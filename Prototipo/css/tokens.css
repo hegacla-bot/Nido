@@ -1,0 +1,83 @@
+/*
+  Nido · v3 — Design tokens
+  Extraídos de Figma (get_variable_defs) y verificados contra get_design_context
+  de las 8 pantallas reales de la sección "UI PROTOTIPADO (NO TOCAR)".
+
+  Escala base: 1rem = 16px a 393px de ancho de viewport (frame de referencia).
+  --scale ajusta esa base de forma fluida entre móviles pequeños y algo más grandes,
+  sin salirse nunca del tamaño "perfecto" en 393px.
+*/
+
+html {
+  /* Base fija: el lienzo (.phone) se dibuja siempre a su tamaño real de Figma
+     (393×852, 1rem = 16px) y es el propio lienzo el que se escala como bloque
+     con transform: scale() según el ancho disponible — ver .screen-canvas-wrap
+     en base.css. Así el interior nunca pierde la proporción exacta de Figma. */
+  font-size: 16px;
+}
+
+:root {
+  /* ---- Color · verificado con get_variable_defs sobre Assets + las 8 pantallas ---- */
+  --color-white: #ffffff;
+  --color-black: #1a1d2c;         /* Color/Black — texto de la app */
+  --color-ios-black: #1d1d1b;     /* "Black" — solo status bar (excepción conocida, ver README) */
+  --color-primary-blue: #516dff;
+  --color-primary-blue-dark: #1e2a6b; /* actualizado en el rediseño (antes #2d3c8c), confirmado por el usuario */
+  --color-primary-blue-light: #dde2fb;
+  --color-primary-blue-lighter: #f4f5fc; /* nuevo en el rediseño — botones "suaves" (nav Home, secundario del modal Ayúdanos) */
+  --color-gray-1: #9799a2;
+  --color-gray-3: #d0d1d7;
+  --color-error: #f53d5b;         /* "Cancelar" del aviso de eliminar foto (687:8416) */
+  --color-input-bg: #e8ebf6; /* fondo de cajas de teléfono/código en el flujo de registro */
+
+  --bg-app: #f4f6ff;              /* fondo de Home / Álbumes / Personas / Yo */
+  --bg-onboarding: #ffffff;       /* fondo de las pantallas de onboarding */
+
+  /* Fondos de tarjeta observados en las pantallas reales (no son variables de Figma,
+     son fills directos verificados por pantalla — ver README "Excepciones") */
+  --bg-card-album: #efebd7;
+
+  /* ---- Tipografía · Atkinson Hyperlegible (única familia usada) ---- */
+  --font-family: 'Atkinson Hyperlegible', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --font-size-page-title: 1.375rem; /* 22px — título superior ("Álbumes","Personas","Yo").
+                                        No está ligado a variable de Figma: tamaño ad hoc
+                                        verificado en las 3 pantallas, se mantiene tal cual. */
+  --font-size-title-xlarge: 1.5rem; /* 24px — títulos del flujo de registro */
+  --font-size-title-large: 1.25rem; /* 20px — Nido normal/Title/Large */
+  --font-size-label-xlarge: 1.375rem; /* 22px — Nido normal/Label/Extralarge (teclado numérico) */
+  --font-size-label-large: 1.25rem; /* 20px — Nido normal/Label/Large */
+  --font-size-label-medium: 1.125rem; /* 18px — Nido normal/Label/Medium */
+  --font-size-label-small: 1rem;    /* 16px — Nido normal/Label/small */
+  --font-size-time: 1.0625rem;      /* 17px — reloj de la status bar (iOS SF Pro) */
+
+  --font-weight-bold: 700;
+  --font-weight-regular: 400;
+
+  /* ---- Espaciado · verificado por geometría real de las 8 pantallas ---- */
+  --space-page-margin: 1.25rem;   /* 20px — margen lateral de página */
+  --space-grid-gap: 1rem;         /* 16px — separación entre tarjetas en grid */
+  --space-stack-gap: 1.25rem;     /* 20px — separación vertical "Mis recuerdos" */
+  --space-section-gap: 1rem;      /* 16px — separación título → contenido de sección */
+
+  /* ---- Radios ---- */
+  --radius-card: 0.75rem;         /* 12px — tarjetas de foto */
+  --radius-button: 0.75rem;       /* 12px — cajas pequeñas (input de teléfono/código,
+    teclado numérico) — NO los botones grandes tipo .btn, ver --radius-button-lg */
+  --radius-button-lg: 1.25rem;    /* 20px — .btn (Volver/Entrar/Compartir/Permitir...):
+    confirmado en todas las pantallas revisadas, .btn llevaba 12px por error */
+  --radius-pill: 1.5rem;          /* 24px — wrapper "Crear" */
+  --radius-bubble: 2rem;          /* 32px — burbuja de diálogo del pollito */
+
+  /* ---- Sombras · verificadas por pantalla ---- */
+  --shadow-card: 2px 4px 4px 0px rgba(159, 172, 186, 0.25), 2px 4px 12px 0px rgba(116, 135, 154, 0.5);
+  --shadow-button: 2px 4px 16px 0px rgba(65, 81, 162, 0.1), 2px 4px 4px 0px rgba(85, 102, 189, 0.2);
+  --shadow-button-light: 2px 4px 16px 0px rgba(159, 159, 176, 0.3), 2px 4px 4px 0px rgba(178, 178, 194, 0.2); /* nuevo — botones sobre fondo blue-lighter */
+  /* drop-shadow() no admite una lista separada por comas como box-shadow —
+     hay que encadenar dos funciones drop-shadow() completas. */
+  --glow-onboarding-highlight: drop-shadow(0px 0px 6px white) drop-shadow(0px 0px 40px rgba(255, 255, 255, 0.8));
+
+  /* ---- Frame de referencia ---- */
+  --phone-width: 393px;
+  --phone-height: 852px;
+}

@@ -1,0 +1,319 @@
+/*
+  Nido · v3 — Álbumes, rediseño (649:7468). Reemplaza el layout antiguo
+  (page-title + action-row + .album-card en lista) por: cabecera compartida
+  con Home (título azul + avatar con anillo), dos botones "suaves" arriba,
+  y cada álbum como una "pila de fotos" (una foto recta delante, otra
+  girada asomando detrás) en vez de una fila con miniatura.
+*/
+
+/* "Mis álbumes" empieza en 241px en Figma (649:7469), no en los 255px
+   genéricos de .screen-content — encontrado con un diff de píxeles real
+   contra la exportación de Figma del usuario (ImageChops.difference):
+   el título y las cajas "Todas tus fotos"/"104 fotos" salían duplicados
+   (dos líneas fantasma superpuestas), ~12-14px por debajo de donde deben.
+   Mismo ajuste que ya lleva Yo. */
+[data-screen="albumes"] .screen-content {
+  /* top ya es 0 desde la regla base (css/components.css) — solo cambia
+     el padding-top. */
+  padding-top: 15.0625rem;
+}
+
+/* ---- Botones "Álbum nuevo" / "Buscar" (649:8858) ---- */
+.albumes-actions {
+  position: absolute;
+  left: var(--space-page-margin);
+  top: 8.4375rem; /* 135px, igual que el nav-row de Home */
+  width: calc(100% - 2 * var(--space-page-margin));
+  display: flex;
+  gap: 1rem;
+  z-index: 10;
+}
+
+/* Envoltorio exterior de "Álbum nuevo": tarjeta suave normal, con un botón
+   de borde discontinuo dentro (no es el mismo btn--create de otras
+   pantallas: aquí lleva doble capa, como en Figma). */
+.albumes-new-wrap {
+  flex: 1 0 0;
+  background: var(--color-primary-blue-lighter);
+  border: 1px solid var(--color-primary-blue-light);
+  border-radius: 1.25rem; /* 20px */
+  box-shadow: 2px 4px 16px 0px rgba(43, 53, 102, 0.1), 2px 4px 8px 0px rgba(50, 63, 132, 0.15);
+  padding: 0.75rem; /* 12px */
+}
+.albumes-new-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem; /* 10px */
+  padding: 1rem 1.25rem; /* 16px 32px en Figma, reducido en horizontal —
+    con flex:1 en esta fila el hueco real es más estrecho que en el diseño
+    y "Álbum nuevo" se partía en dos líneas a 32px de cada lado. */
+  white-space: nowrap;
+  background: var(--color-primary-blue-lighter);
+  border: 2px dashed var(--color-primary-blue);
+  /* Esquina inferior-izquierda más redondeada que las otras tres — así
+     está en Figma (649:8872), no es un descuido. */
+  border-radius: 0.75rem 0.75rem 0.75rem 1rem;
+  font-family: inherit;
+  font-weight: var(--font-weight-bold);
+  font-size: 1.25rem; /* 20px */
+  color: var(--color-primary-blue-dark);
+  cursor: pointer;
+}
+.albumes-new-btn img {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.albumes-search-btn {
+  flex-shrink: 0;
+  width: 6.6875rem; /* 107px, mismo ancho que .btn--vertical */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--color-primary-blue-lighter);
+  border: 1px solid var(--color-primary-blue-light);
+  border-radius: 1.25rem;
+  box-shadow: var(--shadow-button-light);
+  font-family: inherit;
+  font-weight: var(--font-weight-bold);
+  font-size: 1.125rem; /* 18px */
+  color: var(--color-primary-blue-dark);
+  cursor: pointer;
+}
+.albumes-search-btn img {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+/* ---- Lista "Mis álbumes" (649:7469) ---- */
+.albumes-list {
+  display: flex;
+  flex-direction: column;
+}
+
+/* En Figma no hay separación entre el título y la lista (gap:0) — el hueco
+   visual de ~24px que se ve viene solo del propio "cojín" que ya reserva la
+   caja de cada .album-stack (237.648px de caja para una foto de 189px), no
+   de un margen aparte. El margen genérico de .section-title (16px, pensado
+   para el resto de pantallas) se sumaba a ese cojín y dejaba el hueco casi
+   el doble de grande de lo que toca. */
+[data-screen="albumes"] .section-title {
+  margin-bottom: 0;
+}
+
+/* Cada álbum ocupa una caja más alta (237.648px) que la foto visible
+   (189px) a propósito: dentro caben la portada recta Y la foto girada que
+   asoma detrás, ambas centradas en esta misma caja. */
+.album-stack {
+  position: relative;
+  width: 100%;
+  height: 14.853rem; /* 237.648px */
+  flex-shrink: 0;
+}
+.album-stack__back,
+.album-stack__front {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 20.634rem; /* 330.14px */
+  height: 11.794rem; /* 188.71px */
+  border-radius: 1.5rem; /* 24px */
+  overflow: hidden;
+}
+.album-stack__back {
+  transform: translate(-50%, -50%) rotate(-8.82deg) skewX(-1.21deg);
+  pointer-events: none;
+}
+.album-stack__back img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+}
+.album-stack__back::after {
+  /* Blanquea la foto de detrás para que no compita con la de delante —
+     misma idea que un cristal esmerilado, no es un error de opacidad. */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.5);
+}
+.album-stack__front {
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1rem;
+  cursor: pointer;
+  border: none;
+  text-align: left;
+  font-family: inherit;
+}
+.album-stack__front img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -2;
+}
+.album-stack__front::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  /* El segundo stop real en Figma es ~112%, no 100% — el degradado no llega
+     a transparencia total ni siquiera en el borde superior de la foto,
+     se queda con un velo oscuro residual muy tenue en toda la caja
+     (confirmado con get_design_context, no a ojo). Con 100% aquí se
+     aclaraba de más arriba de la cuenta. */
+  background: linear-gradient(to top, rgba(16, 28, 43, 0.72) 27%, rgba(255, 255, 255, 0) 112%);
+}
+.album-stack__caption {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem; /* 2px */
+  color: var(--color-white);
+  font-weight: var(--font-weight-bold);
+  font-size: 1.125rem; /* 18px */
+}
+.album-stack__caption img {
+  position: static;
+  width: 1.1875rem; /* 19px */
+  height: 1.1875rem;
+  z-index: auto;
+}
+.album-stack__meta {
+  color: var(--color-white);
+  font-size: 1rem; /* 16px */
+  margin: 0;
+}
+
+/* ---- Botón flotante "ver más álbumes" (668:9155) ----
+   Mismo patrón que .carousel-next de Home, pero apuntando hacia abajo
+   (aquí la lista se desplaza en vertical, no en horizontal). */
+.albumes-more {
+  position: absolute;
+  left: 18.8125rem; /* 301px, misma fórmula que el botón de Home */
+  top: 40rem; /* 640px */
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  background: var(--color-primary-blue-lighter);
+  border: 1px solid var(--color-primary-blue-light);
+  box-shadow: 2px 4px 16px 0px rgba(164, 164, 175, 0.2), 2px 4px 4px 0px rgba(187, 187, 196, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.albumes-more img {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+/* ================================================================ */
+/* Dentro de un álbum — cuadrícula de fotos (668:9100)                */
+/* Cabecera, footer y botón flotante son los mismos que Álbumes; lo    */
+/* único nuevo aquí es la cuadrícula de 2 columnas y el botón "Añadir". */
+/* ================================================================ */
+
+/* Aquí no hay fila de botones bajo la cabecera (el "Añadir" es la primera
+   celda de la propia cuadrícula) — el contenido empieza justo debajo del
+   header, no a los 255px que usa .screen-content por defecto en el resto
+   de pantallas. */
+[data-screen="album-detalle"] .screen-content,
+[data-screen="persona-fotos"] .screen-content {
+  padding-top: 8.4375rem; /* 135px */
+}
+
+.album-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  column-gap: 1rem; /* 16px */
+  row-gap: 0.625rem; /* 10px */
+}
+
+/* Las fotos reutilizan .photo-card (así heredan el comportamiento ya
+   existente de "tocar abre el detalle" de js/app.js) pero con radio 20px
+   y sin sombra, no los 12px/sombra que llevan en Álbumes o Home. */
+.album-grid .photo-card {
+  border-radius: 1.25rem; /* 20px */
+  box-shadow: none;
+  aspect-ratio: 1 / 1;
+}
+
+/* "Añadir" — misma construcción de dos capas que .albumes-new-wrap, pero
+   cuadrada (168×168) y con el icono encima del texto en vez de al lado. */
+.album-grid__add-wrap {
+  aspect-ratio: 1 / 1;
+  background: var(--color-primary-blue-lighter);
+  border: 1px solid var(--color-primary-blue-light);
+  border-radius: 1.25rem;
+  box-shadow: 2px 4px 16px 0px rgba(43, 53, 102, 0.1), 2px 4px 8px 0px rgba(50, 63, 132, 0.15);
+  padding: 0.75rem;
+  display: flex;
+}
+.album-grid__add-btn {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem; /* 10px */
+  background: var(--color-primary-blue-lighter);
+  border: 2px dashed var(--color-primary-blue);
+  border-radius: 0.75rem 0.75rem 0.75rem 1rem; /* misma esquina asimétrica que Álbumes */
+  font-family: inherit;
+  font-weight: var(--font-weight-bold);
+  font-size: 1.25rem; /* 20px */
+  color: var(--color-primary-blue-dark);
+  cursor: pointer;
+}
+.album-grid__add-btn img {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+/* ================================================================ */
+/* Seleccionar fotos para añadir (685:8075)                          */
+/* Misma cuadrícula que "dentro de un álbum", pero aquí tocar una foto */
+/* la selecciona (velo oscuro + check) en vez de abrir el detalle —    */
+/* por eso usa .photo-cell, no .photo-card (esa abre la galería).      */
+/* ================================================================ */
+
+[data-screen="album-seleccionar"] .screen-content {
+  padding-top: 8.4375rem; /* 135px, igual que album-detalle: no hay fila de botones arriba */
+}
+
+/* .is-selectable son .photo-card normales dentro de .album-grid — ya
+   heredan el radio 20px/sin sombra de la regla `.album-grid .photo-card`
+   de más arriba, y el "toque simple abre el detalle" de openDetalle() en
+   app.js. Esto solo añade el velo+check de selección. */
+.select-overlay {
+  position: absolute;
+  inset: 0;
+  /* Sin velo oscuro: en la captura actual de Figma (685:8075) las elegidas solo llevan el check azul. */
+  background: transparent;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.photo-card.is-selectable.is-selected .select-overlay {
+  opacity: 1;
+}
+.select-overlay img {
+  width: 2.75rem; /* 44px — estaba en 48px */
+  height: 2.75rem;
+}
+
+/* El footer de 2 botones (Volver + Añadir) reutiliza .bottom-fade +
+   .bottom-action-row, que ya existían para este mismo patrón en la
+   pantalla de detalle de foto — no hizo falta CSS nuevo para eso. */
