@@ -1,1 +1,79 @@
-
+# Nido · PRD
+ 
+Sep 24, 2026 · @Clara
+ 
+## Contexto
+ 
+Nido es una app móvil de fotos familiares que una persona mayor usa ella misma, sola y sin miedo a romper nada, mientras la IA organiza los recuerdos por ella. El resto del círculo familiar sube fotos desde la misma app; dos piezas refuerzan la cercanía: un asistente de voz («Nidi») y una mascota guía, el pollito.
+ 
+**Estado actual:** prototipo navegable v3 (publicado en Netlify) y un concepto conversacional v4 (duplicado sin botones, solo voz, hecho para recoger feedback de David). El equipo es de diseño, no de programación; el proyecto es un TFM.
+ 
+**De dónde viene:** el proyecto ha pasado por cuatro pivotes. Empezó como una app-guía paso a paso, pasó por un álbum familiar con doble interfaz y por un cambio de atributos, y llegó a plantear un marco digital físico donde la persona mayor no tocaba nada. El mentor rechazó ese marco:
+ 
+> «¿Quién tiene más tiempo para gastar en el móvil? Los abuelos. Estáis poniendo la carga de la simplicidad en quien menos la necesita... Lo único que estáis haciendo es el marco de Google Fotos, que Google Fotos ya vende. No tiene sentido.»
+ 
+Ese comentario provocó el Pivote 4 (el actual): volver a la app, con la persona mayor como usuaria activa. El marco era un producto que ya existe; lo único que el equipo puede aportar es la **capa de simplificación**. La landing «Núdo» y cualquier material centrado en el marco físico quedan desactualizados.
+ 
+**Atributos del producto:** *Solo toca* y *Memoria viva*. Prueba de fuego: sin *solo toca*, esto sería Google Fotos.
+ 
+## People problem
+ 
+Las apps de fotos actuales tienen demasiadas opciones y no están pensadas para una persona mayor, así que esta depende de que un familiar le enseñe o le prepare el contenido.
+ 
+**Evidencia** (siete entrevistas, seis reales y una sintética; cinco validan el problema y dos no):
+ 
+- Varias personas lo formularon casi igual: «ellos no tienen que hacer nada, solo disfrutarlo». El valor está en que la persona mayor no dependa de nadie.
+- Las funciones de IA generan rechazo por **miedo a romper algo**, no por privacidad.
+- La barrera no es el precio sino la avería: «¿a quién llamo si se queda en blanco?».
+- El cuello de botella es el onboarding grupal: un álbum con un solo miembro no vale nada.
+- El dolor depende de la distancia, no de la edad: quienes tienen a la persona mayor cerca no lo sienten.
+- La respuesta natural ante una foto no es un botón, es una llamada de teléfono.
+**Quién sufre el problema:** personas mayores de 65-89 años (no es un grupo homogéneo, algunas no saben leer) y sus familiares, sobre todo los que viven lejos.
+ 
+**Limitación de la evidencia:** ninguna persona entrevistada es compradora real y las entrevistas se hicieron sobre el concepto del marco, no sobre la app. Revalidar sobre la app es requisito previo para dar el problema por cerrado.
+ 
+**El hueco de mercado:** Tinybeans, Famileo, Aura y Skylight esquivan al mayor (le mandan un email o un marco que solo recibe); GrandPad, Doro y KOMP le apartan a un aparato propio; Google Fotos, iCloud y similares le ignoran (misma interfaz para un nieto de 20 y un abuelo de 80). Nadie ofrece una app de fotos donde la persona mayor sea usuaria de primera, con la misma potencia de IA pero con una capa de simplicidad diseñada para ella.
+ 
+## Objetivos de negocio
+ 
+- **Ocupar un hueco no cubierto:** ser la primera app de fotos familiares donde la persona mayor es usuaria de primera nivel, no un destinatario pasivo.
+- **Abrir puertas profesionales:** el objetivo explícito (feedback de David) es que el proyecto sirva de carta de presentación para el siguiente trabajo del equipo, lo que exige un resultado diferenciado y no una copia de lo que ya existe.
+- **Defensa sólida del TFM:** el proyecto debe sostener el pivote ante el tribunal, con evidencia de proceso (investigación, pivotes, decisiones justificadas), no solo una pantalla bonita.
+- **Restricciones de recursos que condicionan el negocio:** equipo de diseño sin perfil de programación, tiempo limitado (trabajo compartido con jornada laboral), y créditos de despliegue limitados (Netlify plan gratuito, ya se agotó una cuenta).
+## User stories
+ 
+**Persona mayor (usuaria principal)**
+ 
+- Como persona mayor, quiero abrir la app y ver mis recuerdos de familia sin tener que aprender nada, para sentir que puedo usarla yo sola.
+- Como persona mayor, quiero encontrar a alguien tocando su cara, para no depender de escribir una búsqueda.
+- Como persona mayor, quiero compartir una foto con un toque, para no necesitar ayuda de nadie.
+- Como persona mayor, quiero verificarme sin teclear ningún código, para no arriesgarme a equivocarme.
+- Como persona mayor, quiero que un pollito me ayude cuando me quedo bloqueada, con opciones grandes y claras, para no sentirme perdida ni tonta.
+- Como persona mayor, quiero deshacer si borro una foto por error, para no tener miedo a romper algo.
+- Como persona mayor, quiero un tour de bienvenida que se resuelva tocando, para entender la app sin que nadie me lo explique.
+**Familiar que hace el alta**
+ 
+- Como familiar, quiero dar de alta a mi familiar mayor e invitarla al círculo, para que pueda empezar a usar la app sin fricción.
+- Como familiar, quiero grabar mi voz para el asistente (con consentimiento informado), para que resulte cercano y familiar.
+- Como familiar, quiero ver quién falta por unirse al círculo, para completarlo cuanto antes.
+**Resto del círculo familiar**
+ 
+- Como familiar del círculo, quiero subir fotos y vídeos en un solo flujo, para no tener que pensar en el formato.
+- Como familiar del círculo, quiero saber que nadie puede borrar lo que yo subí, para compartir contenido sin miedo.
+- Como familiar del círculo, quiero recibir un aviso si hace tiempo que no se sube nada (nunca la persona mayor), para no perder el hábito.
+## Out of scope
+ 
+- **El marco digital físico**, descartado en el Pivote 4. La landing «Núdo» y cualquier material centrado en él están desactualizados.
+- Ser un gestor de biblioteca: etiquetar a mano, gestionar duplicados o administrar almacenamiento.
+- Ser una red social: sin métricas de vanidad, seguidores ni contenido público.
+- Ser una app «para mayores»: sin infantilizar, sin usar la palabra «mayores» ni «modo simple» dentro de la app.
+- Mensajería propia: se comparte por el share sheet nativo del sistema.
+- Un modelo 3D rotable del pollito (se descartó para que nadie lo gire sin querer y se despiste).
+- Descripción automática de escenas y generación de contenido nuevo con IA: tiene coste real y no está decidido si se implementa o se simula.
+## Preguntas abiertas
+ 
+1. ¿La persona mayor solo recibe y confirma, o también aporta (notas de voz, fotos propias)?
+2. ¿Cómo se cuenta la privacidad si algún análisis pasa por la nube?
+3. ¿Qué funciones de «Memoria viva» se implementan de verdad y cuáles se simulan?
+4. ¿Cuáles son los umbrales de éxito del producto (tareas completadas sin ayuda, toques por tarea, sensación de dominio)?
+5. ¿Qué se hace con el concepto conversacional (v4, solo voz): es una alternativa a v3 o una dirección a evaluar después del feedback de David?
