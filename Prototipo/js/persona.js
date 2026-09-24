@@ -789,6 +789,18 @@ window.PersonaSelect = (function () {
     });
   }
 
+  // Un data: URI con la imagen entera en base64 (varios cientos de KB de texto, una foto 1024×1024)
+  // hacía que Safari en iPhone recargara la pestaña entera (o cortara la propia petición con "Load
+  // failed") por presión de memoria justo al ponerlo en el <img> — reportado el 24-sep, reproducible
+  // al 100%, INDEPENDIENTE del híbrido botones+voz (ya pasaba en esta versión de antes). Un blob:
+  // URL es mucho más ligero para el navegador (no duplica los datos como texto en el DOM).
+  function base64AUrlObjeto(base64, tipo) {
+    const bin = atob(base64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return URL.createObjectURL(new Blob([bytes], { type: tipo || 'image/jpeg' }));
+  }
+
   // Texto real, nunca pedido a la IA — ver la nota en crear-imagen.js sobre
   // por qué (tildes/ñ mal escritas, letras solapadas). "retrato" no lleva
   // pie: no es festivo, no necesita un titular encima.
@@ -867,7 +879,7 @@ window.PersonaSelect = (function () {
       });
       const data = await res.json();
       if (!res.ok || !data.imageBase64) throw new Error(data.error || 'fallo al generar');
-      document.querySelector('[data-felicitacion-img]').src = 'data:image/jpeg;base64,' + data.imageBase64;
+      document.querySelector('[data-felicitacion-img]').src = base64AUrlObjeto(data.imageBase64);
       const caption = document.querySelector('[data-felicitacion-caption]');
       caption.textContent = CAPTIONS[style] || '';
       // Una tipografía por tipo de creación — ver las reglas --cumpleanos/etc. en persona.css.
@@ -879,7 +891,7 @@ window.PersonaSelect = (function () {
       const done = document.createElement('div');
       done.className = 'photo-card photo-card--square-2col';
       done.innerHTML = '<img alt="Felicitación creada con IA" />';
-      done.querySelector('img').src = 'data:image/jpeg;base64,' + data.imageBase64;
+      done.querySelector('img').src = base64AUrlObjeto(data.imageBase64);
       done.dataset.caption = CAPTIONS[style] || '';
       const first = yoGrid.querySelector('.yo-generar-wrap');
       first.insertAdjacentElement('afterend', done);
