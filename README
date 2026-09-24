@@ -1,1 +1,15 @@
-
+Nido
+App de fotos familiares pensada para que una persona mayor la use ella misma, sola y sin miedo a romper nada, mientras la IA organiza los recuerdos por ella. Proyecto de TFM de diseño.
+Prototipo navegable (v3): https://nido-0921-22084.netlify.app
+Estado
+Prototipo v3 navegable publicado, y un concepto conversacional v4 (solo voz, sin botones) en evaluación tras el feedback de David.
+Contenido de este repo
+PDR — objetivos y prioridades del proyecto.
+Conocimiento — todo lo que sabemos del proyecto: pivotes, investigación de usuarios, principios de diseño, arquitectura, estado del prototipo y feedback recibido.
+Módulos — documentación de cada módulo/pantalla de la app.
+Equipo
+Ainhoa — parte técnica del prototipo
+Clara — project lead, UI
+Josep — case study
+Cómo se trabaja
+Fase por fase, en lenguaje sencillo (el equipo es de diseño, no de programación). Ante cualquier duda de producto, manda lo recogido en Conocimiento sobre "Lo que NO queremos que sea".
