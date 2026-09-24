@@ -637,10 +637,11 @@ window.PersonaSelect = (function () {
     const imgs = libraryImages();
     if (!imgs.length) return;
     organizando = true;
-    const pantalla = () => window.NidoNav.current();
     try {
-      const res = await Reconocimiento.organize(imgs, (n, t) =>
-        window.nidoToast(pantalla(), 'Buscando personas en tus fotos… ' + n + ' de ' + t, null, null, 60000));
+      // Sin avisos de progreso ni de resultado (24-sep, pedido): es trabajo interno de la app, a la
+      // persona que la usa no le aporta nada saber "buscando... 7 de 39" ni "he encontrado 7
+      // personas" — solo ruido. Sigue funcionando igual de bien en silencio.
+      const res = await Reconocimiento.organize(imgs, () => {});
       res.personas.forEach((o) => {
         registerPerson(o.person);
         const e = PERSONAS[o.person.id];
@@ -649,11 +650,8 @@ window.PersonaSelect = (function () {
       });
       pintarGrupos(res.grupos);
       pintarVacio(res.personas.length === 0);
-      const n = res.personas.length;
-      window.nidoToast(pantalla(), n ? 'He encontrado ' + n + (n === 1 ? ' persona' : ' personas') + ' en tus fotos.' : 'No he encontrado personas que se repitan en tus fotos.', null, null, 5000);
     } catch (err) {
       console.error('organizar biblioteca falló:', err);
-      window.nidoToast(pantalla(), 'No he podido buscar personas en tus fotos.', null, null, 5000);
     } finally { organizando = false; }
   }
 

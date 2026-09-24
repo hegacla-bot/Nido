@@ -1,7 +1,7 @@
-// Nido · editor visual SOLO LOCAL para recolocar los pollitos de onboarding a mano.
+// Nido · editor visual SOLO LOCAL para recolocar a mano los pollitos Y las burbujas de onboarding.
 // Se activa con ?editar=pollitos en la URL — en cualquier otro caso este archivo no hace nada.
-// Cada capa de onboarding lleva en su HTML data-onb-css (el selector CSS exacto que la posiciona)
-// y data-onb-file (en qué archivo vive esa regla) — así el editor sabe qué guardar sin adivinar.
+// Cada elemento móvil lleva en su HTML data-onb-css (el selector CSS exacto que lo posiciona) y
+// data-onb-file (en qué archivo vive esa regla) — así el editor sabe qué guardar sin adivinar.
 // Guardar escribe de verdad en el .css del proyecto, vía servidor-local.mjs (nunca se despliega).
 (function () {
   if (!/(?:^|[?&])editar=pollitos(?:&|$)/.test(location.search)) return;
@@ -11,13 +11,27 @@
     const canvas = document.querySelector('.screen-canvas');
     return canvas ? canvas.getBoundingClientRect().width / CANVAS_REF : 1;
   }
-  // getComputedStyle ya da el valor en el espacio SIN escalar del propio elemento (los transforms
-  // del ancestro no afectan a left/top calculados) — para leer basta con pasar a rem a 16px/rem.
   function remDe(el, prop) { return parseFloat(getComputedStyle(el)[prop]) / 16; }
 
-  function pollitoVisible() {
-    return Array.from(document.querySelectorAll('.onboarding-pollito[data-onb-css]'))
-      .find((el) => el.offsetParent !== null);
+  // Las pantallas inactivas se ocultan con opacity:0 (no display:none), así que offsetParent no
+  // sirve para saber qué se ve de verdad — por eso el panel se quedaba siempre en "step 1" (el
+  // primero del DOM), aunque se hubiera navegado a otra pantalla/paso. Se comprueba opacity/hidden/
+  // display en toda la cadena de ancestros, que es lo que de verdad decide si algo se ve.
+  function esVisibleDeVerdad(el) {
+    let n = el;
+    while (n && n !== document.documentElement) {
+      if (n.hidden) return false;
+      const cs = getComputedStyle(n);
+      if (cs.display === 'none' || cs.visibility === 'hidden' || parseFloat(cs.opacity) === 0) return false;
+      n = n.parentElement;
+    }
+    const r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  }
+
+  function elementoVisible() {
+    return Array.from(document.querySelectorAll('.onboarding-pollito[data-onb-css], .onboarding-tooltip[data-onb-css]'))
+      .find(esVisibleDeVerdad);
   }
 
   const panel = document.createElement('div');
@@ -25,8 +39,8 @@
     'font:13px/1.45 -apple-system,BlinkMacSystemFont,sans-serif;padding:12px 14px;border-radius:14px;' +
     'box-shadow:0 6px 20px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:8px;width:260px;white-space:pre-line;';
   panel.innerHTML =
-    '<b>🐣 Editor de pollitos (solo local)</b>' +
-    '<span id="ep-info">Arrastra el pollito de esta pantalla.</span>' +
+    '<b>🐣 Editor de onboarding (solo local)</b>' +
+    '<span id="ep-info">Arrastra el pollito o la burbuja de esta pantalla.</span>' +
     '<button id="ep-guardar" style="background:#516dff;color:#fff;border:0;border-radius:10px;padding:9px;font-weight:700;cursor:pointer" disabled>Guardar posición</button>';
   document.body.appendChild(panel);
   const info = panel.querySelector('#ep-info');
@@ -37,16 +51,21 @@
   let ultimoDragTs = 0;
 
   function actualizarInfo() {
-    const el = pollitoVisible();
-    if (!el) { info.textContent = 'Ningún pollito de onboarding visible en esta pantalla.\nNavega hasta el paso que quieras ajustar.'; return; }
-    info.textContent = el.dataset.onbCss + '\nleft: ' + remDe(el, 'left').toFixed(4) + 'rem   top: ' + remDe(el, 'top').toFixed(4) + 'rem';
+    const el = elementoVisible();
+    if (!el) { info.textContent = 'Nada movible visible en esta pantalla ahora mismo.\nNavega hasta el paso que quieras ajustar.'; return; }
+    const tipo = el.classList.contains('onboarding-pollito') ? 'Pollito' : 'Burbuja';
+    info.textContent = tipo + ': ' + el.dataset.onbCss + '\nleft: ' + remDe(el, 'left').toFixed(4) + 'rem   top: ' + remDe(el, 'top').toFixed(4) + 'rem';
   }
   actualizarInfo();
-  // Tras cualquier toque (cambio de pantalla/paso) puede haber un pollito distinto visible.
+  // Con un enlace directo (p.ej. #onboarding-3) este script corre ANTES que app.js aplique el
+  // hash inicial, así que la primera lectura puede decir "nada visible" un instante — se repite
+  // sola en cuanto la página termina de montarse.
+  window.addEventListener('load', () => setTimeout(actualizarInfo, 300));
+  // Tras cualquier toque (cambio de pantalla/paso) puede haber otro elemento visible.
   document.addEventListener('click', () => setTimeout(actualizarInfo, 250), true);
 
   document.addEventListener('pointerdown', (e) => {
-    const el = e.target.closest('.onboarding-pollito[data-onb-css]');
+    const el = e.target.closest('.onboarding-pollito[data-onb-css], .onboarding-tooltip[data-onb-css]');
     if (!el) return;
     e.preventDefault();
     arrastre = {
