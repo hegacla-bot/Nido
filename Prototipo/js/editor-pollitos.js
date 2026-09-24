@@ -38,13 +38,18 @@
   }
 
   const panel = document.createElement('div');
+  // pointer-events:none en el panel entero — reportado el 24-sep ("los pollitos no se guardan"):
+  // el panel, fijo abajo a la izquierda, tapaba de verdad al pollito (que casi siempre vive ahí
+  // mismo, "los pies pisan el botón" de Siguiente) y le robaba el toque. Solo el botón de Guardar
+  // necesita ser clicable de verdad.
   panel.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:99999;background:#1f2a44;color:#fff;' +
     'font:13px/1.45 -apple-system,BlinkMacSystemFont,sans-serif;padding:12px 14px;border-radius:14px;' +
-    'box-shadow:0 6px 20px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:8px;width:260px;white-space:pre-line;';
+    'box-shadow:0 6px 20px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:8px;width:260px;white-space:pre-line;' +
+    'pointer-events:none;';
   panel.innerHTML =
     '<b>🐣 Editor de onboarding (solo local)</b>' +
     '<span id="ep-info">Arrastra el pollito o la burbuja de esta pantalla.</span>' +
-    '<button id="ep-guardar" style="background:#516dff;color:#fff;border:0;border-radius:10px;padding:9px;font-weight:700;cursor:pointer" disabled>Guardar posición</button>';
+    '<button id="ep-guardar" style="background:#516dff;color:#fff;border:0;border-radius:10px;padding:9px;font-weight:700;cursor:pointer;pointer-events:auto" disabled>Guardar posición</button>';
   document.body.appendChild(panel);
   const info = panel.querySelector('#ep-info');
   const btn = panel.querySelector('#ep-guardar');
