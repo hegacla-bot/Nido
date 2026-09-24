@@ -48,6 +48,10 @@
   width: 26.0237rem;
   max-width: none; /* el reset global "img{max-width:100%}" la recortaba */
   height: 20rem;
+  /* La familia en el sofá (24-sep) es más ancha que alta (recorte a su
+     contenido real): sin esto se deformaba estirándose para llenar el
+     hueco de siempre. */
+  object-fit: contain;
   pointer-events: none;
 }
 .registro-1-underline {

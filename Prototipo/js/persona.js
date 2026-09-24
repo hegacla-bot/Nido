@@ -807,7 +807,7 @@ window.PersonaSelect = (function () {
   const CAPTIONS = {
     cumpleanos: '¡Feliz cumpleaños!',
     aniversario: 'Feliz aniversario',
-    amistad: 'Para un buen amigo',
+    navidad: '¡Feliz Navidad!',
     anonuevo: '¡Feliz Año Nuevo!',
   };
 
@@ -916,7 +916,7 @@ window.PersonaSelect = (function () {
   const CAPTION_STYLES = {
     cumpleanos: { font: "700 44px 'Fredoka'", rot: -3, fill: 'rainbow', stroke: '#fff', sw: 3 },
     aniversario: { font: "italic 700 44px 'Playfair Display'", rot: 0, fill: '#f4d58d', stroke: '#7a4f1a', sw: 1, glow: 'rgba(244,213,141,0.5)' },
-    amistad: { font: "700 46px 'Fredoka'", rot: -2, fill: '#4fb3a9', stroke: '#fff', sw: 4, drop: '#2f6b62' },
+    navidad: { font: "700 52px 'Mountains of Christmas'", rot: -2, fill: '#d6483a', stroke: '#fff', sw: 4, drop: '#2f6b45' },
     anonuevo: { font: "400 36px 'Bungee'", rot: -1.5, fill: '#ffd166', stroke: '#7a3ea1', sw: 2, glow: 'rgba(255,209,102,0.85)' },
   };
 
