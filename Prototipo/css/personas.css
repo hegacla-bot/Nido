@@ -218,10 +218,11 @@
   position: absolute;
   left: 1.25rem;
   width: 13.0625rem; /* 209px */
-  height: 5.625rem; /* 90px */
+  min-height: 5.625rem; /* 90px — min, no fijo: con texto de 3 líneas (p.ej. un nombre largo) se
+    quedaba corto y el texto no tenía el mismo margen arriba/abajo que a los lados. */
   box-sizing: border-box;
   margin: 0;
-  padding: 0 1.09375rem; /* texto de 174px, x=17,5 como en Figma */
+  padding: 0.5rem 1.3125rem; /* mismo margen que el resto de burbujas de Nidi (ayuda-layer, eliminar-foto) */
   display: flex;
   align-items: center;
   background: var(--color-white);
@@ -487,7 +488,7 @@
 .persona-ask__bubble--confirm {
   top: 15.4375rem; /* 247px */
   left: 1.4375rem;
-  height: 5.625rem;
+  min-height: 5.625rem;
   border-radius: 2rem 2rem 0 2rem;
 }
 .persona-ask__crear {

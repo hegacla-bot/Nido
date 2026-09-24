@@ -34,7 +34,7 @@
      pollito, como el pico de una burbuja de diálogo. */
   border-radius: 2rem 2rem 0 2rem;
   min-height: 5.625rem; /* 90px */
-  padding: 0.5rem 1.09375rem; /* texto de 174px */
+  padding: 0.5rem 1.3125rem; /* mismo margen que el resto de burbujas de Nidi (ayuda-layer, persona-ask) */
   display: flex;
   align-items: center;
   font-size: 1.125rem; /* 18px */
