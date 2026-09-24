@@ -1,1 +1,318 @@
+Nido - Todo lo que sabemos del proyecto
+Nido · Todo lo que sabemos del proyecto
+Sep 24, 2026 · @Clara
+Qué es Nido
+Nido es una app de fotos familiares que una persona mayor usa ella misma, con autonomía total, en lugar de recibir pasivamente lo que otros le preparan.
+La persona mayor abre la app sola. El onboarding se resuelve confirmando con un toque, nunca escribiendo.
+El resto de la familia sube fotos desde la misma app, en una cuenta compartida: el «círculo familiar».
+La IA organiza las fotos en momentos con contexto (quién sale, cuándo), elimina duplicados y permite encontrar un recuerdo tocando una cara en vez de escribir una búsqueda.
+Dos piezas refuerzan la cercanía: un asistente (hoy «Nidi») y una mascota guía, el pollito, que aparece cuando alguien se queda bloqueado.
+Fórmula de atributos: app de fotos para personas mayores + Solo toca y Memoria viva.
+Concepto: la tecnología más potente para una persona mayor es la que desaparece detrás de un simple toque.
+Prueba de fuego: sin solo toca, esto sería Google Fotos: potente, pero no diseñado para alguien que nunca ha usado una app de gestión de archivos.
+El foco del diseño es UX y una UI sencilla: pocos pasos, todo táctil, nunca un callejón sin salida.
+De dónde viene: los cuatro pivotes
+El proyecto cambió cuatro veces de rumbo, y conocer esa cadena explica decisiones que parecen arbitrarias.
+Fase
+Qué era
+Qué pasó
+Origen
+App-guía que explicaba paso a paso las tareas del móvil
+Nació de un insight real: una abuela apuntaba los pasos en una libreta porque no se fiaba de su memoria. Se abandonó
+Pivote 1
+Álbum familiar con doble interfaz (estándar y simplificada)
+Dos interfaces sobre la misma app
+Pivote 2
+Cambio de atributos
+Pasaron a Se adapta e Instant sharing
+Pivote 3
+App + marco digital físico
+La persona mayor no tocaba nada; las fotos aparecían solas. Descartado
+Pivote 4 (actual)
+Vuelta a la app, con la persona mayor como usuaria activa
+El mentor rechazó el marco de raíz
+La cita del mentor que provocó el Pivote 4:
+«¿Quién tiene más tiempo para gastar en el móvil? Los abuelos. Estáis poniendo la carga de la simplicidad en quien menos la necesita... Lo único que estáis haciendo es el marco de Google Fotos, que Google Fotos ya vende. No tiene sentido.»
+El marco era un producto que ya existe. Lo único que el equipo puede hacer que no pueda hacer cualquiera es la capa de simplificación: convertir una tarea compleja (gestionar fotos con IA) en algo que una persona mayor use sola, sin ayuda y sin miedo a romper nada.
+Consecuencia: la app es el único punto de contacto. La landing (marca «Núdo») y cualquier material centrado en el marco están desactualizados.
+Hipótesis fundacional
+Si ayudamos a personas mayores que quieren ver y compartir fotos de su familia a resolver que las apps actuales (WhatsApp, Google Fotos) tienen demasiadas opciones y no están pensadas para ellas, con una app de fotos radicalmente simple, táctil, que ellas mismas puedan usar sin ayuda, la elegirán frente a depender de que un familiar les enseñe o les prepare el contenido, porque nuestra solución les da autonomía real, no solo acceso pasivo.
+El problema y los usuarios
+Se hicieron siete entrevistas (seis reales y una sintética) durante la fase del marco. Cinco validan el problema y dos no; los hallazgos sobre la persona mayor y la tecnología siguen vigentes, lo que cambia es la solución.
+Persona
+Perfil
+Resultado
+Rocío Juárez, 24
+Familia extensa, mayores que imprimen fotos
+Problema validado; la intención de uso más clara
+Clara Bernal
+Familia fuera, mayores que no participan
+Validado; habla de «dignidad tecnológica»
+Mercedes Lozano, 19
+Estudia en Murcia
+Validado; aporta un caso de uso nuevo
+María Lozano, 16
+Abuela sin móvil y sin saber leer
+Validado, pero no entendió la propuesta sola
+Eduardo Pla, 40
+Madre y abuela de 104 años muy cerca
+No validado: no hay hábito de compartir
+Arturo Bort
+Abuela separada, la ayudan los domingos
+No validado
+Pilar Navarro, 78
+Sintética
+Validado, con matices importantes
+Seis hallazgos que gobiernan el diseño
+El valor está en que la persona mayor no dependa de nadie. Varias personas lo dijeron casi igual: «ellos no tienen que hacer nada, solo disfrutarlo». Con la app, eso se traduce en cero esfuerzo, pero siendo ella quien la usa.
+Las funciones de IA generan rechazo por miedo a romper algo, no por privacidad: «No me metáis más cosas, que luego se estropea y no sé qué he tocado». Cada función visible es otra superficie donde equivocarse; de ahí viene la sección «Lo que NO queremos que sea».
+La respuesta natural no es un botón, es una llamada. Pilar ve una foto y llama por teléfono; la confirmación de que alguien vio algo puede ser esa llamada, no un acuse de lectura.
+La barrera no es el precio, es la avería. A Pilar le preocupa más «¿a quién llamo si se queda en blanco?» que cuánto cuesta.
+El cuello de botella es el onboarding grupal. Arturo: «la barrera no es el producto, es el onboarding grupal». Un álbum familiar con un solo miembro no vale nada.
+El dolor depende de la distancia, no de la edad. Quienes tienen a la persona mayor cerca (Eduardo y Arturo) no sienten el problema; quienes están lejos, sí.
+Aviso sobre validación: ninguna persona entrevistada es compradora real y las entrevistas se hicieron sobre el concepto del marco. Hay que revalidar la intención de uso sobre la app antes de dar nada por cerrado.
+El hueco que ocupamos
+Nadie ha hecho una app de fotos donde la persona mayor sea usuaria de primera, con la misma potencia de IA que Google o Apple pero con una capa de simplicidad diseñada para ella. Las referencias analizadas caen en tres grupos:
+Grupo
+Referencias
+Qué hacen
+Esquivan al mayor
+Tinybeans, Famileo, Aura, Skylight
+Le mandan un email, le imprimen una gaceta o le ponen un marco que solo recibe
+Le apartan a un aparato propio
+GrandPad, Doro, KOMP
+Diseñan bien para él, pero le sacan del dispositivo donde está su familia
+Le ignoran
+Google Fotos, iCloud, FamilyAlbum, 23snaps, Lifecake, Cluster
+La misma interfaz para un nieto de 20 y un abuelo de 80
+Apple Assistive Access demuestra que una interfaz simplificada es legítima, pero la esconde en Ajustes y la aplica a todo el teléfono, no a una experiencia diseñada de cero para esto.
+Principios, valores y tono
+Tres principios rigen cada decisión: nunca te hacemos sentir tonto, te guía paso a paso cuando tienes dificultades y cercano como un familiar. Los valores son cercanía, facilidad, independencia y libertad.
+Referencias de tono:
+Doro (campaña Aurora): «the joke's never on the user — it's on bad design». Si una frase deja en ridículo al usuario en vez de al mal diseño, está mal escrita.
+KOMP (No Isolation): su filosofía es «warm technology» y su objetivo no es asistir al mayor sino darle sensación de dominio. Es mejor criterio de diseño que «que sea fácil».
+Principios de UX y UI sencilla
+Esta es la sección central ahora que la persona mayor usa la app directamente. Los cinco primeros hallazgos vienen de estudios citables (Nielsen Norman Group, con 123 participantes de 65+ y unos 20 años de investigación; Pew Research Center; un estudio clínico sobre manipulación táctil; Rogers et al. con eye-tracking).
+Hallazgo
+Fuente
+Requisito de UI
+Los botones pequeños son especialmente problemáticos
+Rogers et al.
+Objetivos táctiles bastante más grandes que lo estándar
+La experiencia previa con el móvil no mejora la precisión motora
+Estudio clínico
+Zonas de toque generosas incluso para usuarios «expertos» en WhatsApp
+Son notablemente más lentos en scroll y deslizar
+Rogers et al.
+Nunca depender solo de un gesto: dar alternativa de botón o voz
+Las interfaces rígidas ante el error frustran más que nada
+NN/G
+Ningún toque lleva a un callejón sin salida
+El 48 % de los mayores de 65 necesita ayuda para configurar un dispositivo nuevo
+Pew Research
+El registro inicial no puede recaer solo en la persona mayor
+65-89 años no es un grupo homogéneo
+NN/G
+La UI no puede asumir un único perfil de habilidad
+De ahí salen cinco principios de interacción:
+Solo toca. Sin campos de texto ni buscadores en ningún sitio de la app.
+Confirmar, no crear. Ante un dato nuevo (por ejemplo, quién es una persona) la app pregunta con opciones grandes de Sí/No; nunca pide escribir ni elegir de una lista larga.
+La voz como alternativa al teclado, no como añadido: un micrófono, nunca un formulario.
+Nunca un callejón sin salida. Cualquier toque lleva a algo útil o a un camino de vuelta claro.
+Navegación redundante. Lo que se hace deslizando también se puede hacer con un botón.
+Honestidad metodológica: cualquier otra decisión de interacción (metáforas visuales, mecánicas concretas) es una hipótesis de diseño del equipo, no un hallazgo de investigación, hasta validarla con usuarios reales.
+Lo que NO queremos que sea
+Ante cualquier duda de diseño, se resuelve aquí.
+No es un gestor de biblioteca. Nada de organizar, etiquetar a mano, gestionar duplicados o administrar almacenamiento. Si una función existe para gestionar fotos y no para disfrutar momentos, fuera.
+No es una app «para mayores». No infantiliza. La palabra «mayores» no aparece nunca en la comunicación dentro de la app, ni «fácil» como promesa, ni «modo simple» como nombre de nada. Se habla DE la persona que usa la app, nunca DE «los viejos».
+No es una red social. Sin métricas de vanidad, seguidores, contenido público ni nada que genere comparación entre miembros de la familia.
+La persona mayor no es el problema a resolver. Es una usuaria con criterio; cada frase de la app tendría que poder leerla ella sin incomodarse.
+No se llena de funciones. Cada función visible es una superficie más donde equivocarse. Antes de añadir algo: ¿ayuda a ver y compartir momentos, o es algo que cualquier gestor de fotos ya tiene?
+No exige configurar nada técnico. Ni wifi manual ni contraseñas tecleadas. El único esfuerzo real es confirmar con un toque lo que la app ya detectó.
+El asistente no se hace pasar por una persona. Si usa la voz de un familiar es para resultar cercano, no para engañar; ella debe saber siempre que habla con la app.
+La mascota no es omnipresente. Aparece cuando alguien se queda bloqueado, no en cada pantalla.
+Arquitectura ligera: identidad y datos
+Estas decisiones están fijadas con independencia de cómo acaben siendo las pantallas.
+Dato
+Dónde vive
+Por qué
+Identidad
+El número de teléfono, verificado una vez
+Sin usuario ni contraseña que crear o recordar
+Círculo familiar
+Invitación explícita de un familiar ya verificado
+No automático ni basado en escanear una agenda completa
+Fotos originales
+Galería nativa del teléfono (Google Fotos o iCloud)
+La app las lee; no las duplica en un almacén propio
+Reconocimiento facial
+En el propio dispositivo
+Se compara solo contra el círculo familiar, no contra toda la agenda
+Contenido que se comparte
+Share sheet nativo del sistema (WhatsApp, SMS...)
+Cero mensajería propia que construir o mantener
+Corrección importante: se planteó «como WhatsApp, sin registro», pero WhatsApp sí verifica el número con un código SMS de 6 dígitos. La versión correcta: un familiar invita desde su cuenta ya verificada, y la persona mayor se verifica con un solo toque sobre el autocompletado nativo de código SMS de iOS y Android, nunca tecleando dígitos con límite de tiempo.
+Quién hace el alta: un familiar la completa en nombre de la persona mayor, coherente con el dato de Pew del 48 %. Si aparece un campo de email, nombre o contraseña, es de la cuenta del familiar; la persona mayor nunca teclea credenciales.
+Voz del asistente: si la familia quiere activarla, el familiar graba el audio para clonar su voz durante ese mismo flujo de alta, no en un paso aparte.
+Decisiones tomadas y tensiones abiertas
+Hay cinco decisiones cerradas y tres tensiones sin resolver.
+Decisión
+Motivo
+Imagen y vídeo en un solo flujo
+Nadie piensa «voy a subir un vídeo», piensa «voy a subir esto»
+Elegir familia solo si perteneces a varias
+Preguntarlo siempre añade una decisión con una única respuesta habitual
+Nadie puede borrar lo que subió otro
+Protege del miedo a romper algo
+Onboarding de confirmación, no de creación
+Menos toques precisos, menos riesgo de error
+Verificación del número por autocompletado, no tecleada
+Evita un paso de escritura con límite de tiempo
+Tensiones sin resolver
+Hasta dónde llega la reciprocidad. ¿La persona mayor solo recibe y confirma, o también aporta (notas de voz, fotos propias)?
+Privacidad frente a análisis en la nube. Mandar fotos familiares a una API de terceros contradice lo que promete el producto; hay que decidir cómo se cuenta antes de programarlo.
+Qué funciones de «Memoria viva» son viables ahora. Reconocimiento facial y deduplicación son gratis y viables en el dispositivo; describir escenas o generar contenido tiene coste real y no está decidido si se implementa o se simula.
+El agente y el asistente con voz familiar
+El principio del equipo es que los flujos largos o pesados los automatiza el agente, no la persona mayor.
+El agente Nido
+Curación de momentos: decide cómo agrupar y presentar las fotos que llegan.
+Resúmenes automáticos: genera el contexto de cada foto (quién sale, cuándo) a partir de reconocimiento facial y metadatos.
+Aviso por silencio: si hace tiempo que la familia no sube nada, avisa a la familia, nunca a la persona mayor.
+También quita fricción al montar el círculo familiar, en la búsqueda en lenguaje natural y al agrupar por evento y persona.
+El prompt de curación es diseño de producto, no código: ahí se codifican los principios de UX, y va en la memoria del TFM igual que un wireframe.
+El asistente con voz familiar
+La idea sale de la función «Voz Personal» de iOS, que clona la voz del propio usuario. La vuelta de tuerca de Nido es que la nieta presta su voz al asistente: es cross-person, no accesibilidad clásica. Resuelve el miedo o la extrañeza de hablar con una máquina con una decisión de diseño, no con más tecnología. Y conecta con un hallazgo: la abuela de María y Mercedes no sabe leer, así que para ella la voz es la única puerta de entrada.
+Vive dentro de la app, como una función más a la que se accede tocando o hablando.
+Pieza
+Qué decide
+Con qué se hace
+Voz
+Cómo suena (el timbre)
+ElevenLabs, Instant Voice Cloning: 1-2 min de audio generan un voice_id
+Cerebro
+Qué se contesta
+Claude, o respuestas guionizadas si no hay clave
+Conocimiento
+Con qué información se contesta
+Un catálogo JSON con fecha, título, personas y descripción de cada foto
+ElevenLabs solo controla cómo suena. Sin el catálogo, el asistente no podría responder «busca las fotos de la Navidad de 2024» con datos reales: se los inventaría. El flujo es: la persona habla o escribe, el cerebro responde consultando el catálogo, y la respuesta pasa por ElevenLabs con el voice_id.
+Estado real hoy: el asistente «Nidi» es un agente de ElevenLabs con voz predeterminada, sin clonar, y LLM Claude Haiku 4.5. Tiene dos herramientas cliente: abrir_en_la_app (mueve la app) y gestionar_albumes (crear, añadir, renombrar). No ve las fotos: recibe por contexto la pantalla, los nombres de las personas y los álbumes. La clonación de voz sigue pendiente.
+Nota ética, obligada en la memoria: usar la voz de un familiar mejora la usabilidad, pero abre la cuestión del consentimiento informado. La persona mayor debe saber que habla con una IA que usa la voz de su nieta, y no creer que habla con su nieta real. Es la línea entre facilitar el uso y generar confusión en una persona vulnerable; tratarla de frente da peso a la propuesta ante el tribunal.
+La mascota: el pollito
+Un pollito bebé acompaña a la persona, coherente con el nombre Nido, y nace del cascarón en la bienvenida. Aparece solo cuando alguien se queda bloqueado: un empty state real, inactividad prolongada o si se le invoca.
+Al tocarlo ofrece hasta tres opciones en forma de pills, con la segura siempre primera:
+Todos los álbumes: «volver a casa».
+Buscar.
+Salir.
+Principios acordados: nunca omnipresente; movimiento sutil en reposo (respiración, parpadeo) que solo se activa del todo al tocarlo; máximo tres opciones, con verbos claros y botones grandes.
+Estilo: ilustración con aspecto 3D tipo peluche (pelaje suave, ojos grandes, luz de estudio cálida), con referencia al personaje que Instagram/Threads mostró para su asistente «Muse». No es un modelo 3D rotable, porque alguien mayor podría girarlo sin querer y despistarse; es un personaje con movimientos predefinidos: respirar, mirar, reaccionar al toque.
+Por qué importa al TFM: conecta con la guía de Intención de Soul, el cuidado perceptible en un rincón que casi nadie cuida, que es exactamente un empty state.
+Poses: el set acordado son cuatro (saliendo del huevo, en reposo, feliz, señalando o guiando). En el prototipo v3 ya hay poses del pollito en el onboarding y clips de vídeo (pollito-huevo, pollito-fotos, pollito-loop), pero los tres personajes son algo distintos entre sí: falta regenerar los clips con una imagen de referencia del mismo pollito.
+Estado del prototipo
+El prototipo activo es prototipo-v3, un prototipo navegable que sustituye a prototipo/ y prototipo-v2/. Se toca solo tras leer su SESSION-NOTES.md. Se dibuja a tamaño real de móvil (393×852) y se escala entero según el ancho disponible.
+Qué tiene:
+Registro y onboardings, con un tour de bienvenida sobre Home.
+Home con «Mis recuerdos» (fotos y vídeos alternados, con un vídeo de ejemplo en bucle).
+Álbumes, incluidos los automáticos (por año y evento) y los que crea la persona, con botón Añadir salvo en «Todas tus fotos».
+Personas, con tutorial, nombrado por voz y álbumes de grupos.
+Detalle de foto o vídeo con galería deslizable, zoom con pellizco y selección de personas.
+Felicitación con IA, Yo y Ajustes (cerrar sesión, eliminar cuenta, cambiar teléfono), Mis documentos.
+Ayuda del pollito, con órdenes por voz.
+Avisos de confirmación y error, como «Foto eliminada» con Deshacer.
+El diseño sale de Figma (sección «UI PROTOTIPADO (NO TOCAR)» de la página UI) y se verificó contra capturas 1:1. Las versiones anteriores v1 (15 frames) y v2 (18 frames) están volcadas en el archivo Figma «Prototipo», página «Prototipo claude».
+Biblioteca real y reconocimiento
+42 archivos únicos (38 fotos y 4 vídeos), con fotos a 1000 px y EXIF limpio de GPS; pesa unos 3,8 MB en fotos.
+El reconocimiento facial corre en el navegador (face-api.js) con umbral de confianza 0,75 y distancia de coincidencia 0,55. Se afinó tras un falso positivo: el detector marcaba la cara de un gato como persona.
+Personas con nombre sembradas a partir de una hoja de contactos: Clara (nieta), Ana (nieta), Carlos (hijo), Joaquín y Sergio (hijo). Una señora sin nombre aún.
+Cifras actuales aproximadas: Clara 9 fotos, Ana 9, Joaquín 2, Carlos 1, Sergio 1.
+Fallos reales encontrados y arreglados
+La fuente Atkinson Hyperlegible nunca se cargaba (faltaba el enlace a Google Fonts).
+El escalado responsive se desbordaba en ventanas anchas; se resolvió con transform: scale() sobre el lienzo.
+Cada foto se contaba 2-3 veces y inflaba álbumes y grupos falsos; ahora hay una URL por archivo.
+Safari en iPhone cerraba la página por memoria: demasiados vídeos activos. Ahora solo se reproduce uno en Home, el resto lleva portada.
+La página quedaba «muerta» al abrir en móvil porque face-api.js (1,3 MB) bloqueaba la carga; ahora se descarga aparte cuando hace falta.
+El vídeo de bienvenida no arranca con el modo de bajo consumo del iPhone; se añadió un WebP animado de respaldo.
+Hallazgos de testing con personas mayores (sobre el prototipo)
+A diferencia de las seis hallazgos de la sección «El problema y los usuarios» (que vienen de entrevistas sobre el concepto del marco), estos salen de sesiones de testing reales sobre el prototipo ya construido, con abuelitos usando la app:
+El scroll no se entiende bien, ni el horizontal ni el vertical. Refuerza UX-02/UX-03: no depender solo de un gesto y dar siempre una salida o alternativa clara.
+La repetición no fija el aprendizaje. Tras hacer la misma acción varias veces, se olvidaba cómo hacerla de nuevo; la app no puede asumir que una interacción, una vez mostrada, ya queda aprendida.
+El pollito genera ternura y confianza, y cuando necesitan ayuda lo buscan activamente. Se plantea potenciarlo añadiendo gifs para hacerlo más dinámico.
+Concepto conversacional (prototipo-v4)
+Es un duplicado de v3 para el feedback de David: sin botones, solo voz. Está desplegado aparte en nido-concepto-conversacional.netlify.app. v3 nunca se toca para esto.
+Feedback de David sobre el concepto conversacional
+David revisó el prototipo-v4 y pidió llevar la idea conversacional más lejos, con estos puntos:
+Dirección propuesta:
+Explorar una app puramente conversacional, sin ningún elemento de interfaz «determinista» (nada de «crea un álbum»): que abrir la app sea encontrarse algo amigable, no un formulario.
+Pensarla como un compañero: el abuelo la abre y enseguida ve cosas; puede hablar para ver más, y navegar de una foto a otra, y a otra, siguiendo lo que quiera.
+Un botón como «crea un álbum» da de golpe mucha libertad, y eso puede paralizar en vez de ayudar; no aporta nada que no tenga ya cualquier gestor de fotos.
+La app debería sugerir e invitar a hablar, no a configurar.
+Cómo debería verse la apertura:
+Imagen + prompt, muy sencillo, letra grande, estético y pulido.
+«¿Quieres hablar? Pulsa en el texto.» / «¿Quieres ver imágenes? Pulsa en ellas.»
+El asistente puede arrancar con guías o preguntas abiertas, por ejemplo: «seguro que tienes una historia preciosa sobre tus nietos, ¿nos ponemos a ello?» o «¿qué recuerdas de cuando tenías 20 años?».
+La pregunta clave al abrir una foto:
+«¿Qué recuerdos tienes de esta foto?» — ahí está, según David, lo único de la app. Quedan por resolver dos preguntas: cómo formularla de forma sugerente, y cómo esa conversación se convierte en datos estructurados.
+Idea a explorar: un álbum que además cuente una historia, añadiendo elementos de fuera del álbum del usuario para rellenar huecos (ejemplo que puso: un artículo de prensa del día de su boda).
+Restricción de coste como criterio de diseño (regla que propone David):
+«Cada botón o recuadro interactivo que ponéis vale 500 dólares que os quito del banco.»
+Sobre el asistente visual (el «pollo»): pide cambiar su tratamiento estético porque se nota que es «lo primero que ha salido del horno de GPT»; pide buscar un tratamiento más elaborado, y compartió una referencia visual como ejemplo a seguir.
+Objetivo final y forma de trabajar: el proyecto debe abrir puertas al siguiente trabajo del equipo, lo que exige algo único y exigente. Pide que se compartan wireframes o conceptos en cuanto existan, sin esperar a tenerlo todo acabado, para reducir el trabajo antes de dar feedback.
+Infraestructura y despliegue
+El prototipo v3 está publicado en https://nido-0921-22084.netlify.app y, según las últimas notas (22-sep), sin cambios pendientes de subir.
+Elemento
+Detalle
+Hosting
+Netlify, cuenta nueva (equipo Barreira, plan Free). La cuenta antigua agotó los 300 créditos mensuales con unos 16 despliegues en un día
+Regla de oro
+No desplegar sin que la usuaria lo pida expresamente. Un «sube» vale para un solo despliegue; se prueba antes en localhost
+Asistente de voz
+Agente ElevenLabs «Nidi», conectado con la función agente-voz.js y agente.js
+Claves
+ElevenLabs y Cloudflare, como secretos de Netlify. La de ElevenLabs caduca sobre el 21-oct-2026 (30 días); al caducar, el botón Hablar cae a la escucha del navegador
+Pruebas con audio
+Siempre Chrome con --mute-audio
+Micrófono en iPhone
+Necesita permiso de Safari y el dictado activado en Ajustes; hay mensajes con los pasos si falla
+Teniéndolo presente: cada visita a Home descarga unos 4 MB de biblioteca, así que el ancho de banda también gasta créditos.
+Pendientes y próximos pasos
+La única fecha límite dura es la caducidad de la clave de ElevenLabs, sobre el 21-oct-2026. El resto son pendientes sin fecha.
+Del proyecto
 
+Revalidar con usuarios reales de 65+ la intención de uso sobre la app (las entrevistas fueron sobre el marco).
+
+Definir los flujos y el sitemap concretos (a cargo del equipo).
+
+Decidir el alcance de la reciprocidad.
+
+Clonar la voz real en ElevenLabs y desplegarla.
+
+Terminar las cuatro ilustraciones del pollito y su componente (animaciones, lógica de aparición, pills).
+
+Escribir la memoria: el pivote con la cita del mentor, la arquitectura voz/cerebro/conocimiento, el consentimiento informado, el razonamiento de Soul de la mascota, y la privacidad (fotos y nombres en un sitio público, huellas faciales en el navegador).
+Del prototipo
+
+Comprobar en un iPhone real: que la página ya no se cierre sola, el tiempo de la primera detección, si arranca el vídeo de inicio, si responde el asistente y si gestionar_albumes funciona.
+
+Comparar las capas nuevas con Figma.
+
+Vídeo de bienvenida más fluido y pollito consistente entre clips.
+
+Poner nombre a la señora de las personas 7 y 11.
+
+Onboarding con botón alternativo a «mantén pulsado».
+
+Pollito de ayuda tras unos 20 s de inactividad.
+
+Anterior y siguiente en el detalle de foto.
+
+Auditoría de textos pequeños.
+
+Unir los 12 CSS en uno para cargar más rápido.
+
+Recuerdos en vídeo.
+
+Explorar la dirección conversacional que pide David: apertura imagen + prompt, navegación foto a foto por voz, y validar cómo convertir «¿qué recuerdos tienes de esta foto?» en datos.
+
+Rediseñar el avatar del asistente (el «pollo») con un tratamiento visual más elaborado.
+Cómo se trabaja
+Fase por fase, nunca «hazme Nido» de golpe; se explica en lenguaje sencillo, porque el equipo es de diseño y no de programación; Sonnet por defecto y Opus solo si algo se atasca. Ante cualquier duda de producto manda la sección «Lo que NO queremos que sea».
