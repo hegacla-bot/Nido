@@ -388,10 +388,10 @@
 }
 .felicitacion-cargando__pollito {
   position: absolute;
-  left: 3.6875rem; /* 59px */
+  left: 3.6875rem; /* 59px — centrado en el lienzo de 393px con el ancho de abajo */
   top: 11.875rem; /* 190px */
   width: 17.25rem; /* 276px */
-  height: 23.0625rem; /* 369px */
+  height: 17.25rem; /* cuadrado (24-sep): el pollito nuevo viene en formato 1:1, no 276×369 */
   max-width: none;
   animation: felicitacion-pintando 2.4s ease-in-out infinite;
 }
