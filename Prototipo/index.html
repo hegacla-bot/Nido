@@ -19,18 +19,18 @@
        app sigue en Atkinson Hyperlegible, no se toca. -->
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" rel="stylesheet" />
   <!-- Una tipografía distinta por tipo de creación, no la misma para todas —
-       Fredoka (arriba) para cumpleaños/amistad, y estas 3 para el resto: cada
+       Fredoka (arriba) para cumpleaños/amistad, y estas 2 para el resto: cada
        una pensada para que "pegue" con su propia ilustración (elegante para
-       aniversario, navideña de verdad para Navidad, con energía de fiesta
-       nocturna para Año Nuevo). Solo se usan en persona.css. -->
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700&family=Mountains+of+Christmas:wght@700&family=Bungee&display=swap" rel="stylesheet" />
+       aniversario, con energía de fiesta nocturna para Año Nuevo). Solo se
+       usan en persona.css. -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700&family=Bungee&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/tokens.css?v=7" />
   <link rel="stylesheet" href="css/base.css?v=13" />
   <link rel="stylesheet" href="css/components.css?v=56" />
   <link rel="stylesheet" href="css/bienvenida.css?v=3" />
   <link rel="stylesheet" href="css/registro.css?v=14" />
   <link rel="stylesheet" href="css/albumes.css?v=10" />
-  <link rel="stylesheet" href="css/persona.css?v=26" />
+  <link rel="stylesheet" href="css/persona.css?v=27" />
   <link rel="stylesheet" href="css/yo.css?v=5" />
   <link rel="stylesheet" href="css/personas.css?v=36" />
   <link rel="stylesheet" href="css/onboarding.css?v=23" />
@@ -1729,10 +1729,10 @@
             <span class="felicitacion-card__title">Año nuevo</span>
             <span class="felicitacion-card__text">Celebra el nuevo año con familiares y amigos.</span>
           </button>
-          <button class="felicitacion-card felicitacion-card--w152" data-felicitacion-card="navidad">
-            <img class="felicitacion-card__img" src="assets/img/felicitacion-navidad.webp" alt="" />
-            <span class="felicitacion-card__title">Feliz navidad</span>
-            <span class="felicitacion-card__text">Felicita la navidad con tu foto preferida.</span>
+          <button class="felicitacion-card felicitacion-card--w152" data-felicitacion-card="amistad">
+            <img class="felicitacion-card__img" src="assets/img/felicitacion-amistad.webp" alt="" />
+            <span class="felicitacion-card__title">Amistad</span>
+            <span class="felicitacion-card__text">Para ese amigo o amiga especial, con tu foto preferida.</span>
           </button>
         </div>
       </div>
@@ -2167,7 +2167,7 @@
             <div class="persona-select-card__style-grid">
               <button class="btn btn--type2 persona-style-btn" data-persona-style="cumpleanos">Cumpleaños</button>
               <button class="btn btn--type2 persona-style-btn" data-persona-style="aniversario">Aniversario</button>
-              <button class="btn btn--type2 persona-style-btn" data-persona-style="navidad">Navidad</button>
+              <button class="btn btn--type2 persona-style-btn" data-persona-style="amistad">Amistad</button>
               <button class="btn btn--type2 persona-style-btn" data-persona-style="anonuevo">Año nuevo</button>
             </div>
             <div class="persona-select-card__actions">
@@ -2288,7 +2288,7 @@
   <script src="js/vendor/exifr.js" defer></script>
   <!-- face-api.js (1,3 MB) ya no se carga aquí: reconocimiento.js lo pide solo cuando hay que buscar personas, para que la app no espere a bajarlo. -->
   <script src="js/reconocimiento.js?v=6"></script>
-  <script src="js/persona.js?v=50"></script>
+  <script src="js/persona.js?v=51"></script>
   <script src="js/eliminar-foto.js?v=2"></script>
   <input type="file" id="gallery-input" accept="image/*,video/*" multiple hidden />
   <script src="js/agente.js?v=5"></script>

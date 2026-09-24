@@ -326,15 +326,16 @@
   transform: none;
 }
 
-/* Navidad — tipografía navideña de verdad (no genérica de fiesta), rojo y
-   verde clásicos con contorno blanco tipo "nieve". */
-.persona-create-result__caption--navidad {
-  font-family: 'Mountains of Christmas', var(--font-family);
-  font-size: 3.25rem;
-  color: #d6483a;
+/* Amistad — Fredoka (misma familia redondeada que cumpleaños), en el verde
+   azulado cálido de la ilustración de los dos pollitos abrazados. */
+.persona-create-result__caption--amistad {
+  font-family: 'Fredoka', var(--font-family);
+  font-weight: 700;
+  font-size: 2.875rem;
+  color: #4fb3a9;
   -webkit-text-stroke: 2px #ffffff;
   paint-order: stroke fill;
-  text-shadow: 0 3px 0 #2f6b45, 0 4px 10px rgba(26, 29, 44, 0.4);
+  text-shadow: 0 3px 0 #2f6b62, 0 4px 10px rgba(26, 29, 44, 0.4);
   transform: rotate(-2deg);
 }
 

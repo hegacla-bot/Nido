@@ -21,7 +21,7 @@ const RECONOCIBLE = 'manteniendo reconocibles las caras, el pelo y la ropa de la
 // describir en positivo qué aspecto tiene la superficie, no qué no debe
 // llevar — confirmado con la documentación del modelo.
 // Genérica a propósito — nunca nombra "globos": eso hacía que aparecieran
-// globos en TODAS las creaciones (aniversario, navidad...) aunque no
+// globos en TODAS las creaciones (aniversario, amistad...) aunque no
 // pegaran, solo por estar en esta frase compartida. Cada estilo pone sus
 // propios elementos decorativos en su propio prompt, esta frase solo dice
 // cómo deben ser (lisos, sin marcas, sin texto), sea cual sea el elemento.
@@ -41,7 +41,7 @@ const ESPACIO_TITULAR =
   'importante ahí, para poder añadir un título encima. Ese cielo o fondo es un degradado suave y continuo, ' +
   'sin ninguna forma parecida a letras, números o símbolos.';
 
-// Los prompts NO nombran la ocasión ("cumpleaños", "Navidad", "Año Nuevo"): al oír esas palabras el modelo
+// Los prompts NO nombran la ocasión ("cumpleaños", "amistad", "Año Nuevo"): al oír esas palabras el modelo
 // dibuja por su cuenta un rótulo con ellas ("New Year Year", visto en pruebas 21-sep). Se describe el aspecto
 // visual y ya está; el título real lo pone Nido encima como HTML.
 const PROMPTS = {
@@ -51,9 +51,9 @@ const PROMPTS = {
   aniversario:
     'Convierte esta foto en una ilustración elegante y romántica, ' +
     'con detalles florales y dorados. ' + SOLO_DECORACION + ' ' + ESPACIO_TITULAR + ' ' + RECONOCIBLE,
-  navidad:
-    'Convierte esta foto en una ilustración cálida y festiva de invierno, ' +
-    'con nieve, luces cálidas, abetos y adornos rojos y dorados. ' + SOLO_DECORACION + ' ' + ESPACIO_TITULAR + ' ' + RECONOCIBLE,
+  amistad:
+    'Convierte esta foto en una ilustración cálida y cercana, en tonos menta y coral suaves, ' +
+    'con pequeños corazones y nubes redondeadas. ' + SOLO_DECORACION + ' ' + ESPACIO_TITULAR + ' ' + RECONOCIBLE,
   anonuevo:
     // Sin confeti aquí tampoco — solo la fiesta lo lleva.
     'Convierte esta foto en una ilustración festiva de una noche de gala, ' +
