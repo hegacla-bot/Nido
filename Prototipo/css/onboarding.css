@@ -15,7 +15,9 @@
 
 .onboarding-highlight {
   position: absolute;
-  z-index: 31;
+  /* Por encima de la burbuja (31): lo destacado de verdad (el botón real)
+     nunca debe quedar debajo de su propia explicación. */
+  z-index: 33;
   filter: var(--glow-onboarding-highlight);
 }
 
@@ -221,7 +223,7 @@
 /* "Todas tus fotos ›" de la primera tarjeta, repetido en blanco sobre el velo */
 .onboarding-caption {
   position: absolute;
-  z-index: 31;
+  z-index: 33;
   left: 2.875rem; top: 26.4375rem; /* 46, 423 */
   display: flex;
   align-items: center;
@@ -403,7 +405,8 @@
 .onboarding-highlight,
 .onboarding-help-avatar,
 .onboarding-caption,
-.onboarding-glow-title {
+.onboarding-glow-title,
+.ob-personas__title {
   animation: onboarding-pulso 1.8s ease-in-out infinite;
 }
 .onboarding-highlight { border-radius: 1.25rem; }
