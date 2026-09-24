@@ -24,7 +24,55 @@ const TIPOS = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; ch
   '.json': 'application/json; charset=utf-8', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png',
   '.svg': 'image/svg+xml', '.webp': 'image/webp', '.mp4': 'video/mp4' };
 
+// ---- Editor visual de pollitos (js/editor-pollitos.js, ?editar=pollitos) ----
+// Busca el bloque de una regla CSS por su selector exacto (tolerante a que el selector esté
+// partido en varias líneas, como ".ob-step-4 .onboarding-pollito,\n.ob-step-5 ...") y devuelve
+// dónde empieza y acaba su cuerpo, para poder tocar solo left/top sin rehacer el resto.
+function buscarBloqueCSS(css, selector) {
+  const partes = selector.split(',').map((s) => s.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const patron = partes.join('\\s*,\\s*') + '\\s*\\{';
+  const m = new RegExp(patron).exec(css);
+  if (!m) return null;
+  const bodyStart = m.index + m[0].length;
+  const bodyEnd = css.indexOf('}', bodyStart);
+  if (bodyEnd === -1) return null;
+  return { bodyStart, bodyEnd };
+}
+function reemplazarPropiedadCSS(bloque, prop, valor) {
+  // (^|[{;]): el bloque recibido ya viene SIN la '{' inicial (se quitó al localizarlo), así que la
+  // primera propiedad del bloque no tiene ningún '{'/';' delante — solo el propio inicio de cadena.
+  // Bug real, visto en la primera prueba: "left" (siempre la primera) no se sustituía nunca.
+  const re = new RegExp('(^|[{;])(\\s*)' + prop + '(\\s*:\\s*)[^;]+(;)');
+  if (re.test(bloque)) return bloque.replace(re, '$1$2' + prop + '$3' + valor + '$4');
+  return ' ' + prop + ': ' + valor + ';' + bloque;
+}
+
 http.createServer(async (req, res) => {
+  if (req.method === 'POST' && req.url === '/__guardar-posicion') {
+    let body = '';
+    for await (const chunk of req) body += chunk;
+    try {
+      const { file, selector, left, top } = JSON.parse(body || '{}');
+      if (!file || !selector || !left || !top) throw new Error('faltan datos');
+      const filePath = path.join(ROOT, file);
+      if (!filePath.startsWith(ROOT) || !fs.existsSync(filePath)) throw new Error('archivo no válido: ' + file);
+      let css = fs.readFileSync(filePath, 'utf8');
+      const bloque = buscarBloqueCSS(css, selector);
+      if (!bloque) throw new Error('no encuentro el selector en ' + file + ': ' + selector);
+      let cuerpo = css.slice(bloque.bodyStart, bloque.bodyEnd);
+      cuerpo = reemplazarPropiedadCSS(cuerpo, 'left', left);
+      cuerpo = reemplazarPropiedadCSS(cuerpo, 'top', top);
+      css = css.slice(0, bloque.bodyStart) + cuerpo + css.slice(bloque.bodyEnd);
+      fs.writeFileSync(filePath, css);
+      console.log('✏️  Guardado', selector, '->', left, top, 'en', file);
+      res.writeHead(200, { 'content-type': 'application/json' });
+      res.end(JSON.stringify({ ok: true }));
+    } catch (err) {
+      res.writeHead(400, { 'content-type': 'application/json' });
+      res.end(JSON.stringify({ error: String((err && err.message) || err) }));
+    }
+    return;
+  }
   if (req.url.startsWith('/.netlify/functions/agente-voz')) {
     const { handler } = require('./netlify/functions/agente-voz.js');
     const out = await handler();
