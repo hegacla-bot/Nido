@@ -79,7 +79,9 @@
 .eliminar-foto-volver {
   position: absolute;
   left: var(--space-page-margin);
-  top: 46.5rem; /* 744px (759:4941) */
+  /* Mismo y que el botón de abajo de las pantallas reales (ver la nota igual en
+     .ayuda-layer__close / onboarding.css) — antes 744px, 2px por encima de la cuenta. */
+  top: 46.625rem; /* 746px */
   width: calc(100% - 2 * var(--space-page-margin));
   height: 4.25rem; /* 68px */
 }

@@ -494,9 +494,11 @@
 .persona-ask__crear {
   position: absolute;
   left: 1.25rem;
-  top: 41.125rem; /* 658px */
+  /* Mismo y/alto que el botón de abajo de las pantallas reales (ver la nota igual en
+     .ayuda-layer__close / onboarding.css) — antes se quedaba más arriba de la cuenta. */
+  top: 46.625rem; /* 746px */
   width: calc(100% - 2 * var(--space-page-margin));
-  height: 4.0625rem; /* 65px */
+  height: 4.25rem; /* 68px */
   z-index: 1;
 }
 .persona-ask__bubble--confirm[hidden],
@@ -607,7 +609,10 @@
 .ayuda-layer__close {
   position: absolute;
   left: 1.25rem;
-  top: 46rem; /* 736px */
+  /* Mismo y/alto que el botón de abajo de las pantallas reales y de los onboarding-cta (ver la nota
+     en onboarding.css: "se notaba el salto" con el valor antiguo, 736px) — antes no se había
+     aplicado aquí ese mismo ajuste. */
+  top: 46.625rem; /* 746px */
   width: calc(100% - 2 * var(--space-page-margin));
   height: 4.25rem; /* 68px */
   z-index: 1;
