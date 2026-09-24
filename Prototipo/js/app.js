@@ -264,8 +264,10 @@
     const enBienvenida = () => document.querySelector('.screen.is-active')?.dataset.screen === 'bienvenida';
     // Antes pasaba por "pre-registro" (otro pollito, tirando fotos, de puro trámite) — quitado
     // el 24-sep: de la bienvenida se pasa directo al registro.
-    bienvenidaVideo.addEventListener('ended', () => { if (enBienvenida()) showScreen('registro-1'); });
-    videoConRespaldo(bienvenidaVideo, { activa: enBienvenida, animacion: 'assets/video/pollito-huevo.webp', ms: 5300, fin: () => showScreen('registro-1') });
+    // registro-1 ("Revive tus momentos...", valor+Entrar) se quitó del todo el 24-sep: de la
+    // bienvenida se pasa ahora directo a registro-2 (antes ya se había quitado pre-registro igual).
+    bienvenidaVideo.addEventListener('ended', () => { if (enBienvenida()) showScreen('registro-2'); });
+    videoConRespaldo(bienvenidaVideo, { activa: enBienvenida, animacion: 'assets/video/pollito-huevo.webp', ms: 5300, fin: () => showScreen('registro-2') });
   }
 
   // ---------------------------------------------------------------

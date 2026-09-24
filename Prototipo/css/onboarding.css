@@ -103,7 +103,7 @@
   box-shadow: 2px 4px 16px 0 rgba(123, 123, 135, 0.3), 2px 4px 4px 0 #868693;
 }
 .ob-step-1 .onboarding-tooltip {
-  left: 3.125rem; top: 23.8125rem; width: 12rem; height: 4.375rem; /* 50, 381, 192×70 */
+  left: 3.1548rem; top: 25.3540rem; width: 12rem; height: 4.375rem; /* 50, 381, 192×70 */
   padding: 0 1.5rem; /* texto de 144px */
   border-radius: var(--radius-bubble) var(--radius-bubble) 0 var(--radius-bubble);
 }

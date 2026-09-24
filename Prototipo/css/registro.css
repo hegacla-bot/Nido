@@ -1,21 +1,14 @@
 /*
-  Nido · v3 — Flujo de registro (5 pantallas, copiadas 1:1 de Figma):
-  registro-1 (590:6913, rediseño del look & feel — valor+Entrar,
-  reemplaza el nodo 514:6044 original) → registro-2 (514:6055, teléfono) →
-  registro-3 (514:6104, código) → modal "Ayúdanos" (514:6163, superpuesto
-  sobre registro-3, no es una pantalla aparte) → registro-4 (514:6039,
-  splash del logo) → Home.
+  Nido · v3 — Flujo de registro (4 pantallas, copiadas 1:1 de Figma):
+  registro-2 (514:6055, teléfono) → registro-3 (514:6104, código) →
+  modal "Ayúdanos" (514:6163, superpuesto sobre registro-3, no es una
+  pantalla aparte) → registro-4 (514:6039, splash del logo) → Home.
+  (registro-1, valor+Entrar, se quitó del todo el 24-sep: de la bienvenida
+  se pasa ahora directo a registro-2.)
 */
 
 .screen--registro {
   background: var(--bg-app);
-}
-/* registro-1 (590:6913) es la única pantalla de este flujo con fondo blanco
-   puro en Figma — registro-2/3/4 (teléfono/código/splash) sí usan
-   --bg-app. Sin este override, el lavanda de fondo hacía que todo el resto
-   (foto, título, botón) se viera "deslavado" en comparación con Figma. */
-.registro-1 {
-  background: var(--color-white);
 }
 
 .registro-wordmark {
@@ -35,54 +28,6 @@
   width: calc(100% - 2 * var(--space-page-margin));
 }
 
-/* ---- registro-1 · valor + Entrar (590:6913, rediseño) ----
-   La imagen fuente de Figma (574x320, "overflow: hidden") recorta un
-   8.43% superior de la ilustración — en vez de reproducir esa caja
-   contenedora + recorte en CSS, se recortó el propio asset por código
-   (PIL) antes de exportarlo a webp, así que aquí basta un <img> simple
-   con las medidas ya visibles, igual que el resto de la app. */
-.registro-1-photo {
-  position: absolute;
-  left: -1.029rem;
-  top: 11.9375rem;
-  width: 26.0237rem;
-  max-width: none; /* el reset global "img{max-width:100%}" la recortaba */
-  height: 20rem;
-  /* La familia en el sofá (24-sep) es más ancha que alta (recorte a su
-     contenido real): sin esto se deformaba estirándose para llenar el
-     hueco de siempre. */
-  object-fit: contain;
-  pointer-events: none;
-}
-.registro-1-underline {
-  position: absolute;
-  left: -0.0377rem;
-  top: 28.5519rem;
-  width: 27.1693rem;
-  max-width: none; /* mismo motivo que .registro-1-photo */
-  transform: rotate(-0.2deg);
-  pointer-events: none;
-}
-.registro-1-title {
-  position: absolute;
-  left: 1.25rem;
-  top: 35rem; /* 560px — estaba en 552px */
-  width: 17.6875rem; /* 283px — con 349px se quedaba en una sola línea; en
-    Figma envuelve a dos ("Revive tu momentos" / "mas especiales") */
-  font-size: var(--font-size-title-xlarge); /* 24px — estaba en 20px
-    (--font-size-label-large), por eso se veía más fino/pequeño de lo que toca */
-  font-weight: var(--font-weight-bold);
-  color: var(--color-primary-blue-dark);
-}
-.registro-1-subtitle {
-  position: absolute;
-  left: 1.25rem; /* 20px, igual que el título — estaba en 44px, desalineada */
-  top: 39.75rem; /* 636px — estaba en 588px, pensado para un título de una
-    sola línea; con el título en dos líneas se quedaba pegado a la segunda */
-  font-size: var(--font-size-label-medium);
-  font-weight: var(--font-weight-regular);
-  color: var(--color-primary-blue-dark);
-}
 
 /* ---- registro-2 · teléfono (514:6055) ---- */
 .registro-title {

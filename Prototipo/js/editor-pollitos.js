@@ -29,9 +29,12 @@
     return r.width > 0 && r.height > 0;
   }
 
-  function elementoVisible() {
+  // Antes esto devolvía el PRIMERO visible (siempre la burbuja: en el HTML va antes que el
+  // pollito en todas las pantallas) — parecía que solo se pudiera mover/guardar la burbuja, aunque
+  // el pollito sí se movía y se guardaba bien. Ahora se listan TODOS los visibles, sin elegir uno.
+  function elementosVisibles() {
     return Array.from(document.querySelectorAll('.onboarding-pollito[data-onb-css], .onboarding-tooltip[data-onb-css]'))
-      .find(esVisibleDeVerdad);
+      .filter(esVisibleDeVerdad);
   }
 
   const panel = document.createElement('div');
@@ -51,10 +54,12 @@
   let ultimoDragTs = 0;
 
   function actualizarInfo() {
-    const el = elementoVisible();
-    if (!el) { info.textContent = 'Nada movible visible en esta pantalla ahora mismo.\nNavega hasta el paso que quieras ajustar.'; return; }
-    const tipo = el.classList.contains('onboarding-pollito') ? 'Pollito' : 'Burbuja';
-    info.textContent = tipo + ': ' + el.dataset.onbCss + '\nleft: ' + remDe(el, 'left').toFixed(4) + 'rem   top: ' + remDe(el, 'top').toFixed(4) + 'rem';
+    const els = elementosVisibles();
+    if (!els.length) { info.textContent = 'Nada movible visible en esta pantalla ahora mismo.\nNavega hasta el paso que quieras ajustar.'; return; }
+    info.textContent = els.map((el) => {
+      const tipo = el.classList.contains('onboarding-pollito') ? '🐣 Pollito' : '💬 Burbuja';
+      return tipo + '\n' + el.dataset.onbCss + '\nleft: ' + remDe(el, 'left').toFixed(4) + 'rem   top: ' + remDe(el, 'top').toFixed(4) + 'rem';
+    }).join('\n\n');
   }
   actualizarInfo();
   // Con un enlace directo (p.ej. #onboarding-3) este script corre ANTES que app.js aplique el
