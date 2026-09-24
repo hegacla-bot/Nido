@@ -69,11 +69,6 @@
         if (!willBeActive && wasActive) window.Mascota.exitOnboardingPollito(screen);
       }
 
-      if (screen.classList.contains('screen--pre-registro')) {
-        if (willBeActive && !wasActive) enterPreRegistro(screen);
-        if (!willBeActive && wasActive) exitPreRegistro(screen);
-      }
-
       if (willBeActive && !wasActive && name === 'yo' && !yoOnboardingSeen) {
         yoOnboardingSeen = true;
         const layer = screen.querySelector('[data-onboarding-layer]');
@@ -108,46 +103,6 @@
         window.EliminarFoto.close();
         closeDetalleOnboarding();
       }
-    });
-  }
-
-  // ---------------------------------------------------------------
-  // Pre-registro: el vídeo ya trae el logo y el pollito integrados desde
-  // su primer frame, así que solo hay que reproducirlo al entrar (se
-  // repite cada vez, útil para testear sin recargar) y pararlo al salir.
-  // Al terminar, se desenfoca y desvanece, y pasa sola al flujo de
-  // registro — ya no hay botón "Siguiente" ni pantalla en blanco de por
-  // medio, era un provisional de antes de tener las pantallas reales.
-  // ---------------------------------------------------------------
-  const PRE_REGISTRO_FADE_MS = 550; // debe coincidir con la transition del CSS
-
-  let preRegistroRespaldo = false;
-  function enterPreRegistro(screen) {
-    const video = screen.querySelector('[data-pre-registro-video]');
-    if (!video) return;
-    video.classList.remove('is-ending');
-    video.currentTime = 0;
-    const p = video.play();
-    if (p && p.catch) p.catch(() => {}); // si no lo deja, entra el respaldo animado (abajo)
-    if (!preRegistroRespaldo) {
-      preRegistroRespaldo = true;
-      const activa = () => document.querySelector('.screen.is-active')?.dataset.screen === 'pre-registro';
-      videoConRespaldo(video, { activa, animacion: 'assets/video/pollito-fotos.webp', ms: 3000,
-        fin: (img) => { img.classList.add('is-ending'); setTimeout(() => showScreen('registro-1'), PRE_REGISTRO_FADE_MS); } });
-    }
-  }
-
-  function exitPreRegistro(screen) {
-    const video = screen.querySelector('[data-pre-registro-video]');
-    if (video) video.pause();
-  }
-
-  const preRegistroVideo = document.querySelector('[data-pre-registro-video]');
-  if (preRegistroVideo) {
-    preRegistroVideo.addEventListener('ended', () => {
-      if (document.querySelector('.screen.is-active')?.dataset.screen !== 'pre-registro') return;
-      preRegistroVideo.classList.add('is-ending');
-      setTimeout(() => showScreen('registro-1'), PRE_REGISTRO_FADE_MS);
     });
   }
 
@@ -300,15 +255,17 @@
 
   // ---------------------------------------------------------------
   // Bienvenida: el vídeo del pollito naciendo se ve una sola vez, sin botón
-  // — al terminar, pasa solo a la pantalla de pre-registro.
+  // — al terminar, pasa sola al registro.
   // ---------------------------------------------------------------
   const bienvenidaVideo = document.querySelector('[data-bienvenida-video]');
   if (bienvenidaVideo) {
     // Solo si sigue en bienvenida: con un deep-link (#pantalla) el vídeo se reproduce
     // igualmente por debajo y, al acabar, arrastraba a otra pantalla (bug de la sesión 3).
     const enBienvenida = () => document.querySelector('.screen.is-active')?.dataset.screen === 'bienvenida';
-    bienvenidaVideo.addEventListener('ended', () => { if (enBienvenida()) showScreen('pre-registro'); });
-    videoConRespaldo(bienvenidaVideo, { activa: enBienvenida, animacion: 'assets/video/pollito-huevo.webp', ms: 5300, fin: () => showScreen('pre-registro') });
+    // Antes pasaba por "pre-registro" (otro pollito, tirando fotos, de puro trámite) — quitado
+    // el 24-sep: de la bienvenida se pasa directo al registro.
+    bienvenidaVideo.addEventListener('ended', () => { if (enBienvenida()) showScreen('registro-1'); });
+    videoConRespaldo(bienvenidaVideo, { activa: enBienvenida, animacion: 'assets/video/pollito-huevo.webp', ms: 5300, fin: () => showScreen('registro-1') });
   }
 
   // ---------------------------------------------------------------
