@@ -7,7 +7,10 @@
 */
 
 .screen--bienvenida {
-  background: linear-gradient(to bottom, #f3f3f8 17.014%, #fafafc 94.127%);
+  /* Blanco puro (24-sep, pedido junto con el pollito nuevo): antes era un
+     degradado casi blanco copiado de Figma; con el vídeo nuevo ya en fondo
+     blanco, mejor que la pantalla entera sea del mismo blanco, sin costura. */
+  background: #ffffff;
 }
 
 .bienvenida-video {
