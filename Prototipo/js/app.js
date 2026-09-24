@@ -177,6 +177,15 @@
       item.className = 'detail-media__item';
       const clone = source.cloneNode(true);
       clone.removeAttribute('id');
+      if (clone.tagName === 'VIDEO') {
+        // Aquí un vídeo se ve como una foto que se mueve sola, en bucle, sin botón de play — como un
+        // GIF (pedido el 24-sep). Solo se reproduce el que se está viendo (ver detalleVideoVisible),
+        // nunca todos a la vez: un iPhone no aguanta una docena de vídeos activos al mismo tiempo
+        // (ya visto antes, "ha generado problemas repetidamente" — mismo motivo por el que la
+        // rejilla tampoco los reproduce todos solos).
+        clone.loop = true; clone.muted = true; clone.playsInline = true; clone.setAttribute('playsinline', '');
+        clone.removeAttribute('autoplay');
+      }
       item.appendChild(clone);
       detalleMedia.appendChild(item);
 
@@ -185,6 +194,7 @@
 
     // Arranca ya en la foto tocada, sin animación de scroll de por medio.
     detalleMedia.scrollLeft = startIndex * detalleMedia.clientWidth;
+    detalleVideoVisible();
 
     // Primera vez que se abre una foto: onboarding de la pantalla (765:5320).
     if (!detalleOnboardingSeen) {
@@ -194,6 +204,21 @@
       layer.classList.add('is-visible');
     }
   }
+
+  // Reproduce en bucle SOLO el vídeo que se está viendo ahora mismo (como un GIF: sin botón de
+  // play, siempre en movimiento) y pausa+rebobina los demás — al deslizar entre fotos se actualiza solo.
+  let detalleVideoTimer = null;
+  function detalleVideoVisible() {
+    const i = Math.round(detalleMedia.scrollLeft / detalleMedia.clientWidth);
+    detalleMedia.querySelectorAll('.detail-media__item video').forEach((v, idx) => {
+      if (idx === i) { const p = v.play(); if (p && p.catch) p.catch(() => {}); }
+      else { v.pause(); v.currentTime = 0; }
+    });
+  }
+  detalleMedia.addEventListener('scroll', () => {
+    clearTimeout(detalleVideoTimer);
+    detalleVideoTimer = setTimeout(detalleVideoVisible, 120);
+  }, { passive: true });
 
   // ---------------------------------------------------------------
   // Pinch-to-zoom sobre la foto de la pantalla de detalle: separar dos
