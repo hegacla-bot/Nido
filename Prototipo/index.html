@@ -24,17 +24,17 @@
        aniversario, navideña de verdad para Navidad, con energía de fiesta
        nocturna para Año Nuevo). Solo se usan en persona.css. -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700&family=Mountains+of+Christmas:wght@700&family=Bungee&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/tokens.css?v=7" />
-  <link rel="stylesheet" href="css/base.css?v=13" />
+  <link rel="stylesheet" href="css/tokens.css?v=8" />
+  <link rel="stylesheet" href="css/base.css?v=16" />
   <link rel="stylesheet" href="css/components.css?v=56" />
   <link rel="stylesheet" href="css/bienvenida.css?v=4" />
-  <link rel="stylesheet" href="css/registro.css?v=15" />
-  <link rel="stylesheet" href="css/albumes.css?v=10" />
+  <link rel="stylesheet" href="css/registro.css?v=16" />
+  <link rel="stylesheet" href="css/albumes.css?v=13" />
   <link rel="stylesheet" href="css/persona.css?v=27" />
   <link rel="stylesheet" href="css/yo.css?v=5" />
-  <link rel="stylesheet" href="css/personas.css?v=36" />
-  <link rel="stylesheet" href="css/onboarding.css?v=25" />
-  <link rel="stylesheet" href="css/eliminar-foto.css?v=8" />
+  <link rel="stylesheet" href="css/personas.css?v=49" />
+  <link rel="stylesheet" href="css/onboarding.css?v=32" />
+  <link rel="stylesheet" href="css/eliminar-foto.css?v=9" />
 </head>
 <body>
 
@@ -95,9 +95,9 @@
       </div>
 
       <div class="bottom-fade"></div>
-      <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-wide registro-cta" data-nav="registro-3">
-        <span class="btn__icon"><img src="assets/icons/icon-arrow-narrow-right.svg" alt="" /></span>
+      <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-trailing registro-cta" data-nav="registro-3">
         Enviar código
+        <span class="btn__icon"><img src="assets/icons/icon-arrow-narrow-right.svg" alt="" /></span>
       </button>
 
       <div class="home-bar"><span class="home-bar__pill"></span></div>
@@ -142,9 +142,9 @@
       </div>
 
       <div class="bottom-fade"></div>
-      <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-wide registro-cta" data-nav="ajustes-codigo">
-        <span class="btn__icon"><img src="assets/icons/icon-arrow-narrow-right.svg" alt="" /></span>
+      <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-trailing registro-cta" data-nav="ajustes-codigo">
         Enviar código
+        <span class="btn__icon"><img src="assets/icons/icon-arrow-narrow-right.svg" alt="" /></span>
       </button>
 
       <div class="home-bar"><span class="home-bar__pill"></span></div>
@@ -203,15 +203,15 @@
 
       <div class="registro-modal-overlay" data-registro-modal>
         <div class="registro-modal">
-          <img class="registro-modal-photo" src="assets/img/registro-polaroid-photos.webp?v=3" alt="" />
+          <img class="registro-modal-photo" src="assets/img/registro-polaroid-photos-v2.webp" alt="" />
           <p class="registro-modal-title">Ayúdanos</p>
           <p class="registro-modal-body">Permite el acceso a tu galería y organizaremos todas tus fotos automáticamente.</p>
           <div class="registro-modal-actions">
-            <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-wide" data-nav="registro-nidi" data-pick-gallery>
+            <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-wide" data-nav="registro-4" data-pick-gallery>
               <span class="btn__icon"><img src="assets/icons/icon-check.svg" alt="" /></span>
               Permitir
             </button>
-            <button class="btn btn--type3 btn--horizontal btn--lg" data-nav="registro-nidi">
+            <button class="btn btn--type3 btn--horizontal btn--lg" data-nav="registro-4">
               Quiero saber más
             </button>
           </div>
@@ -276,10 +276,10 @@
 
 
     <!-- ============================================================ -->
-    <!-- REGISTRO · saludo de Nidi (765:5974) — tras el modal "Ayúdanos"  -->
-    <!-- Sin botón: avanza sola al loader, o al tocar en cualquier sitio.  -->
+    <!-- REGISTRO · saludo de Nidi (765:5974) — justo tras el huevo, antes del teléfono -->
+    <!-- Sin botón: avanza sola al teléfono (registro-2), o al tocar en cualquier sitio. -->
     <!-- ============================================================ -->
-    <section class="screen screen--registro registro-nidi" data-screen="registro-nidi" data-nav="registro-4">
+    <section class="screen screen--registro registro-nidi" data-screen="registro-nidi" data-nav="registro-2">
       <div class="status-bar">
         <span class="status-bar__time">9:41</span>
         <div class="status-bar__levels">
@@ -295,7 +295,7 @@
       <img class="registro-wordmark" src="assets/icons/wordmark-nido.svg" alt="Nido" />
       <p class="registro-nidi-title">Hola, soy Nidi.</p>
       <p class="registro-nidi-subtitle">Estoy aquí para ayudarte en lo que necesites.</p>
-      <img class="registro-nidi-pollito" src="assets/img/nidi-saludando.webp" alt="Nidi, el pollito, saludando" />
+      <img class="registro-nidi-pollito" src="assets/img/nidi-saludando-v3.webp" alt="Nidi, el pollito, saludando" />
 
       <div class="home-bar"><span class="home-bar__pill"></span></div>
     </section>
@@ -342,7 +342,7 @@
            style="position:absolute; left:1.25rem; top:4.6875rem; width:4.25rem;" />
 
       <button class="avatar avatar--ring" data-help aria-label="Ayuda">
-        <img src="assets/img/avatar-pollito.png?v=3" alt="Tu pollito" />
+        <img src="assets/img/avatar-pollito.png?v=4" alt="Tu pollito" />
       </button>
 
       <nav class="nav-row">
@@ -430,7 +430,7 @@
            style="position:absolute; left:1.25rem; top:4.6875rem; width:4.25rem;" />
 
       <button class="avatar avatar--ring" aria-hidden="true" tabindex="-1">
-        <img src="assets/img/avatar-pollito.png?v=3" alt="Tu pollito" />
+        <img src="assets/img/avatar-pollito.png?v=4" alt="Tu pollito" />
       </button>
 
       <nav class="nav-row">
@@ -503,7 +503,7 @@
       </div>
       <div class="onboarding-tooltip onboarding-tooltip--tail-br" data-onb-css=".ob-step-1 .onboarding-tooltip" data-onb-file="css/onboarding.css">Aquí tienes todos tus álbumes.</div>
       <div class="onboarding-pollito" data-onb-css=".ob-step-1 .onboarding-pollito" data-onb-file="css/onboarding.css">
-        <img class="onboarding-pollito__visual" src="assets/img/pollito-onboarding-1-v2.webp" alt="Nidi señalando" />
+        <img class="onboarding-pollito__visual" src="assets/img/pollito-onboarding-1-v3.webp" alt="Nidi señalando" />
       </div>
       <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-trailing onboarding-cta" data-onboarding-next="onboarding-2">
         Siguiente
@@ -533,7 +533,7 @@
            style="position:absolute; left:1.25rem; top:4.6875rem; width:4.25rem;" />
 
       <button class="avatar avatar--ring" aria-hidden="true" tabindex="-1">
-        <img src="assets/img/avatar-pollito.png?v=3" alt="Tu pollito" />
+        <img src="assets/img/avatar-pollito.png?v=4" alt="Tu pollito" />
       </button>
 
       <nav class="nav-row">
@@ -606,7 +606,7 @@
       </div>
       <div class="onboarding-tooltip onboarding-tooltip--tail-br" data-onb-css=".ob-step-2 .onboarding-tooltip" data-onb-file="css/onboarding.css">Aquí puedes ver las fotos de tus personas favoritas.</div>
       <div class="onboarding-pollito" data-onb-css=".ob-step-2 .onboarding-pollito" data-onb-file="css/onboarding.css">
-        <img class="onboarding-pollito__visual" src="assets/img/pollito-onboarding-2-v2.webp" alt="Nidi señalando" />
+        <img class="onboarding-pollito__visual" src="assets/img/pollito-onboarding-2-v3.webp" alt="Nidi señalando" />
       </div>
       <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-trailing onboarding-cta" data-onboarding-next="onboarding-3">
         Siguiente
@@ -636,7 +636,7 @@
            style="position:absolute; left:1.25rem; top:4.6875rem; width:4.25rem;" />
 
       <button class="avatar avatar--ring" aria-hidden="true" tabindex="-1">
-        <img src="assets/img/avatar-pollito.png?v=3" alt="Tu pollito" />
+        <img src="assets/img/avatar-pollito.png?v=4" alt="Tu pollito" />
       </button>
 
       <nav class="nav-row">
@@ -709,7 +709,7 @@
       </div>
       <div class="onboarding-tooltip onboarding-tooltip--tail-br" data-onb-css=".ob-step-3 .onboarding-tooltip" data-onb-file="css/onboarding.css">Aquí tienes todo lo que tú creas y tus documentos importantes.</div>
       <div class="onboarding-pollito" data-onb-css=".ob-step-3 .onboarding-pollito" data-onb-file="css/onboarding.css">
-        <img class="onboarding-pollito__visual" src="assets/img/pollito-onboarding-3-v2.webp" alt="Nidi señalando" />
+        <img class="onboarding-pollito__visual" src="assets/img/pollito-onboarding-3-v3.webp" alt="Nidi señalando" />
       </div>
       <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-trailing onboarding-cta" data-onboarding-next="onboarding-4">
         Siguiente
@@ -739,7 +739,7 @@
            style="position:absolute; left:1.25rem; top:4.6875rem; width:4.25rem;" />
 
       <button class="avatar avatar--ring" aria-hidden="true" tabindex="-1">
-        <img src="assets/img/avatar-pollito.png?v=3" alt="Tu pollito" />
+        <img src="assets/img/avatar-pollito.png?v=4" alt="Tu pollito" />
       </button>
 
       <nav class="nav-row">
@@ -807,8 +807,8 @@
       <div class="onboarding-overlay"></div>
       <p class="onboarding-glow-title">Mis recuerdos</p>
       <div class="onboarding-tooltip onboarding-tooltip--tail-br" data-onb-css=".ob-step-4 .onboarding-tooltip" data-onb-file="css/onboarding.css">Aquí puedes explorar recuerdos que hemos creado para ti.</div>
-      <div class="onboarding-pollito" data-onb-css=".ob-step-4 .onboarding-pollito, .ob-step-5 .onboarding-pollito" data-onb-file="css/onboarding.css">
-        <img class="onboarding-pollito__visual" src="assets/img/pollito-onboarding-4b-v2.webp?v=1" alt="Nidi pensativo" />
+      <div class="onboarding-pollito" data-onb-css=".ob-step-4 .onboarding-pollito" data-onb-file="css/onboarding.css">
+        <img class="onboarding-pollito__visual" src="assets/img/pollito-onboarding-4-v3.webp" alt="Nidi pensativo" />
       </div>
       <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-trailing onboarding-cta" data-onboarding-next="onboarding-5">
         Siguiente
@@ -835,7 +835,7 @@
            style="position:absolute; left:1.25rem; top:4.6875rem; width:4.25rem;" />
 
       <button class="avatar avatar--ring" aria-hidden="true" tabindex="-1">
-        <img src="assets/img/avatar-pollito.png?v=3" alt="Tu pollito" />
+        <img src="assets/img/avatar-pollito.png?v=4" alt="Tu pollito" />
       </button>
 
       <nav class="nav-row">
@@ -902,11 +902,11 @@
       
       <div class="onboarding-overlay"></div>
       <button class="avatar avatar--ring onboarding-help-avatar" data-onboarding-next="home" aria-label="Ayuda">
-        <img src="assets/img/avatar-pollito.png?v=3" alt="Tu pollito" />
+        <img src="assets/img/avatar-pollito.png?v=4" alt="Tu pollito" />
       </button>
       <div class="onboarding-tooltip onboarding-tooltip--tail-bl" data-onb-css=".ob-step-5 .onboarding-tooltip" data-onb-file="css/onboarding.css">Pulsa aquí cuando necesites ayuda. Estaré contigo.</div>
-      <div class="onboarding-pollito" data-onb-css=".ob-step-4 .onboarding-pollito, .ob-step-5 .onboarding-pollito" data-onb-file="css/onboarding.css">
-        <img class="onboarding-pollito__visual" src="assets/img/pollito-onboarding-2-v2.webp" alt="Nidi señalando" />
+      <div class="onboarding-pollito" data-onb-css=".ob-step-5 .onboarding-pollito" data-onb-file="css/onboarding.css">
+        <img class="onboarding-pollito__visual" src="assets/img/pollito-onboarding-3-v3.webp" alt="Nidi señalando" />
       </div>
       <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-trailing onboarding-cta" data-onboarding-next="home">
         Siguiente
@@ -932,7 +932,7 @@
         </div>
       </div>
       <button class="avatar avatar--ring" aria-hidden="true" tabindex="-1">
-        <img src="assets/img/avatar-pollito.png?v=3" alt="Tu pollito" />
+        <img src="assets/img/avatar-pollito.png?v=4" alt="Tu pollito" />
       </button>
       <h1 class="page-title">Álbumes</h1>
       <div class="top-fade"></div>
@@ -1003,7 +1003,7 @@
       </div>
       <div class="onboarding-tooltip onboarding-tooltip--tail-br" data-onb-css=".ob-albumes .onboarding-tooltip" data-onb-file="css/onboarding.css">Aquí puedes crear un álbum a tu gusto.</div>
       <div class="onboarding-pollito" data-onb-css=".ob-albumes .onboarding-pollito" data-onb-file="css/onboarding.css">
-        <img class="onboarding-pollito__visual" src="assets/img/pollito-onboarding-2-v2.webp" alt="Nidi señalando" />
+        <img class="onboarding-pollito__visual" src="assets/img/pollito-onboarding-3-v3.webp" alt="Nidi señalando" />
       </div>
       <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-trailing onboarding-cta" data-onboarding-next="onboarding-albumes-2">
         Siguiente
@@ -1029,7 +1029,7 @@
         </div>
       </div>
       <button class="avatar avatar--ring" aria-hidden="true" tabindex="-1">
-        <img src="assets/img/avatar-pollito.png?v=3" alt="Tu pollito" />
+        <img src="assets/img/avatar-pollito.png?v=4" alt="Tu pollito" />
       </button>
       <h1 class="page-title">Álbumes</h1>
       <div class="top-fade"></div>
@@ -1096,7 +1096,7 @@
       </div>
       <div class="onboarding-tooltip onboarding-tooltip--tail-br" data-onb-css=".ob-albumes-2 .onboarding-tooltip" data-onb-file="css/onboarding.css">Pulsa aquí para ver todas tus fotos.</div>
       <div class="onboarding-pollito" data-onb-css=".ob-albumes-2 .onboarding-pollito" data-onb-file="css/onboarding.css">
-        <img class="onboarding-pollito__visual" src="assets/img/pollito-onboarding-2-v2.webp" alt="Nidi señalando" />
+        <img class="onboarding-pollito__visual" src="assets/img/pollito-onboarding-3-v3.webp" alt="Nidi señalando" />
       </div>
       <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-trailing onboarding-cta" data-onboarding-next="albumes">
         Siguiente
@@ -1121,7 +1121,7 @@
         </div>
       </div>
       <button class="avatar avatar--ring" data-help aria-label="Ayuda">
-        <img src="assets/img/avatar-pollito.png?v=3" alt="Tu pollito" />
+        <img src="assets/img/avatar-pollito.png?v=4" alt="Tu pollito" />
       </button>
       <h1 class="page-title">Álbumes</h1>
       <div class="top-fade"></div>
@@ -1186,7 +1186,7 @@
         <p class="persona-ask__bubble persona-ask__bubble--1">¿Cómo quieres llamar a tu nuevo álbum?</p>
         <p class="persona-ask__bubble persona-ask__bubble--2">Toca en el micrófono y dímelo.</p>
         <p class="persona-ask__reply" data-album-reply hidden>....</p>
-        <img class="persona-ask__pollito" src="assets/img/pollito-pregunta-nombre.webp" alt="Nidi preguntando" />
+        <img class="persona-ask__pollito" src="assets/img/pollito-ayuda-v3.webp" alt="Nidi preguntando" />
         <!-- Confirmación (captura 757:4223): el nombre "oído" arriba y la pregunta debajo -->
         <p class="persona-ask__bubble persona-ask__bubble--confirm" data-album-confirm hidden>¿Quieres que tu álbum se llame así?</p>
         <button class="btn btn--soft btn--horizontal btn--lg persona-ask__crear" data-album-action="crear" data-album-confirm hidden>
@@ -1219,7 +1219,7 @@
         </div>
       </div>
       <button class="avatar avatar--ring" data-help aria-label="Ayuda">
-        <img src="assets/img/avatar-pollito.png?v=3" alt="Tu pollito" />
+        <img src="assets/img/avatar-pollito.png?v=4" alt="Tu pollito" />
       </button>
       <h1 class="page-title">Todas tus fotos</h1>
       <div class="top-fade"></div>
@@ -1275,29 +1275,26 @@
         </div>
       </div>
       <button class="avatar avatar--ring" data-help aria-label="Ayuda">
-        <img src="assets/img/avatar-pollito.png?v=3" alt="Tu pollito" />
+        <img src="assets/img/avatar-pollito.png?v=4" alt="Tu pollito" />
       </button>
       <h1 class="page-title">Elige las fotos a añadir</h1>
       <div class="top-fade"></div>
 
       <div class="screen-content">
-        <!-- Mantener pulsado selecciona (como "seleccionar personas dentro
-             de una foto", mismo umbral de 650ms) — un toque normal abre el
-             detalle de la foto, igual que cualquier otra .photo-card de la
-             app. Por eso son .photo-card de verdad (heredan openDetalle())
-             y no una clase nueva sin ese comportamiento. Empieza sin
-             ninguna seleccionada; el estado "ya elegidas" de la captura de
-             Figma es solo para enseñar cómo se ve, no el punto de partida. -->
+        <!-- Figma 685:8075 (25-sep): cada foto lleva SIEMPRE su círculo (vacío = sin elegir, check azul = elegida) sobre un
+             velo oscuro, para que se vea sin explicaciones que se pueden marcar. Un toque marca/desmarca (app.js); antes era
+             mantener pulsado, un gesto que no se ve. Empieza sin ninguna elegida. Estas 9 son de relleno: cargarGaleria
+             (app.js) pone aquí las fotos que hay en la app, las mismas y en el mismo orden que «Todas tus fotos». -->
         <div class="album-grid" data-select-grid>
-          <button class="photo-card is-selectable"><img src="assets/img/album-museo.webp" alt="" /><span class="select-overlay"><img src="assets/icons/icon-check-circle.svg" alt="" /></span></button>
-          <button class="photo-card is-selectable"><img src="assets/img/album-venecia.webp" alt="" /><span class="select-overlay"><img src="assets/icons/icon-check-circle.svg" alt="" /></span></button>
-          <button class="photo-card is-selectable"><img src="assets/img/album-museo.webp" alt="" /><span class="select-overlay"><img src="assets/icons/icon-check-circle.svg" alt="" /></span></button>
-          <button class="photo-card is-selectable"><img src="assets/img/album-venecia.webp" alt="" /><span class="select-overlay"><img src="assets/icons/icon-check-circle.svg" alt="" /></span></button>
-          <button class="photo-card is-selectable"><img src="assets/img/album-museo.webp" alt="" /><span class="select-overlay"><img src="assets/icons/icon-check-circle.svg" alt="" /></span></button>
-          <button class="photo-card is-selectable"><img src="assets/img/album-venecia.webp" alt="" /><span class="select-overlay"><img src="assets/icons/icon-check-circle.svg" alt="" /></span></button>
-          <button class="photo-card is-selectable"><img src="assets/img/album-museo.webp" alt="" /><span class="select-overlay"><img src="assets/icons/icon-check-circle.svg" alt="" /></span></button>
-          <button class="photo-card is-selectable"><img src="assets/img/album-venecia.webp" alt="" /><span class="select-overlay"><img src="assets/icons/icon-check-circle.svg" alt="" /></span></button>
-          <button class="photo-card is-selectable"><img src="assets/img/album-museo.webp" alt="" /><span class="select-overlay"><img src="assets/icons/icon-check-circle.svg" alt="" /></span></button>
+          <button class="photo-card is-selectable"><img src="assets/img/album-museo.webp" alt="" /><span class="select-overlay"><img class="select-overlay__vacio" src="assets/icons/icon-circle-empty.svg" alt="" /><img class="select-overlay__check" src="assets/icons/icon-check-circle-44.svg" alt="" /></span></button>
+          <button class="photo-card is-selectable"><img src="assets/img/album-venecia.webp" alt="" /><span class="select-overlay"><img class="select-overlay__vacio" src="assets/icons/icon-circle-empty.svg" alt="" /><img class="select-overlay__check" src="assets/icons/icon-check-circle-44.svg" alt="" /></span></button>
+          <button class="photo-card is-selectable"><img src="assets/img/album-museo.webp" alt="" /><span class="select-overlay"><img class="select-overlay__vacio" src="assets/icons/icon-circle-empty.svg" alt="" /><img class="select-overlay__check" src="assets/icons/icon-check-circle-44.svg" alt="" /></span></button>
+          <button class="photo-card is-selectable"><img src="assets/img/album-venecia.webp" alt="" /><span class="select-overlay"><img class="select-overlay__vacio" src="assets/icons/icon-circle-empty.svg" alt="" /><img class="select-overlay__check" src="assets/icons/icon-check-circle-44.svg" alt="" /></span></button>
+          <button class="photo-card is-selectable"><img src="assets/img/album-museo.webp" alt="" /><span class="select-overlay"><img class="select-overlay__vacio" src="assets/icons/icon-circle-empty.svg" alt="" /><img class="select-overlay__check" src="assets/icons/icon-check-circle-44.svg" alt="" /></span></button>
+          <button class="photo-card is-selectable"><img src="assets/img/album-venecia.webp" alt="" /><span class="select-overlay"><img class="select-overlay__vacio" src="assets/icons/icon-circle-empty.svg" alt="" /><img class="select-overlay__check" src="assets/icons/icon-check-circle-44.svg" alt="" /></span></button>
+          <button class="photo-card is-selectable"><img src="assets/img/album-museo.webp" alt="" /><span class="select-overlay"><img class="select-overlay__vacio" src="assets/icons/icon-circle-empty.svg" alt="" /><img class="select-overlay__check" src="assets/icons/icon-check-circle-44.svg" alt="" /></span></button>
+          <button class="photo-card is-selectable"><img src="assets/img/album-venecia.webp" alt="" /><span class="select-overlay"><img class="select-overlay__vacio" src="assets/icons/icon-circle-empty.svg" alt="" /><img class="select-overlay__check" src="assets/icons/icon-check-circle-44.svg" alt="" /></span></button>
+          <button class="photo-card is-selectable"><img src="assets/img/album-museo.webp" alt="" /><span class="select-overlay"><img class="select-overlay__vacio" src="assets/icons/icon-circle-empty.svg" alt="" /><img class="select-overlay__check" src="assets/icons/icon-check-circle-44.svg" alt="" /></span></button>
         </div>
       </div>
 
@@ -1313,7 +1310,7 @@
         </button>
         <button class="btn btn--soft btn--horizontal btn--lg btn--icon-wide btn--grow" data-nav="select-back" data-select-add>
           <span class="btn__icon"><img src="assets/icons/icon-check-blue-dark.svg" alt="" /></span>
-          Añadir
+          <span data-select-add-label>Añadir</span>
         </button>
       </div>
       <div class="home-bar"><span class="home-bar__pill"></span></div>
@@ -1335,7 +1332,7 @@
         </div>
       </div>
       <button class="avatar" aria-hidden="true" tabindex="-1">
-        <img src="assets/img/avatar-pollito.png?v=3" alt="Tu pollito" />
+        <img src="assets/img/avatar-pollito.png?v=4" alt="Tu pollito" />
       </button>
       <h1 class="page-title">Yo</h1>
       <div class="top-fade"></div>
@@ -1385,7 +1382,7 @@
           </div>
           <div class="onboarding-tooltip" data-onb-css=".ob-yo .onboarding-tooltip" data-onb-file="css/onboarding.css">Aquí hemos recopilado todas las fotos con documentos o información útil.</div>
           <div class="onboarding-pollito" data-onb-css=".ob-yo .onboarding-pollito" data-onb-file="css/onboarding.css">
-            <img class="onboarding-pollito__visual" src="assets/img/pollito-onboarding-2-v2.webp" alt="Nidi señalando" />
+            <img class="onboarding-pollito__visual" src="assets/img/pollito-onboarding-3-v3.webp" alt="Nidi señalando" />
           </div>
         </div>
 
@@ -1399,7 +1396,7 @@
           </div>
           <div class="onboarding-tooltip" data-onb-css=".ob-yo [data-layer-step=&quot;2&quot;] .onboarding-tooltip" data-onb-file="css/onboarding.css">En ajustes puedes gestionar tu cuenta.</div>
           <div class="onboarding-pollito" data-onb-css=".ob-yo [data-layer-step=&quot;2&quot;] .onboarding-pollito" data-onb-file="css/onboarding.css">
-            <img class="onboarding-pollito__visual" src="assets/img/pollito-onboarding-1-v2-derecha.webp" alt="Nidi señalando" />
+            <img class="onboarding-pollito__visual" src="assets/img/pollito-onboarding-2-v3.webp" alt="Nidi señalando" />
           </div>
         </div>
 
@@ -1427,7 +1424,7 @@
         </div>
       </div>
       <button class="avatar avatar--ring" data-help aria-label="Ayuda">
-        <img src="assets/img/avatar-pollito.png?v=3" alt="Tu pollito" />
+        <img src="assets/img/avatar-pollito.png?v=4" alt="Tu pollito" />
       </button>
       <h1 class="page-title">Personas</h1>
       <div class="top-fade"></div>
@@ -1550,7 +1547,7 @@
         </div>
       </div>
       <button class="avatar avatar--ring" data-help aria-label="Ayuda">
-        <img src="assets/img/avatar-pollito.png?v=3" alt="Tu pollito" />
+        <img src="assets/img/avatar-pollito.png?v=4" alt="Tu pollito" />
       </button>
       <h1 class="page-title" data-persona-name>Persona</h1>
       <div class="top-fade"></div>
@@ -1599,7 +1596,7 @@
         </div>
       </div>
       <button class="avatar avatar--ring" data-help aria-label="Ayuda">
-        <img src="assets/img/avatar-pollito.png?v=3" alt="Tu pollito" />
+        <img src="assets/img/avatar-pollito.png?v=4" alt="Tu pollito" />
       </button>
       <h1 class="page-title" data-persona-name>Persona</h1>
       <div class="top-fade"></div>
@@ -1637,7 +1634,7 @@
         </div>
       </div>
       <button class="avatar avatar--ring" data-help aria-label="Ayuda">
-        <img src="assets/img/avatar-pollito.png?v=3" alt="Tu pollito" />
+        <img src="assets/img/avatar-pollito.png?v=4" alt="Tu pollito" />
       </button>
       <h1 class="page-title" data-persona-name>Persona</h1>
       <div class="top-fade"></div>
@@ -1677,7 +1674,7 @@
         </div>
       </div>
       <button class="avatar avatar--ring" data-help aria-label="Ayuda">
-        <img src="assets/img/avatar-pollito.png?v=3" alt="Tu pollito" />
+        <img src="assets/img/avatar-pollito.png?v=4" alt="Tu pollito" />
       </button>
       <h1 class="page-title">Elige un estilo</h1>
       <div class="top-fade"></div>
@@ -1686,22 +1683,22 @@
         <p class="felicitacion-pregunta">¿Qué tipo de felicitación quieres crear?</p>
         <div class="felicitacion-lista">
           <button class="felicitacion-card felicitacion-card--w131" data-felicitacion-card="cumpleanos">
-            <img class="felicitacion-card__img" src="assets/img/felicitacion-cumpleanos.webp" alt="" />
+            <img class="felicitacion-card__img" src="assets/img/felicitacion-cumpleanos-v2.webp" alt="" />
             <span class="felicitacion-card__title">Cumpleaños</span>
             <span class="felicitacion-card__text">Perfecta para felicitar a una persona especial.</span>
           </button>
-          <button class="felicitacion-card felicitacion-card--w134" data-felicitacion-card="aniversario">
-            <img class="felicitacion-card__img" src="assets/img/felicitacion-aniversario.webp" alt="" />
+          <button class="felicitacion-card felicitacion-card--w148" data-felicitacion-card="aniversario">
+            <img class="felicitacion-card__img" src="assets/img/felicitacion-aniversario-v2.webp" alt="" />
             <span class="felicitacion-card__title">Aniversario</span>
             <span class="felicitacion-card__text">Felicita su aniversario a una pareja especial para ti.</span>
           </button>
           <button class="felicitacion-card felicitacion-card--w152" data-felicitacion-card="anonuevo">
-            <img class="felicitacion-card__img" src="assets/img/felicitacion-anonuevo.webp" alt="" />
+            <img class="felicitacion-card__img" src="assets/img/felicitacion-anonuevo-v2.webp" alt="" />
             <span class="felicitacion-card__title">Año nuevo</span>
             <span class="felicitacion-card__text">Celebra el nuevo año con familiares y amigos.</span>
           </button>
           <button class="felicitacion-card felicitacion-card--w152" data-felicitacion-card="navidad">
-            <img class="felicitacion-card__img" src="assets/img/felicitacion-navidad.webp" alt="" />
+            <img class="felicitacion-card__img" src="assets/img/felicitacion-navidad-v2.webp" alt="" />
             <span class="felicitacion-card__title">Feliz navidad</span>
             <span class="felicitacion-card__text">Felicita la navidad con tu foto preferida.</span>
           </button>
@@ -1761,7 +1758,7 @@
         </div>
       </div>
       <button class="avatar avatar--ring" data-help aria-label="Ayuda">
-        <img src="assets/img/avatar-pollito.png?v=3" alt="Tu pollito" />
+        <img src="assets/img/avatar-pollito.png?v=4" alt="Tu pollito" />
       </button>
       <h1 class="page-title">Felicitación</h1>
 
@@ -1802,7 +1799,7 @@
         </div>
       </div>
       <button class="avatar avatar--ring" data-help aria-label="Ayuda">
-        <img src="assets/img/avatar-pollito.png?v=3" alt="Tu pollito" />
+        <img src="assets/img/avatar-pollito.png?v=4" alt="Tu pollito" />
       </button>
       <h1 class="page-title" data-album-title>Álbum nuevo</h1>
 
@@ -1836,7 +1833,7 @@
         </div>
         <div class="onboarding-tooltip" data-onb-css=".ob-album-nuevo .onboarding-tooltip" data-onb-file="css/personas.css">Pulsa aquí para añadir imágenes al álbum</div>
         <div class="onboarding-pollito" data-onb-css=".ob-album-nuevo .onboarding-pollito" data-onb-file="css/personas.css">
-          <img class="onboarding-pollito__visual" src="assets/img/pollito-onboarding-1-v2.webp" alt="Nidi señalando" />
+          <img class="onboarding-pollito__visual" src="assets/img/pollito-onboarding-1-v3.webp" alt="Nidi señalando" />
         </div>
         <button class="btn btn--type2 btn--horizontal btn--lg onboarding-cta" data-onboarding-layer-close>
           Aceptar
@@ -1861,7 +1858,7 @@
         </div>
       </div>
       <button class="avatar avatar--ring" data-help aria-label="Ayuda">
-        <img src="assets/img/avatar-pollito.png?v=3" alt="Tu pollito" />
+        <img src="assets/img/avatar-pollito.png?v=4" alt="Tu pollito" />
       </button>
       <h1 class="page-title">Ajustes</h1>
 
@@ -1938,7 +1935,7 @@
         </div>
       </div>
       <button class="avatar avatar--ring" data-help aria-label="Ayuda">
-        <img src="assets/img/avatar-pollito.png?v=3" alt="Tu pollito" />
+        <img src="assets/img/avatar-pollito.png?v=4" alt="Tu pollito" />
       </button>
       <h1 class="page-title">Mis documentos</h1>
       <div class="top-fade"></div>
@@ -2004,7 +2001,7 @@
         </div>
       </div>
       <button class="avatar avatar--ring" data-help aria-label="Ayuda">
-        <img src="assets/img/avatar-pollito.png?v=3" alt="Tu pollito" />
+        <img src="assets/img/avatar-pollito.png?v=4" alt="Tu pollito" />
       </button>
       <h1 class="page-title">Detalle foto</h1>
 
@@ -2060,7 +2057,7 @@
           </div>
           <div class="onboarding-tooltip" data-onb-css=".ob-detalle [data-detalle-step=&quot;1&quot;] .onboarding-tooltip" data-onb-file="css/onboarding.css">Pulsa aquí para crear felicitaciones personalizadas</div>
           <div class="onboarding-pollito" data-onb-css=".ob-detalle [data-detalle-step=&quot;1&quot;] .onboarding-pollito" data-onb-file="css/onboarding.css">
-            <img class="onboarding-pollito__visual" src="assets/img/pollito-onboarding-1-v2.webp" alt="Nidi señalando" />
+            <img class="onboarding-pollito__visual" src="assets/img/pollito-onboarding-1-v3.webp" alt="Nidi señalando" />
           </div>
         </div>
 
@@ -2074,7 +2071,7 @@
           </div>
           <div class="onboarding-tooltip" data-onb-css=".ob-detalle [data-detalle-step=&quot;2&quot;] .onboarding-tooltip" data-onb-file="css/onboarding.css">Pulsa aquí para eliminar las fotos que no quieras.</div>
           <div class="onboarding-pollito" data-onb-css=".ob-detalle [data-detalle-step=&quot;2&quot;] .onboarding-pollito" data-onb-file="css/onboarding.css">
-            <img class="onboarding-pollito__visual" src="assets/img/pollito-onboarding-1-v2-derecha.webp" alt="Nidi señalando" />
+            <img class="onboarding-pollito__visual" src="assets/img/pollito-onboarding-2-v3.webp" alt="Nidi señalando" />
           </div>
         </div>
 
@@ -2091,7 +2088,7 @@
         <div class="onboarding-overlay"></div>
         <p class="persona-ask__bubble persona-ask__bubble--1">¿Cómo se llama esta persona?</p>
         <p class="persona-ask__bubble persona-ask__bubble--2">Toca en el micrófono y dímelo.</p>
-        <img class="persona-ask__pollito" src="assets/img/pollito-pregunta-nombre.webp" alt="Nidi preguntando" />
+        <img class="persona-ask__pollito" src="assets/img/pollito-ayuda-v3.webp" alt="Nidi preguntando" />
         <button class="persona-ask__mic" data-persona-action="mic" aria-label="Hablar">
           <img src="assets/icons/mic-escuchar.svg" alt="" />
         </button>
@@ -2258,12 +2255,13 @@
   <script src="js/mascota.js?v=4"></script>
   <script src="js/vendor/exifr.js" defer></script>
   <!-- face-api.js (1,3 MB) ya no se carga aquí: reconocimiento.js lo pide solo cuando hay que buscar personas, para que la app no espere a bajarlo. -->
-  <script src="js/reconocimiento.js?v=6"></script>
-  <script src="js/persona.js?v=52"></script>
+  <script src="js/reconocimiento.js?v=7"></script>
+  <script src="js/persona.js?v=57"></script>
   <script src="js/eliminar-foto.js?v=2"></script>
   <input type="file" id="gallery-input" accept="image/*,video/*" multiple hidden />
-  <script src="js/agente.js?v=5"></script>
+  <script src="js/agente.js?v=9"></script>
+  <script src="js/agente-acciones.js?v=6"></script>
   <script src="js/editor-pollitos.js?v=5"></script>
-  <script src="js/app.js?v=61"></script>
+  <script src="js/app.js?v=75"></script>
 </body>
 </html>

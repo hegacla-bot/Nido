@@ -257,7 +257,7 @@ p, h1, h2, h3 {
   top: 3.5rem; /* 56px */
   width: 4rem; /* 64px */
   height: 4rem;
-  border: 0.1875rem solid var(--color-primary-blue); /* 3px, #516dff */
+  border: 0; /* el anillo azul ya viene dentro de avatar-pollito.png (Figma "Ellipse 1"); antes: 3px #516dff en CSS */
 }
 
 /* ---------------------------------------------------------------- */
@@ -282,4 +282,38 @@ p, h1, h2, h3 {
   font-weight: var(--font-weight-bold);
   color: var(--color-black);
   margin: 0 0 var(--space-section-gap) 0;
+}
+
+/* ---------------------------------------------------------------- */
+/* Botón marcado por Nidi (herramienta «senalar»: «pulsa el que brilla») */
+/* ---------------------------------------------------------------- */
+.nido-senal {
+  animation: nido-senal-pulso 1.4s ease-in-out infinite;
+  /* Solo sombra: no se toca position ni z-index para no descolocar botones absolutos (avatar, «Volver»…). */
+}
+@keyframes nido-senal-pulso {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(81, 109, 255, 0.55), 0 0 0 10px rgba(81, 109, 255, 0.22); }
+  50%      { box-shadow: 0 0 0 7px rgba(81, 109, 255, 0.55), 0 0 0 18px rgba(81, 109, 255, 0.12); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nido-senal { animation: none; box-shadow: 0 0 0 6px rgba(81, 109, 255, 0.55), 0 0 0 12px rgba(81, 109, 255, 0.22); }
+}
+
+/* ---------------------------------------------------------------- */
+/* «Elegir fotos» que pone Nidi en «Todas tus fotos» (herramienta      */
+/* «subir_fotos», js/agente-acciones.js). Solo existe mientras dura la  */
+/* ayuda: al elegir fotos o salir de la pantalla se quita. Va justo     */
+/* encima de «Volver» (.bottom-action: 38px del borde + 68px de alto),  */
+/* con 12px de aire, mismo ancho y márgenes que él.                     */
+/* ---------------------------------------------------------------- */
+.nido-subir-fotos {
+  position: absolute;
+  left: var(--space-page-margin);
+  bottom: 7.375rem; /* 38 + 68 + 12 = 118px */
+  width: calc(100% - 2 * var(--space-page-margin));
+  z-index: 11; /* por encima del difuminado inferior y de la rejilla */
+}
+/* Mientras está, la flecha flotante de bajar (.albumes-more, 640px) sube para que no quede debajo del botón ni de su brillo. */
+.screen:has(> .nido-subir-fotos) .albumes-more {
+  top: 33.5rem; /* 536px: termina en 608, el brillo del botón empieza hacia 648 */
 }

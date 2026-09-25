@@ -1,8 +1,10 @@
 // Nido · conversación de voz con el asistente (ElevenLabs Agents).
 //
 // El navegador pide a una función de Netlify (agente-voz.js) una URL firmada — la clave nunca sale del
-// servidor — y abre la conversación por voz. El agente no ve las fotos: solo sabe lo que esta app le cuenta
-// (pantalla, nombres, álbumes) y solo puede mover la app a través de una herramienta ("abrir_en_la_app").
+// servidor — y abre la conversación por voz. El agente solo sabe lo que esta app le cuenta (pantalla, ficha o foto
+// abierta, nombres, álbumes: NidoAgenteContexto en app.js) y solo actúa con herramientas cliente: aquí abrir_en_la_app
+// y gestionar_albumes; el resto (personas, ver LA foto abierta, señalar, felicitaciones, subir fotos) en agente-acciones.js.
+// Qué hace cada una y cómo darlas de alta en ElevenLabs: agente/HERRAMIENTAS.md.
 // La librería es grande, así que solo se descarga la primera vez que alguien pulsa Hablar.
 
 window.NidoAgente = (function () {
@@ -52,10 +54,10 @@ window.NidoAgente = (function () {
       sesion = await window.ElevenLabsClient.Conversation.startSession({
         signedUrl,
         connectionType: 'websocket',
-        clientTools: {
+        clientTools: Object.assign({
           abrir_en_la_app: async (p) => hooks.abrir((p && (p.pedido || p.request)) || ''),
           gestionar_albumes: async (p) => (hooks.gestionar ? hooks.gestionar(p || {}) : 'No puedo hacer eso ahora.'),
-        },
+        }, hooks.herramientas || {}), // el resto (personas, ver fotos, señalar…) vive en agente-acciones.js
         onConnect: () => { try { sesion && sesion.sendContextualUpdate(hooks.contexto()); } catch (e) {} },
         onMessage: (m) => {
           if (!m || !m.message) return;
@@ -82,11 +84,15 @@ window.NidoAgente = (function () {
 
   function contexto(texto) { try { if (sesion) sesion.sendContextualUpdate(texto); } catch (e) {} }
 
+  // Un aviso de la propia app que Nidi debe atender YA (p. ej. «acaba de abrir la ficha de alguien sin nombre»): entra como un turno de
+  // la conversación y Nidi responde en voz alta. No se usa sendContextualUpdate porque ése no hace hablar al agente.
+  function decir(texto) { try { if (sesion && sesion.sendUserMessage) { sesion.sendUserMessage(texto); return true; } } catch (e) {} return false; }
+
   async function stop() {
     const s = sesion;
     sesion = null;
     if (s) { try { await s.endSession(); } catch (e) {} }
   }
 
-  return { start, stop, contexto, get activa() { return !!sesion; } };
+  return { start, stop, contexto, decir, get activa() { return !!sesion; } };
 })();

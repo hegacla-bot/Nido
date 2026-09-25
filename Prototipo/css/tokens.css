@@ -68,6 +68,7 @@ html {
     confirmado en todas las pantallas revisadas, .btn llevaba 12px por error */
   --radius-pill: 1.5rem;          /* 24px — wrapper "Crear" */
   --radius-bubble: 2rem;          /* 32px — burbuja de diálogo del pollito */
+  --bubble-pad-y: 0.75rem;         /* 12px — aire arriba y abajo del texto en TODAS las burbujas (alto = texto + 24px, sin alto mínimo) */
 
   /* ---- Sombras · verificadas por pantalla ---- */
   --shadow-card: 2px 4px 4px 0px rgba(159, 172, 186, 0.25), 2px 4px 12px 0px rgba(116, 135, 154, 0.5);

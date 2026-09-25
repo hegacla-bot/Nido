@@ -25,7 +25,7 @@
 .eliminar-foto-bubble {
   position: absolute;
   left: 1.25rem;
-  top: 7.625rem; /* 122px */
+  top: 8.9375rem; /* 143px: conserva su borde inferior (212px) con alto = texto */
   width: 13.0625rem; /* 209px */
   box-sizing: border-box;
   margin: 0;
@@ -33,8 +33,7 @@
   /* tl/tr/bl 32px, br 0 — la esquina sin redondear apunta hacia el
      pollito, como el pico de una burbuja de diálogo. */
   border-radius: 2rem 2rem 0 2rem;
-  min-height: 5.625rem; /* 90px */
-  padding: 0.5rem 1.3125rem; /* mismo margen que el resto de burbujas de Nidi (ayuda-layer, persona-ask) */
+  padding: var(--bubble-pad-y) 1.3125rem; /* alto = texto + 24px, igual que el resto de burbujas de Nidi */
   display: flex;
   align-items: center;
   font-size: 1.125rem; /* 18px */

@@ -218,11 +218,9 @@
   position: absolute;
   left: 1.25rem;
   width: 13.0625rem; /* 209px */
-  min-height: 5.625rem; /* 90px — min, no fijo: con texto de 3 líneas (p.ej. un nombre largo) se
-    quedaba corto y el texto no tenía el mismo margen arriba/abajo que a los lados. */
   box-sizing: border-box;
   margin: 0;
-  padding: 0.5rem 1.3125rem; /* mismo margen que el resto de burbujas de Nidi (ayuda-layer, eliminar-foto) */
+  padding: var(--bubble-pad-y) 1.3125rem; /* alto = texto + 24px, igual que el resto de burbujas de Nidi */
   display: flex;
   align-items: center;
   background: var(--color-white);
@@ -233,29 +231,32 @@
   z-index: 1;
 }
 .persona-ask__bubble--1 {
-  top: 9rem; /* 144px */
+  /* Misma composición que la Ayuda (814:13870). Anclado por abajo: crece hacia arriba si el texto ocupa 3 líneas
+     («¿Cómo quieres llamar a tu nuevo álbum?») en vez de solaparse con el 2.º. */
+  top: auto;
+  bottom: calc(100% - 11.25rem); /* 180px = 12px sobre el 2.º */
   border-radius: 2rem;
 }
 .persona-ask__bubble--2 {
-  top: 15.375rem; /* 246px */
+  top: 12rem; /* 192px: borde inferior a 261px, como en la Ayuda */
   border-radius: 2rem 2rem 0 2rem;
 }
-/* Pose "quita el interrogante" ya rotada (−50,99°) por código a partir del asset
-   de Figma; caja de 383,67×372,08 con el centro en (355,8; 497,0). */
+/* Misma pose y sitio que en la Ayuda (pollito-ayuda-v3.webp, Figma 814:13870): contorno visible con el giro ya aplicado,
+   recortado por el borde derecho de la pantalla. */
 .persona-ask__pollito {
   position: absolute;
-  left: 10.25rem; /* 164px */
-  top: 19.4375rem; /* 311px */
-  width: 23.9792rem; /* 383.67px */
-  height: 23.255rem; /* 372.08px */
+  left: 9.0625rem; /* 145px */
+  top: 17rem; /* 272px */
+  width: 15.5rem; /* 248px */
+  height: 16.375rem; /* 262px */
   max-width: none;
   pointer-events: none;
   z-index: 1;
 }
 .persona-ask__mic {
   position: absolute;
-  left: 7.375rem; /* 118px */
-  top: 34.75rem; /* 556px */
+  left: 7.34375rem; /* 117.5px */
+  top: 34.28125rem; /* 548.5px, como en la Ayuda */
   width: 9.875rem; /* 158px */
   height: 9.875rem;
   padding: 0;
@@ -306,8 +307,8 @@
 }
 .felicitacion-pregunta {
   margin: 0 0 1rem; /* 16px */
-  width: 17.1875rem; /* 275px: envuelve en dos líneas */
-  font-size: var(--font-size-title-large);
+  width: 22.0625rem; /* 353px: cabe en una línea (Figma 891:4119) */
+  font-size: var(--font-size-label-medium); /* 18px; antes 20px en dos líneas (733:2997) */
   font-weight: var(--font-weight-bold);
   color: var(--color-black);
 }
@@ -336,10 +337,14 @@
   left: 0;
   top: 0;
   height: 8.375rem; /* 134px, se recorta por abajo con el borde de la tarjeta */
-  width: auto;
+  width: 9.5rem; /* 152px: Año nuevo y Navidad */
   max-width: none;
+  /* Las imágenes de Figma (891:4115) están pensadas para estirarse a la caja (131/148/152 × 134); no mantienen su proporción. */
+  object-fit: fill;
+  object-position: bottom;
 }
-.felicitacion-card--w131 .felicitacion-card__img { left: 1rem; } /* 16px de padding a la izquierda */
+.felicitacion-card--w131 .felicitacion-card__img { left: 1rem; width: 8.1875rem; } /* 16px de padding a la izquierda; 131px */
+.felicitacion-card--w148 .felicitacion-card__img { width: 9.25rem; } /* 148px */
 .felicitacion-card__title,
 .felicitacion-card__text {
   position: absolute;
@@ -453,13 +458,13 @@
 /* Respuesta que "oye" la app (757:4072): burbuja azul clara con puntos suspensivos, esquina inferior izquierda recta. */
 .persona-ask__reply {
   position: absolute;
-  left: 1.4375rem; /* 23px */
-  top: 23.5rem; /* 376px */
+  left: 1.25rem; /* 20px */
+  top: auto;
+  bottom: calc(100% - 11.25rem); /* mismo hueco que el 1.er bocadillo (borde inferior a 180px), al que sustituye mientras oye */
   width: 13.0625rem; /* 209px */
-  min-height: 3.9375rem; /* 63px con los puntos suspensivos; el texto largo (avisos) crece hasta los 90px de los demás bocadillos */
   box-sizing: border-box;
   margin: 0;
-  padding: 0.5rem 1.4375rem; /* texto de 167px */
+  padding: var(--bubble-pad-y) 1.4375rem; /* texto de 167px; alto = texto + 24px como las demás */
   display: flex;
   align-items: center;
   background: var(--color-primary-blue-light);
@@ -469,6 +474,8 @@
   z-index: 1;
 }
 .persona-ask__reply[hidden] { display: none; }
+/* Mientras la app «oye», la frase oída (lila) ocupa el sitio del 1.er bocadillo y el 2.º se queda debajo: la misma pareja que Ayuda 2. */
+.persona-ask:has(.persona-ask__reply:not([hidden])) .persona-ask__bubble--1 { display: none; }
 
 /* Confirmar el nombre del álbum (captura de 757:4223): la respuesta pasa arriba con el nombre "oído". */
 [data-album-ask].is-confirming .persona-ask__bubble--1,
@@ -477,26 +484,24 @@
   display: none;
 }
 [data-album-ask].is-confirming .persona-ask__reply {
-  top: 9rem; /* 144px */
-  height: 3.9375rem; /* 63px (Frame 389) */
-  padding: 0 1.9375rem 0 1.3125rem; /* texto a x=21 */
+  height: auto;
+  padding: var(--bubble-pad-y) 1.9375rem var(--bubble-pad-y) 1.3125rem; /* texto a x=21 */
   font-size: var(--font-size-label-medium);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .persona-ask__bubble--confirm {
-  top: 15.4375rem; /* 247px */
-  left: 1.4375rem;
-  min-height: 5.625rem;
+  top: 12rem; /* 192px: el sitio del 2.º bocadillo, bajo el nombre oído */
+  left: 1.25rem;
   border-radius: 2rem 2rem 0 2rem;
 }
 .persona-ask__crear {
   position: absolute;
   left: 1.25rem;
-  /* Mismo y/alto que el botón de abajo de las pantallas reales (ver la nota igual en
-     .ayuda-layer__close / onboarding.css) — antes se quedaba más arriba de la cuenta. */
-  top: 46.625rem; /* 746px */
+  /* «Sí, crear álbum» va ENCIMA de «Cancelar» (746px), a 16px (Figma 02.2.1, tercera pantalla). Estaba también a 746px y quedaba
+     tapado por «Cancelar»: no se podía tocar. */
+  top: 41.375rem; /* 662px = 746 − 68 − 16 */
   width: calc(100% - 2 * var(--space-page-margin));
   height: 4.25rem; /* 68px */
   z-index: 1;
@@ -519,12 +524,12 @@
   width: 10.5rem;
 }
 .ob-album-nuevo .onboarding-tooltip {
-  left: 2.0625rem; top: 24.4375rem; width: 13.5rem; height: 4.375rem; /* 33, 391, 216×70 */
-  padding: 0 1.15625rem; /* texto de 179px */
+  left: 2.0625rem; top: 29.0312rem; width: 13.5rem; height: auto; /* 33, 391, 216×70 */
+  padding: var(--bubble-pad-y) 1.15625rem; /* texto de 179px */
   border-radius: var(--radius-bubble) var(--radius-bubble) 0 var(--radius-bubble);
 }
 .ob-album-nuevo .onboarding-pollito {
-  left: 9.125rem; top: 28.1875rem; width: 16.125rem; height: 19.25rem; /* 146, 451, 258×308 */
+  left: 11.1875rem; top: 34.59375rem; width: 12.34375rem; height: 12.09375rem; /* tamaño y pose = los del tour nuevo (pollito-onboarding-N-v3.webp), pies sobre el botón */
 }
 .ob-album-nuevo .onboarding-cta {
   top: 46rem; /* 736px */
@@ -547,10 +552,9 @@
 .ayuda-layer__bubble {
   position: absolute;
   width: 13.0625rem; /* 209px */
-  min-height: 5.625rem; /* 90px */
   box-sizing: border-box;
   margin: 0;
-  padding: 0.5rem 1.3125rem; /* texto de 167px */
+  padding: var(--bubble-pad-y) 1.3125rem; /* texto de 167px; alto = texto + 24px */
   display: flex;
   align-items: center;
   color: var(--color-primary-blue-dark);
@@ -560,10 +564,33 @@
   z-index: 1;
 }
 .ayuda-layer__bubble[hidden] { display: none; }
-/* Nidi: blanco, esquina inferior derecha recta. En la primera pantalla va en 20,234. */
+/* Saludo (Ayuda 1 · 814:13881): blanco y redondo del todo, arriba (20,69 · 209×90, texto de 174px). Solo en la
+   primera pantalla: cuando hay respuesta (`--respuesta`) se oculta. */
+.ayuda-layer__bubble--hola {
+  left: 1.25rem;
+  top: 6.9375rem; /* 111px: con alto = texto (2 líneas = 69px) el par sigue anclado al pollito como en Figma */
+  padding: var(--bubble-pad-y) 1.09375rem; /* 17.5px */
+  background: var(--color-white);
+  border-radius: 2rem;
+}
+.ayuda-layer--respuesta .ayuda-layer__bubble--hola { display: none; }
+/* «Llevas un rato aquí» (Figma 847:2539): sin saludo; un solo bocadillo (borde inferior a 259,4px) y la pose que guiña. */
+.ayuda-layer--inactividad .ayuda-layer__bubble--hola { display: none; }
+.ayuda-layer--inactividad:not(.ayuda-layer--respuesta) .ayuda-layer__bubble--nidi {
+  top: auto;
+  bottom: calc(100% - 16.2125rem);
+}
+.ayuda-layer--inactividad .ayuda-layer__pollito {
+  left: 7.25rem; /* 116px */
+  top: 17.46875rem; /* 279.5px */
+  width: 15.09375rem; /* 241.5px */
+  height: 16.03125rem; /* 256.5px */
+}
+/* Nidi: blanco, esquina inferior derecha recta. En la primera pantalla va debajo del saludo, en 20,171 (814:13883). */
 .ayuda-layer__bubble--nidi {
   left: 1.25rem;
-  top: 14.625rem; /* 234px */
+  top: 12rem; /* 192px: su borde inferior sigue en 261px (Figma 814:13883), 12px bajo el saludo */
+  padding: var(--bubble-pad-y) 0.8125rem; /* 13px: texto de 183px */
   background: var(--color-white);
   border-radius: 2rem 2rem 0 2rem;
 }
@@ -576,23 +603,24 @@
 }
 .ayuda-layer--respuesta .ayuda-layer__bubble--nidi {
   left: 3.1875rem; /* 51px */
-  top: 15.6875rem; /* 251px */
+  top: 14.375rem; /* 230px: 28px bajo el bocadillo lila (Figma: 251 con lila de 90px) */
 }
-/* Pose de Nidi "quita el interrogante" (la misma que al preguntar un nombre): centro en (365; 488). */
+/* Pose de Nidi "quita el interrogante" (814:13870, 847:2534). pollito-ayuda-v3.webp = contorno visible de la pose con
+   su giro de −4,97° ya aplicado; llega al borde derecho de la pantalla (que lo recorta, como en Figma). */
 .ayuda-layer__pollito {
   position: absolute;
-  left: 10.8125rem; /* 173px */
-  top: 18.9375rem; /* 303px */
-  width: 23.9792rem;
-  height: 23.255rem;
+  left: 9.0625rem; /* 145px */
+  top: 17rem; /* 272px */
+  width: 15.5rem; /* 248px */
+  height: 16.375rem; /* 262px */
   max-width: none;
   pointer-events: none;
   z-index: 1;
 }
 .ayuda-layer__mic {
   position: absolute;
-  left: 7.375rem; /* 118px */
-  top: 34.75rem; /* 556px */
+  left: 7.34375rem; /* 117.5px */
+  top: 34.28125rem; /* 548.5px */
   width: 9.875rem; /* 158px */
   height: 9.875rem;
   padding: 0;
@@ -671,10 +699,14 @@
 }
 
 /* ---- Conversación con el asistente: pastilla para terminar cuando la capa de ayuda se cierra ---- */
+/* Arriba, sobre la barra de estado (51px, decorativa y sin toques), como el aviso de llamada en curso del iPhone. Antes iba abajo
+   (bottom 6.5rem) y tapaba justo lo que Nidi pide pulsar: «Elegir fotos» de subir_fotos (tocarlo terminaba la conversación en vez
+   de abrir las fotos), «Ver más vídeos» en la ficha de una persona y parte de «Ver más recuerdos» en Home. Arriba no queda
+   encima de ningún botón: termina a 48px y el avatar empieza a 51px. */
 .agente-pill {
   position: absolute;
   left: 50%;
-  bottom: 6.5rem;
+  top: 0.25rem;
   transform: translateX(-50%);
   z-index: 80;
   display: none;
@@ -695,4 +727,3 @@
 }
 .agente-pill.is-visible { display: inline-flex; }
 .agente-pill__dot { width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #5ad17a; animation: persona-mic-pulse 0.9s ease-in-out infinite; }
-

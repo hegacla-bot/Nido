@@ -25,6 +25,9 @@
   let detalleOnboardingSeen = false; // idem para la pantalla de detalle de foto/vídeo
   let yoOnboardingSeen = false; // el tour de Yo solo sale la primera vez (se reinicia al recargar)
   let personasOnboardingSeen = false; // idem para Personas (806:7232)
+  const IDLE_MS = 20000; // sin tocar nada durante este rato, Nidi se asoma (ver ayudaInactividad)
+  let idleTimer = null;
+  let idlePantalla = null; // pantalla en la que ya se ofreció «Llevas un rato aquí»: no se repite hasta que se cambie de pantalla
   var galeriaPropia = false;   // la persona ha elegido sus propias fotos: la biblioteca de ejemplo ya no se carga
   var bibliotecaCargada = false;
   let albumesOnboardingSeen = false; // el tour de Álbumes solo sale la primera vez (se reinicia al recargar)
@@ -34,6 +37,10 @@
     const active = document.querySelector('.screen.is-active');
     return active ? active.dataset.screen : 'home';
   }
+  // Mientras Nidi (el asistente de voz) está en marcha no salen los tours de primera vez (Yo, Personas, detalle de foto; el de álbum
+  // nuevo, en persona.js): Nidi acaba de abrir esa pantalla y de contarlo, y el tour la taparía pidiendo un toque que Nidi no conoce.
+  // No se dan por vistos: salen la primera vez que la persona llegue ahí sola.
+  const nidiHablando = () => !!(window.NidoAgente && window.NidoAgente.activa);
 
   // Dos pasos dentro de la misma capa: 1 Felicitación (765:5320), 2 Eliminar (765:5385).
   function showDetalleOnboardingStep(layer, step) {
@@ -56,7 +63,9 @@
   }
 
   function showScreen(name) {
-    if (window.NidoAgente && window.NidoAgente.activa && window.NidoAgenteContexto) setTimeout(() => window.NidoAgente.contexto(window.NidoAgenteContexto('Ahora')), 400);
+    if (name !== currentScreen()) idlePantalla = null; // pantalla nueva: puede volver a ofrecerse ayuda si se queda quieta
+    idleArmar(); // cambiar de pantalla (también por voz) cuenta como actividad
+    if (window.NidoAgente && window.NidoAgente.activa && window.NidoAgenteContexto) setTimeout(() => { window.NidoAgente.contexto(window.NidoAgenteContexto('Ahora')); agenteAvisoFicha(); }, 400);
     screens.forEach((screen) => {
       const willBeActive = screen.dataset.screen === name;
       const wasActive = screen.classList.contains('is-active');
@@ -69,14 +78,14 @@
         if (!willBeActive && wasActive) window.Mascota.exitOnboardingPollito(screen);
       }
 
-      if (willBeActive && !wasActive && name === 'yo' && !yoOnboardingSeen) {
+      if (willBeActive && !wasActive && name === 'yo' && !yoOnboardingSeen && !nidiHablando()) {
         yoOnboardingSeen = true;
         const layer = screen.querySelector('[data-onboarding-layer]');
         layer.classList.add('is-visible');
         window.Mascota.enterOnboardingPollito(layer);
       }
       if (willBeActive && !wasActive && name === 'home' && window.NidoBiblioteca) window.NidoBiblioteca.cargar();
-      if (willBeActive && !wasActive && name === 'personas' && !personasOnboardingSeen) {
+      if (willBeActive && !wasActive && name === 'personas' && !personasOnboardingSeen && !nidiHablando()) {
         personasOnboardingSeen = true;
         const layer = screen.querySelector('[data-onboarding-layer]');
         layer.classList.add('is-visible');
@@ -152,7 +161,7 @@
     detalleVideoVisible();
 
     // Primera vez que se abre una foto: onboarding de la pantalla (765:5320).
-    if (!detalleOnboardingSeen) {
+    if (!detalleOnboardingSeen && !nidiHablando()) {
       detalleOnboardingSeen = true;
       const layer = document.querySelector('[data-detalle-onboarding]');
       showDetalleOnboardingStep(layer, 1);
@@ -266,8 +275,8 @@
     // el 24-sep: de la bienvenida se pasa directo al registro.
     // registro-1 ("Revive tus momentos...", valor+Entrar) se quitó del todo el 24-sep: de la
     // bienvenida se pasa ahora directo a registro-2 (antes ya se había quitado pre-registro igual).
-    bienvenidaVideo.addEventListener('ended', () => { if (enBienvenida()) showScreen('registro-2'); });
-    videoConRespaldo(bienvenidaVideo, { activa: enBienvenida, animacion: 'assets/video/pollito-huevo.webp', ms: 5300, fin: () => showScreen('registro-2') });
+    bienvenidaVideo.addEventListener('ended', () => { if (enBienvenida()) showScreen('registro-nidi'); });
+    videoConRespaldo(bienvenidaVideo, { activa: enBienvenida, animacion: 'assets/video/pollito-huevo.webp', ms: 5300, fin: () => showScreen('registro-nidi') });
   }
 
   // ---------------------------------------------------------------
@@ -361,13 +370,36 @@
 
   function enterRegistroNidi() {
     clearTimeout(registroNidiTimer);
-    registroNidiTimer = setTimeout(() => showScreen('registro-4'), REGISTRO_NIDI_MS);
+    registroNidiTimer = setTimeout(() => showScreen('registro-2'), REGISTRO_NIDI_MS);
   }
 
+  // Pantalla de carga (registro-4). «Permitir» abre el selector de fotos del sistema y a la vez entra aquí: la carga espera a que
+  // se cierre (change o cancel) para que el aviso «Sin problema…» salga en esta pantalla y no encima del tour. Tope por si el
+  // navegador no avisa del cierre (Safari antiguo) o la persona tarda mucho eligiendo.
+  const REGISTRO_SPLASH_MS = 1800;       // sin selector, como siempre
+  const REGISTRO_SPLASH_AVISO_MS = 4000; // con aviso: el tiempo de leerlo
+  const REGISTRO_SPLASH_TOPE_MS = 12000;
+  let galeriaAbierta = false; // el selector de fotos del sistema está abierto
+  let splashDesde = 0;
+  function splashSiguiente() { if (currentScreen() === 'registro-4') showScreen('onboarding-1'); }
   function enterRegistroSplash(screen) {
     clearTimeout(registroSplashTimer);
+    splashDesde = Date.now();
     // Tras el loader arranca el tour de onboarding (rediseño de la sesión 5).
-    registroSplashTimer = setTimeout(() => showScreen('onboarding-1'), 1800);
+    registroSplashTimer = setTimeout(splashSiguiente, galeriaAbierta ? REGISTRO_SPLASH_TOPE_MS : REGISTRO_SPLASH_MS);
+  }
+  // El selector se ha cerrado. Devuelve true si estábamos en la pantalla de carga (ya se ha ocupado de todo).
+  function splashSelectorCerrado(cancelado) {
+    galeriaAbierta = false;
+    if (currentScreen() !== 'registro-4') return false;
+    clearTimeout(registroSplashTimer);
+    if (cancelado) {
+      nidoToast('registro-4', AVISO_GALERIA, null, null, REGISTRO_SPLASH_AVISO_MS - 300);
+      registroSplashTimer = setTimeout(splashSiguiente, REGISTRO_SPLASH_AVISO_MS);
+    } else {
+      registroSplashTimer = setTimeout(splashSiguiente, Math.max(0, REGISTRO_SPLASH_MS - (Date.now() - splashDesde)));
+    }
+    return true;
   }
 
   document.addEventListener('click', (event) => {
@@ -491,6 +523,11 @@
   // Seleccionar fotos para añadir a un álbum (685:8075, "Elige las fotos a añadir"): un toque marca/desmarca
   // (antes era mantener pulsado y un toque abría el detalle; en una pantalla cuyo único fin es elegir, tocar
   // tiene que elegir). Captura, para llegar antes que el manejador genérico que abre el detalle.
+  // El botón dice cuántas hay marcadas («Añadir 3», 25-sep): así se sabe lo que va a pasar antes de pulsarlo.
+  function contarSeleccion() {
+    const n = document.querySelectorAll('[data-select-grid] .is-selected').length;
+    document.querySelectorAll('[data-select-add-label]').forEach((el) => { el.textContent = n ? 'Añadir ' + n : 'Añadir'; });
+  }
   document.querySelectorAll('[data-select-grid]').forEach((grid) => {
     grid.addEventListener('click', (event) => {
       const cell = event.target.closest('.photo-card');
@@ -498,6 +535,7 @@
       event.stopImmediatePropagation();
       event.preventDefault();
       cell.classList.toggle('is-selected');
+      contarSeleccion();
     }, true);
   });
 
@@ -517,9 +555,17 @@
       const stack = list.querySelector('[data-album-id="' + album.id + '"]');
       if (!stack) return;
       stack.querySelector('.album-stack__meta').textContent = n + (n === 1 ? ' foto' : ' fotos');
-      const portada = album.photos.find((p) => p.tag === 'IMG'); // portada = 1ª foto (nunca un vídeo: no se puede pintar como imagen)
-      if (portada) stack.querySelector('.album-stack__front > img').src = portada.src;
+      const fotos = album.photos.filter((p) => p.tag === 'IMG'); // nunca un vídeo: no se puede pintar como imagen
+      if (fotos[0]) stack.querySelector('.album-stack__front > img').src = fotos[0].src; // portada = 1ª foto
+      albumStackTrasera(stack, fotos[1]);
     });
+  }
+
+  // La carta girada de detrás enseña la 2.ª foto del álbum. Con una sola foto (o ninguna) no hay carta
+  // de detrás: una pila con la misma foto repetida, o con una foto de relleno, diría algo que no es verdad.
+  function albumStackTrasera(stack, foto) {
+    stack.classList.toggle('album-stack--single', !foto);
+    if (foto) stack.querySelector('.album-stack__back img').src = foto.src;
   }
 
   function albumRender() {
@@ -580,6 +626,15 @@
     return album;
   };
 
+  // Quita un álbum automático por clave (p. ej. «persona:r1abc» cuando se deshace el nombre de esa persona).
+  NidoAlbums.removeKey = (key) => {
+    const album = NidoAlbums.list.find((x) => x.key === key);
+    if (!album) return;
+    NidoAlbums.list = NidoAlbums.list.filter((x) => x !== album);
+    document.querySelectorAll('[data-album-id="' + album.id + '"]').forEach((el) => el.remove());
+    if (NidoAlbums.current === album) { NidoAlbums.current = null; if (currentScreen() === 'album-nuevo') showScreen('albumes'); }
+  };
+
   NidoAlbums.open = (id) => {
     NidoAlbums.current = NidoAlbums.list.find((a) => a.id === id) || null;
     albumRender();
@@ -601,6 +656,7 @@
     if (src) {
       selectTarget = src.dataset.selectTarget;
       document.querySelectorAll('[data-select-grid] .is-selected').forEach((c) => c.classList.remove('is-selected'));
+      contarSeleccion();
     }
     if (event.target.closest('[data-select-add]') && selectTarget === 'nuevo' && NidoAlbums.current) {
       const album = NidoAlbums.current;
@@ -648,7 +704,7 @@
   const MAX_GALLERY = 60;
 
   document.addEventListener('click', (event) => {
-    if (event.target.closest('[data-pick-gallery]')) galleryInput.click(); // debe ir dentro del toque
+    if (event.target.closest('[data-pick-gallery]')) { galeriaAbierta = true; galleryInput.click(); } // debe ir dentro del toque
   }, true);
 
   // Un archivo, una sola dirección: si cada pantalla creara la suya, el buscador de personas vería la misma foto varias veces
@@ -673,8 +729,16 @@
   }
 
   // Si cierra el selector sin elegir nada: no es un error, se queda con las fotos de ejemplo y se le dice.
+  // El aviso sale solo en la pantalla de carga del alta (ver splashSelectorCerrado). En el resto del alta y en el tour no se interrumpe
+  // con nada encima de «Siguiente»; fuera de ahí, si cierra el selector sin elegir, se le dice enseguida.
+  const AVISO_GALERIA = 'Sin problema: de momento verás fotos de ejemplo.';
   galleryInput.addEventListener('cancel', () => {
-    setTimeout(() => nidoToast(currentScreen(), 'Sin problema: de momento verás fotos de ejemplo.', null, null, 5000), 600);
+    if (splashSelectorCerrado(true)) return;
+    if (/^(registro|onboarding)/.test(currentScreen())) return;
+    // Si ya tiene sus fotos, el aviso sería falso (sigue viendo las suyas). Y si lo abrió desde el «Elegir fotos» de Nidi (subir_fotos,
+    // agente-acciones.js), es Nidi quien le habla de ello: dos mensajes a la vez sobran.
+    if (galeriaPropia || document.querySelector('.nido-subir-fotos')) return;
+    setTimeout(() => nidoToast(currentScreen(), AVISO_GALERIA, null, null, 3500), 600);
   });
 
   // Sin conexión: se avisa en la pantalla actual (la IA de felicitaciones la necesita); al volver, se quita.
@@ -763,11 +827,12 @@
     });
     const selGrid = document.querySelector('[data-select-grid]');
     selGrid.innerHTML = '';
+    contarSeleccion(); // cuadrícula nueva, sin nada marcado
     galleryMedia(files).forEach((media) => {
       const cell = document.createElement('button');
       cell.className = 'photo-card is-selectable';
       cell.appendChild(media);
-      cell.insertAdjacentHTML('beforeend', '<span class="select-overlay"><img src="assets/icons/icon-check-circle.svg" alt="" /></span>');
+      cell.insertAdjacentHTML('beforeend', '<span class="select-overlay"><img class="select-overlay__vacio" src="assets/icons/icon-circle-empty.svg" alt="" /><img class="select-overlay__check" src="assets/icons/icon-check-circle-44.svg" alt="" /></span>');
       selGrid.appendChild(cell);
     });
 
@@ -782,7 +847,8 @@
       const todas = stacks[0];
       if (todas) {
         todas.querySelector('.album-stack__meta').textContent = files.length + (files.length === 1 ? ' foto' : ' fotos');
-        if (portada) { todas.querySelector('.album-stack__front > img').src = portada.src; todas.querySelector('.album-stack__back img').src = (items.find((it) => it.tag === 'IMG' && it !== portada) || portada).src; }
+        if (portada) todas.querySelector('.album-stack__front > img').src = portada.src;
+        albumStackTrasera(todas, items.find((it) => it.tag === 'IMG' && it !== portada));
       }
       stacks.slice(1).forEach((s) => s.remove());
     });
@@ -792,9 +858,14 @@
   }
 
   galleryInput.addEventListener('change', async () => {
+    splashSelectorCerrado(false);
     const files = Array.from(galleryInput.files || []);
+    // Subir fotos SUMA a las que ya hay (antes las sustituía: con la biblioteca cargada, «Todas tus fotos» pasaba de 42 a 2 mientras
+    // los álbumes y las personas seguían contando las 42). En el alta todavía no hay nada, así que ahí es lo mismo que antes.
+    // Las nuevas van delante para que el tope MAX_GALLERY (que cargarGaleria aplica antes de ordenar por fecha) no las deje fuera.
+    const yaHay = (galeriaPropia || bibliotecaCargada) && window.NidoGaleria ? window.NidoGaleria.items.map((it) => it.file).filter((f) => f && !files.includes(f)) : [];
     if (files.length) galeriaPropia = true;
-    await cargarGaleria(files);
+    await cargarGaleria(files.length ? files.concat(yaHay) : files);
     galleryInput.value = '';
   });
 
@@ -901,7 +972,10 @@
     'felicitacion-estilo': 'Elige el tipo de felicitación y pulsa Continuar.',
     'felicitacion-generada': 'Esta es tu felicitación. Puedes compartirla.',
   };
-  const AYUDA_SALUDO = '¡Hola! Toca al micrófono y dime en qué necesitas ayuda.';
+  // Ayuda 1 (Figma 814:13870): dos bocadillos. El de arriba saluda y no cambia; el de abajo es el que
+  // dice qué hacer (y luego «Te escucho…», «Conectando…» o los avisos).
+  const AYUDA_HOLA = '¡Hola! ¿En qué te puedo ayudar?';
+  const AYUDA_SALUDO = 'Pulsa en el micrófono y dime qué necesitas.';
   let ayudaLayer = null;
   let ayudaRec = null;
 
@@ -911,9 +985,10 @@
     ayudaLayer.className = 'ayuda-layer';
     ayudaLayer.innerHTML =
       '<div class="onboarding-overlay"></div>' +
+      '<p class="ayuda-layer__bubble ayuda-layer__bubble--hola">' + AYUDA_HOLA + '</p>' +
       '<p class="ayuda-layer__bubble ayuda-layer__bubble--tu" data-ayuda-tu hidden></p>' +
       '<p class="ayuda-layer__bubble ayuda-layer__bubble--nidi" data-ayuda-texto></p>' +
-      '<img class="ayuda-layer__pollito" src="assets/img/pollito-pregunta-nombre.webp" alt="" />' +
+      '<img class="ayuda-layer__pollito" src="assets/img/pollito-ayuda-v3.webp" alt="" />' +
       '<button class="ayuda-layer__mic" data-ayuda="hablar" aria-label="Hablar"><img src="assets/icons/mic-escuchar.svg" alt="" /></button>' +
       '<button class="btn btn--type2 btn--horizontal btn--lg ayuda-layer__close" data-ayuda="cerrar"><span data-ayuda-cerrar-texto>Cancelar</span></button>';
     screens[0].parentElement.appendChild(ayudaLayer);
@@ -946,7 +1021,8 @@
   }
   function ayudaReset() {
     const layer = ayudaBuild();
-    layer.classList.remove('ayuda-layer--respuesta');
+    layer.classList.remove('ayuda-layer--respuesta', 'ayuda-layer--inactividad');
+    layer.querySelector('.ayuda-layer__pollito').src = 'assets/img/pollito-ayuda-v3.webp';
     layer.querySelector('[data-ayuda-tu]').hidden = true;
     layer.querySelector('[data-ayuda-cerrar-texto]').textContent = 'Cancelar';
     ayudaEstadoBoton('cerrado');
@@ -954,6 +1030,35 @@
   }
 
   function ayudaTexto(t) { ayudaBuild().querySelector('[data-ayuda-texto]').textContent = t; }
+
+  // ---- «Llevas un rato aquí» (Figma 847:2539): si la persona no toca nada durante IDLE_MS, Nidi se asoma con la misma capa que el
+  // avatar pero con un solo bocadillo y otra pose. Una vez por visita a cada pantalla; nunca durante el alta, el tour, una foto abierta
+  // o cuando ya hay otra capa, aviso o conversación en marcha. Tocar el micrófono sigue como cualquier ayuda; Cancelar la cierra.
+  const AYUDA_INACTIVIDAD = 'Llevas un rato aquí. Toca el micrófono si quieres que te ayude.';
+  const IDLE_SIN_AYUDA = /^(bienvenida|registro|onboarding|ajustes-codigo|ajustes-telefono|detalle-foto)/;
+  const IDLE_CAPAS = '.ayuda-layer.is-visible, .persona-ask.is-visible, .persona-confirm.is-visible, .eliminar-foto-layer.is-visible, [data-modal].is-visible, [data-onboarding-layer].is-visible, .detalle-onboarding.is-visible, .ob-album-nuevo.is-visible, .nido-toast.is-visible';
+  function ayudaInactividad() {
+    const layer = ayudaBuild();
+    ayudaReset();
+    layer.classList.add('ayuda-layer--inactividad');
+    layer.querySelector('.ayuda-layer__pollito').src = 'assets/img/pollito-inactividad-v3.webp';
+    ayudaTexto(AYUDA_INACTIVIDAD);
+    layer.classList.add('is-visible');
+  }
+  function idleArmar() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(idleDisparar, IDLE_MS);
+  }
+  function idleDisparar() {
+    const pantalla = currentScreen();
+    const puede = !document.hidden && pantalla !== idlePantalla && !IDLE_SIN_AYUDA.test(pantalla)
+      && !(window.NidoAgente && window.NidoAgente.activa) && !document.querySelector(IDLE_CAPAS);
+    if (!puede) { idleArmar(); return; } // ahora no toca: se vuelve a mirar dentro de otro rato
+    idlePantalla = pantalla;
+    ayudaInactividad();
+  }
+  ['pointerdown', 'touchstart', 'keydown', 'wheel', 'scroll'].forEach((ev) => document.addEventListener(ev, idleArmar, { capture: true, passive: true }));
+  idleArmar();
 
   function ayudaCerrar() {
     if (ayudaRec) { try { ayudaRec.abort(); } catch (e) {} ayudaRec = null; }
@@ -984,22 +1089,59 @@
   // Lo que el asistente sabe de la app en cada momento: solo esto, nunca las fotos.
   window.NidoAgenteContexto = (cuando) => {
     const pantalla = currentScreen();
-    const personas = window.PersonaSelect ? window.PersonaSelect.nombres() : [];
-    const albumes = NidoAlbums.list.map((a) => a.name);
-    return (cuando || 'Ahora') + ' la persona está en la pantalla «' + pantalla + '». ' + (AYUDA_TEXTOS[pantalla] || '') +
-      ' Personas que Nido conoce: ' + (personas.join(', ') || 'ninguna todavía') + '.' +
+    const api = window.PersonaSelect && window.PersonaSelect.agente;
+    const est = api ? api.estado() : { ficha: null, personas: [], foto: null };
+    // Los de la persona y los que pone Nido solo (por año, época o persona) por separado: estos últimos no se cambian a mano.
+    const albumes = NidoAlbums.list.filter((a) => !a.auto).map((a) => a.name + ' (' + a.photos.length + ')');
+    const automaticos = NidoAlbums.list.filter((a) => a.auto).map((a) => a.name + ' (' + a.photos.length + ')');
+    const conNombre = est.personas.filter((p) => p.nombre).map((p) => p.nombre + ' (' + p.nFotos + ')');
+    const sinNombre = est.personas.filter((p) => p.real && !p.nombre);
+    let ficha = '';
+    if (est.ficha) ficha = est.ficha.nombre ? ' Tiene abierta la ficha de «' + est.ficha.nombre + '» (' + est.ficha.nFotos + ' fotos).'
+      : est.ficha.real ? ' Tiene abierta una ficha SIN NOMBRE (' + est.ficha.nFotos + ' fotos): si no lo has hecho ya, pregúntale quién es.' : '';
+    const foto = est.foto ? ' Tiene abierta ' + (est.foto.tipo === 'vídeo' ? 'un vídeo' : 'una foto') + (est.foto.fecha ? ' del ' + est.foto.fecha : '') + ': puedes mirarla con ver_foto.' : '';
+    // El álbum que tiene delante (o del que viene la foto abierta): gestionar_albumes lo usa como origen si no se dice otro.
+    const alVista = albumALaVista();
+    const album = alVista ? ' Está dentro del álbum «' + alVista.name + '» (' + alVista.photos.length + ')' + (alVista.auto ? ', que lo pone Nido solo y no se cambia a mano' : '') + '.' : '';
+    // «Este álbum está vacío» es el texto de la pantalla recién creada: con fotos dentro, Nidi diría lo contrario de lo que se ve.
+    const explica = pantalla === 'album-nuevo' && NidoAlbums.current && NidoAlbums.current.photos.length
+      ? 'Estas son las fotos del álbum. Pulsa Añadir para meter más.' : (AYUDA_TEXTOS[pantalla] || '');
+    return (cuando || 'Ahora') + ' la persona está en la pantalla «' + pantalla + '». ' + explica + ficha + album + foto +
+      ' Personas que Nido conoce por su nombre: ' + (conNombre.join(', ') || 'ninguna todavía') + '.' +
+      (sinNombre.length ? ' Fichas de personas SIN nombre: ' + sinNombre.length + '.' : '') +
       ' Álbumes creados por la persona: ' + (albumes.join(', ') || 'ninguno') + '.' +
-      ' Puedes mover la app con la herramienta abrir_en_la_app (por ejemplo «fotos de Clara», «mis álbumes», «felicitación», «inicio»). ' +
-      'Para CREAR un álbum, AÑADIRLE fotos o CAMBIARLE el nombre usa la herramienta gestionar_albumes (acciones: crear, anadir, renombrar; criterio: persona, año, «navidad», «verano», «vídeos» o «todas»). ' +
-      'Después de usarla, di solo lo que has abierto. Si el nombre no está en la lista, no lo intentes: pregunta.';
+      (automaticos.length ? ' Álbumes que pone Nido solo (se pueden abrir y copiar sus fotos, no cambiar): ' + automaticos.join(', ') + '.' : '');
   };
 
-  // ---- Lo que el asistente puede hacer con los álbumes (herramienta gestionar_albumes): crear, añadir fotos y renombrar ----
-  // Devuelve siempre una frase corta que el asistente le cuenta a la persona (y le sirve para saber si ha salido bien).
-  function fotosPorCriterio(criterio) {
+  // Cuando la persona abre la ficha de alguien que Nido no sabe quién es y Nidi está escuchando, Nidi se lo pregunta (una vez por ficha).
+  const fichasPreguntadas = new Set();
+  // Cuando es Nidi quien abre una ficha sin nombre (abrir_persona, agente-acciones.js), la respuesta de la herramienta ya le dice que
+  // pregunte: la marca aquí para que este aviso no llegue además como otro turno 400 ms después (preguntaría dos veces).
+  window.NidoAgenteFichaPreguntada = (id) => fichasPreguntadas.add(id);
+  function agenteAvisoFicha() {
+    const api = window.PersonaSelect && window.PersonaSelect.agente;
+    if (!api || !window.NidoAgente || !window.NidoAgente.activa) return;
+    const f = api.estado().ficha;
+    if (!f || !f.real || f.nombre || fichasPreguntadas.has(f.id)) return;
+    fichasPreguntadas.add(f.id);
+    window.NidoAgente.decir('[Aviso de la app, no lo ha dicho la persona] Acaba de abrir la ficha de alguien que Nido todavía no sabe quién es (' + f.nFotos + ' fotos). Salúdala y pregúntale amablemente quién es.');
+  }
+
+  // ---- Lo que el asistente puede hacer con los álbumes (herramienta gestionar_albumes): crear, añadir fotos, pasarlas de un
+  // álbum a otro, quitarlas de un álbum y renombrar ----
+  // Devuelve siempre una frase corta y VERDADERA que el asistente le cuenta a la persona (y le sirve para saber si ha salido bien):
+  // empieza por «Hecho:» solo si se ha hecho, con los números reales. Si falta algo, la frase dice qué preguntar.
+  // Los álbumes automáticos (al.auto: por año, Navidad, verano o «Fotos de …», los pone Nido con NidoAlbums.upsert) no se tocan
+  // a mano: upsert les vuelve a poner sus fotos cada vez que se cargan fotos o se reconoce a alguien, así que un cambio a mano
+  // se perdería sin avisar. Se pueden usar como ORIGEN (se copian las fotos, sin quitarlas de allí), nunca como destino.
+
+  // Filtra una lista de fotos ({src, tag, date?}) por lo que ha dicho la persona. Devuelve null si no se entiende ningún criterio:
+  // antes «las fotos de la playa» o «de Pepe» (alguien sin ficha) no filtraban nada y devolvían TODAS, y un «pasa las fotos de
+  // Pepe a Viaje» habría movido el álbum entero. Criterios: persona (por su nombre), año, Navidad, verano, vídeos, fotos, todas.
+  function filtrarPorCriterio(lista, criterio) {
     const t = normV(criterio);
-    let sel = ((window.NidoGaleria && window.NidoGaleria.items) || []).filter((it) => it.src);
-    if (!t) return [];
+    if (!t) return null;
+    let sel = lista.slice(), entendido = false;
     const ps = window.PersonaSelect;
     // personas nombradas en la frase: la foto tiene que salir en todas (si dice "Clara y Ana", en las que salen juntas)
     (ps ? ps.nombres() : []).forEach((n) => {
@@ -1007,56 +1149,255 @@
       if (t.includes(nn) || (corto.length > 2 && new RegExp('\\b' + corto + '\\b').test(t))) {
         const propias = new Set(ps.fotosDePersona(ps.personIdByName(n)));
         sel = sel.filter((it) => propias.has(it.src));
+        entendido = true;
       }
     });
     const anio = t.match(/\b(19|20)\d\d\b/);
-    if (anio) sel = sel.filter((it) => it.date.getFullYear() === Number(anio[0]));
-    if (/navidad/.test(t)) sel = sel.filter((it) => { const m = it.date.getMonth() + 1, d = it.date.getDate(); return (m === 12 && d >= 15) || (m === 1 && d <= 6); });
-    if (/verano/.test(t)) sel = sel.filter((it) => { const m = it.date.getMonth() + 1, d = it.date.getDate(); return (m === 6 && d >= 21) || m === 7 || m === 8 || (m === 9 && d <= 22); });
-    if (/\bvideos?\b/.test(t)) sel = sel.filter((it) => it.tag === 'VIDEO');
-    else if (/\bfotos?\b|\bimagenes\b/.test(t) && !/\btodas\b/.test(t)) sel = sel.filter((it) => it.tag === 'IMG');
-    return sel.map((it) => ({ src: it.src, tag: it.tag }));
+    if (anio) { entendido = true; sel = sel.filter((it) => it.date && it.date.getFullYear() === Number(anio[0])); }
+    if (/navidad/.test(t)) { entendido = true; sel = sel.filter((it) => { if (!it.date) return false; const m = it.date.getMonth() + 1, d = it.date.getDate(); return (m === 12 && d >= 15) || (m === 1 && d <= 6); }); }
+    if (/verano/.test(t)) { entendido = true; sel = sel.filter((it) => { if (!it.date) return false; const m = it.date.getMonth() + 1, d = it.date.getDate(); return (m === 6 && d >= 21) || m === 7 || m === 8 || (m === 9 && d <= 22); }); }
+    if (/\bvideos?\b/.test(t)) { entendido = true; sel = sel.filter((it) => it.tag === 'VIDEO'); }
+    // «las fotos» = solo imágenes; «todas las fotos» y «estas fotos» = todo lo que hay (vídeos incluidos: así se habla)
+    else if (/\bfotos?\b|\bimagen(es)?\b/.test(t) && !/\btod[oa]s?\b|\b(estas|esas|estos|esos)\b/.test(t)) { entendido = true; sel = sel.filter((it) => it.tag === 'IMG'); }
+    if (/\btod[oa]s?\b|\b(estas|esas|estos|esos)\b|\beste album\b/.test(t)) entendido = true; // «todas», «estas fotos»: sin más filtro
+    return entendido ? sel : null;
   }
+  // Fotos de la biblioteca («Todas tus fotos») que encajan con el criterio; [] si no se entiende.
+  function fotosPorCriterio(criterio) {
+    const items = ((window.NidoGaleria && window.NidoGaleria.items) || []).filter((it) => it.src);
+    return (filtrarPorCriterio(items, criterio) || []).map((it) => ({ src: it.src, tag: it.tag }));
+  }
+  // Dos direcciones de la misma foto: una puede venir relativa (fotos de ejemplo del HTML) y otra absoluta (el .src de un <img>).
+  const srcAbs = (s) => { try { return new URL(s, location.href).href; } catch (e) { return s; } };
+  const mismaSrc = (a, b) => srcAbs(a) === srcAbs(b);
+  // «3 fotos»; si todo lo que se cuenta son vídeos, «3 vídeos» (la frase la oye la persona y tiene que ser verdad).
+  const soloVideos = (lista) => !!(lista && lista.length && lista.every((f) => f.tag === 'VIDEO'));
+  const nFotos = (n, lista) => n + (soloVideos(lista) ? (n === 1 ? ' vídeo' : ' vídeos') : (n === 1 ? ' foto' : ' fotos'));
+  const concuerda = (raiz, n, lista) => raiz + (soloVideos(lista) ? 'o' : 'a') + (n === 1 ? '' : 's'); // «pasada», «quitados»…
   const cap1 = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  // Álbum por su nombre para añadir, quitar, renombrar o sacar fotos de él. Estricto, como buscarDestino: antes valía cualquier álbum
+  // cuyo nombre estuviera DENTRO de lo dicho, y «Casa de verano» caía en «Casa», «Pueblo nuevo» vaciaba «Pueblo» y la frase empezaba
+  // por «Hecho:». Vale el nombre exacto, o uno solo que lo contenga (primero entre los de la persona; si no, entre todos, para
+  // poder rechazar un automático con su mensaje). Si no hay uno claro, null: se dice que no existe y se da la lista.
+  // «el álbum de la Playa», «mi álbum Viaje»: lo de delante del nombre no cuenta (así sigue valiendo el nombre exacto).
+  const sinArticulo = (t) => t.replace(/^((el|la|los|las|mi|mis|album|de|del)\s+)+/, '');
   function buscarAlbum(nombre) {
-    const t = normV(nombre);
-    if (!t) return NidoAlbums.current || null;
-    return NidoAlbums.list.find((al) => normV(al.name) === t) || NidoAlbums.list.find((al) => normV(al.name).includes(t) || t.includes(normV(al.name))) || null;
+    const t = sinArticulo(normV(nombre));
+    if (!t) return albumALaVista(); // sin nombre («el álbum» a secas) = el que tiene delante; si no está en ninguno, null (NidoAlbums.current puede ser uno de antes)
+    const exacto = NidoAlbums.list.find((al) => normV(al.name) === normV(nombre) || normV(al.name) === t);
+    if (exacto) return exacto;
+    const suyos = NidoAlbums.list.filter((al) => !al.auto && normV(al.name).includes(t));
+    if (suyos.length) return suyos.length === 1 ? suyos[0] : null;
+    const todos = NidoAlbums.list.filter((al) => normV(al.name).includes(t));
+    return todos.length === 1 ? todos[0] : null;
   }
+  // Destino de fotos: más estricto que buscarAlbum, porque meter fotos en el álbum equivocado sin preguntar es peor que preguntar.
+  // Vale el nombre exacto, o uno solo de los álbumes de la persona que lo contenga («Navidad» → «Navidad en casa»). Un nombre más
+  // largo que uno existente («Viaje 2025» con «Viaje» o con el automático «2025») es otro álbum: null, y Nidi pregunta si lo crea.
+  function buscarDestino(nombre) {
+    const t = sinArticulo(normV(nombre));
+    if (!t) return null;
+    const exacto = NidoAlbums.list.find((al) => normV(al.name) === normV(nombre) || normV(al.name) === t);
+    if (exacto) return exacto;
+    const parecidos = NidoAlbums.list.filter((al) => !al.auto && normV(al.name).includes(t));
+    return parecidos.length === 1 ? parecidos[0] : null;
+  }
+  // «Todas tus fotos» no es un álbum de la lista: es la galería del teléfono (pantalla album-detalle), se llena sola.
+  const esTodasTusFotos = (nombre) => /\btodas (tus|mis|las) fotos\b|^todas$|\bgaleria\b|\bbiblioteca\b|\bcarrete\b/.test(normV(nombre));
+  const listaAlbumes = () => NidoAlbums.list.map((x) => x.name).join(', ') || 'ninguno';
+
+  // La foto que se ve ahora en «detalle-foto» (la misma cuenta que usa «Eliminar foto»: la tarjeta visible del carrusel) y la
+  // pantalla de la que se abrió. null si no hay ninguna abierta.
+  function fotoAbierta() {
+    if (currentScreen() !== 'detalle-foto' || !detalleCards.length) return null;
+    const i = Math.min(detalleCards.length - 1, Math.max(0, Math.round(detalleMedia.scrollLeft / detalleMedia.clientWidth)));
+    const card = detalleCards[i];
+    const el = card && card.querySelector('img, video');
+    if (!el) return null;
+    const scr = card.closest('.screen');
+    return { src: el.src, tag: el.tagName, origen: scr ? scr.dataset.screen : null };
+  }
+  // El álbum creado que la persona tiene delante: dentro de él, o viendo en detalle una foto que se abrió desde él.
+  function albumALaVista() {
+    const pant = currentScreen();
+    if (pant === 'album-nuevo') return NidoAlbums.current;
+    if (pant === 'detalle-foto') { const f = fotoAbierta(); if (f && f.origen === 'album-nuevo') return NidoAlbums.current; }
+    return null;
+  }
+  // En crear y añadir las fotos salen de la biblioteca, salvo «estas fotos» dicho dentro de un álbum: entonces son las de ese álbum.
+  const origenDeEstas = (criterio) => (/\b(estas|esas|estos|esos)\b/.test(normV(criterio)) ? albumALaVista() : null);
+  const esLaFotoAbierta = (t) => /\b(esta|este|esa|ese)\s+(foto|video|imagen)\b|\b(foto|video|imagen)\s+(abierta|abierto)\b|\bla que (estoy|estamos) viendo\b|^(esta|este|esa|ese)$/.test(t);
+
+  // Qué fotos quiere decir la persona, sacadas del álbum `origen` si lo hay (o de toda la biblioteca). Devuelve { fotos } o { error }.
+  function fotosElegidas(criterio, origen) {
+    const t = normV(criterio);
+    const cuales = 'Pregúntale cuáles: esta foto, las de una persona, de un año, de Navidad, de verano, los vídeos o todas.';
+    if (!t) return { error: 'Falta saber qué fotos. ' + cuales };
+    if (esLaFotoAbierta(t)) {
+      const f = fotoAbierta();
+      if (!f) return { error: 'Ahora no tiene ninguna foto abierta. Pregúntale qué fotos quiere decir, o que abra antes la foto.' };
+      if (origen) {
+        const p = origen.photos.find((x) => mismaSrc(x.src, f.src));
+        return p ? { fotos: [p] } : { error: 'La foto que tiene abierta no está en el álbum «' + origen.name + '».' };
+      }
+      return { fotos: [{ src: f.src, tag: f.tag }] };
+    }
+    if (origen) {
+      // Dentro de un álbum: sus fotos, filtradas con el criterio de siempre (la fecha se toma de la biblioteca).
+      const items = ((window.NidoGaleria && window.NidoGaleria.items) || []);
+      const conFecha = origen.photos.map((p) => { const it = items.find((x) => mismaSrc(x.src, p.src)); return { src: p.src, tag: p.tag, date: it ? it.date : null, ref: p }; });
+      const sel = filtrarPorCriterio(conFecha, criterio);
+      if (!sel) return { error: 'No sé qué fotos son «' + criterio + '». ' + cuales };
+      return { fotos: sel.map((x) => x.ref) };
+    }
+    // Sin álbum de origen: «estas fotos» solo tiene sentido si se está viendo un grupo concreto de fotos.
+    if (/\b(estas|esas|estos|esos)\b/.test(t) && !/\btod[oa]s?\b/.test(t)) {
+      const pant = currentScreen(), ps = window.PersonaSelect;
+      const ficha = ps && ps.agente ? ps.agente.estado().ficha : null;
+      if (/^persona-/.test(pant) && ficha) {
+        const items = ((window.NidoGaleria && window.NidoGaleria.items) || []);
+        const fotos = ps.fotosDePersona(ficha.id).map((src) => { const it = items.find((x) => mismaSrc(x.src, src)); return { src, tag: it ? it.tag : 'IMG' }; });
+        return { fotos };
+      }
+      if (pant !== 'album-detalle') return { error: 'No sé qué fotos son «estas» en esta pantalla. ' + cuales };
+    }
+    const sel = filtrarPorCriterio(((window.NidoGaleria && window.NidoGaleria.items) || []).filter((it) => it.src), criterio);
+    if (!sel) return { error: 'No sé qué fotos son «' + criterio + '». ' + cuales };
+    return { fotos: sel.map((it) => ({ src: it.src, tag: it.tag })) };
+  }
+
+  // Tras cambiar fotos de álbum: aviso visible con «Deshacer» (la persona ve lo que ha pasado y puede volver atrás sin pedirlo).
+  function avisoConDeshacer(msg, albumes) {
+    const copia = albumes.map((al) => [al, al.photos.slice()]);
+    const deshacer = () => {
+      copia.forEach(([al, fotos]) => { al.photos = fotos; albumSync(al); });
+      if (currentScreen() === 'album-nuevo' && copia.some(([al]) => al === NidoAlbums.current)) albumRender();
+    };
+    setTimeout(() => nidoToast(currentScreen(), msg, 'Deshacer', deshacer, 7000), 700);
+  }
+
   let ultimoResultadoAlbum = null;
   function gestionarAlbumes(p) {
-    const r = gestionarAlbumesSinRegistro(p);
+    const r = gestionarAlbumesSinRegistro(p || {});
     ultimoResultadoAlbum = r;
     return r;
   }
   function gestionarAlbumesSinRegistro(p) {
     const accion = normV(p.accion), nombre = (p.nombre || '').trim(), nuevo = (p.nuevo_nombre || '').trim(), criterio = p.criterio || '';
+    const origenTxt = (p.origen || '').trim();
+    const crearSiNoExiste = p.crear_si_no_existe === true || p.crear_si_no_existe === 'true';
+    const noEncuentro = (n) => (sinArticulo(normV(n)) ? 'No encuentro ningún álbum llamado «' + n + '».' : 'Falta saber qué álbum. Pregúntale cuál.') + ' Los que hay: ' + listaAlbumes() + '.';
+    const esAuto = (al, que) => 'El álbum «' + al.name + '» lo pone Nido solo (por fechas o por persona) y no se puede ' + que + ' a mano. Pregúntale si prefiere un álbum suyo o crear uno nuevo.';
+
     if (/crear|crea|nuevo/.test(accion)) {
       if (!nombre) return 'Falta el nombre del álbum. Pregúntale cómo quiere llamarlo.';
       if (buscarAlbum(nombre) && normV(buscarAlbum(nombre).name) === normV(nombre)) return 'Ya existe un álbum llamado «' + buscarAlbum(nombre).name + '». Pregúntale si quiere añadirle fotos u otro nombre.';
-      const fotos = fotosPorCriterio(criterio);
+      // Con criterio, las fotos salen de la biblioteca (o, si dice «esta foto», de la que tiene abierta; si dice «estas fotos» dentro
+      // de un álbum, de ese álbum).
+      const el = criterio ? fotosElegidas(criterio, origenDeEstas(criterio)) : { fotos: [] };
+      // Si no se entiende qué fotos quiere (o no hay foto abierta), no se crea nada: Nidi pregunta primero. Antes se creaba vacío,
+      // se decía «Hecho» y el motivo que se daba podía ser falso.
+      if (el.error) return el.error + ' Todavía no he creado el álbum.';
+      const fotos = el.fotos;
       ayudaCerrar();
-      const album = window.PersonaSelect.crearAlbum(cap1(nombre), fotos);
-      return 'Hecho: he creado el álbum «' + album.name + '» con ' + fotos.length + (fotos.length === 1 ? ' foto' : ' fotos') + ' y ya lo tiene abierto.' +
+      const album = window.PersonaSelect.crearAlbum(cap1(nombre), fotos.map((f) => ({ src: f.src, tag: f.tag }))); // copias: no compartir fotos entre álbumes
+      return 'Hecho: he creado el álbum «' + album.name + '» con ' + nFotos(fotos.length, fotos) + ' y ya lo tiene abierto.' +
         (criterio && !fotos.length ? ' No he encontrado fotos con ese criterio; está vacío y puede añadirlas con el botón Añadir.' : '');
     }
+
+    // «pasa estas fotos a Viaje»: salen del álbum de origen (el que diga, o el que tiene delante) y entran en el destino.
+    if (/\b(mover|mueve|pasar|pasa|trasladar|traslada|llevar|lleva|cambiar de album)\b/.test(accion)) {
+      if (!nombre) return 'Falta el álbum al que quiere pasarlas. Pregúntale a cuál.';
+      let origen = null;
+      if (origenTxt) {
+        if (!esTodasTusFotos(origenTxt)) { origen = buscarAlbum(origenTxt); if (!origen) return noEncuentro(origenTxt); }
+      } else origen = albumALaVista();
+      if (esTodasTusFotos(nombre)) return '«Todas tus fotos» son todas las fotos que hay en Nido: ya están ahí. Para sacarlas de un álbum, usa la acción quitar.';
+      let destino = buscarDestino(nombre);
+      if (destino && origen === destino) return 'Ya están en «' + destino.name + '». Pregúntale a qué otro álbum quiere pasarlas.';
+      if (origen && !origen.photos.length) return 'El álbum «' + origen.name + '» está vacío. No he cambiado nada.';
+      if (destino && destino.auto) return esAuto(destino, 'cambiar');
+      const el = fotosElegidas(criterio, origen);
+      if (el.error) return el.error;
+      if (!el.fotos.length) return 'No he encontrado ' + (origen ? 'en «' + origen.name + '» ' : '') + 'fotos con ese criterio. No he cambiado nada.';
+      let creado = false;
+      if (!destino) {
+        // No se crea un álbum sin preguntar: Nidi pregunta y, si dice que sí, repite con crear_si_no_existe=true.
+        if (!crearSiNoExiste) return 'No hay ningún álbum llamado «' + nombre + '». Pregúntale si quiere que lo cree; si dice que sí, repite con crear_si_no_existe=true. Los que hay: ' + listaAlbumes() + '.';
+        destino = NidoAlbums.create(cap1(nombre));
+        creado = true;
+      }
+      const n = el.fotos.length;
+      const nuevas = el.fotos.filter((f) => !destino.photos.some((x) => mismaSrc(x.src, f.src)));
+      const yaEstaban = n - nuevas.length;
+      // Del origen solo se quitan si es un álbum de la persona: de uno automático o de «Todas tus fotos» se copian.
+      const quitaDelOrigen = !!origen && !origen.auto;
+      if (!quitaDelOrigen && !nuevas.length) return (n === 1 ? 'Ya estaba' : 'Ya estaban') + ' en «' + destino.name + '». No he cambiado nada.';
+      avisoConDeshacer(quitaDelOrigen ? nFotos(n, el.fotos) + ' ' + concuerda('pasad', n, el.fotos) + ' a «' + destino.name + '»'
+        : nFotos(nuevas.length, nuevas) + ' ' + concuerda('añadid', nuevas.length, nuevas) + ' a «' + destino.name + '»', quitaDelOrigen ? [destino, origen] : [destino]);
+      destino.photos.push(...nuevas.map((f) => ({ src: f.src, tag: f.tag })));
+      if (quitaDelOrigen) {
+        const fuera = new Set(el.fotos);
+        origen.photos = origen.photos.filter((x) => !fuera.has(x));
+        albumSync(origen);
+      }
+      albumSync(destino);
+      ayudaCerrar();
+      NidoAlbums.open(destino.id); // la persona ve dónde han quedado
+      const extra = yaEstaban ? ' (' + (yaEstaban === 1 ? '1 ya estaba' : yaEstaban + ' ya estaban') + ' en «' + destino.name + '»)' : '';
+      const creadoTxt = creado ? 'he creado el álbum «' + destino.name + '» y ' : '';
+      if (quitaDelOrigen) {
+        return 'Hecho: ' + creadoTxt + 'he pasado ' + nFotos(n, el.fotos) + ' de «' + origen.name + '» a «' + destino.name + '»' + extra + '. Ahora «' + origen.name + '» tiene ' + nFotos(origen.photos.length) +
+          ' y «' + destino.name + '» tiene ' + nFotos(destino.photos.length) + '. Ya lo tiene abierto.';
+      }
+      const deDonde = origen ? 'del álbum «' + origen.name + '», que lo pone Nido solo y no se cambia: allí siguen también' : 'de «Todas tus fotos», donde siguen también';
+      return 'Hecho: ' + creadoTxt + 'he puesto ' + nFotos(nuevas.length, nuevas) + ' en «' + destino.name + '»' + extra + '. ' + (soloVideos(nuevas) ? (nuevas.length === 1 ? 'Lo' : 'Los') : (nuevas.length === 1 ? 'La' : 'Las')) + ' he copiado ' + deDonde + '. «' + destino.name + '» tiene ahora ' + nFotos(destino.photos.length) + '. Ya lo tiene abierto.';
+    }
+
+    // «quita esta foto del álbum»: sale del álbum, pero la foto sigue en el teléfono («Todas tus fotos»). No se borra nada.
+    if (/\b(quitar|quita|sacar|saca|retirar|retira)\b/.test(accion)) {
+      if (nombre && esTodasTusFotos(nombre)) return '«Todas tus fotos» son todas las fotos que hay en Nido y desde aquí no se quitan fotos de ella. Para borrar una foto, que la abra y pulse Eliminar.';
+      const al = nombre ? buscarAlbum(nombre) : albumALaVista();
+      if (!al) return nombre ? noEncuentro(nombre) : 'No sé de qué álbum quiere quitarlas. Pregúntale cuál. Los que hay: ' + listaAlbumes() + '.';
+      if (al.auto) return esAuto(al, 'cambiar');
+      if (!al.photos.length) return 'El álbum «' + al.name + '» ya está vacío. No he quitado nada.';
+      const el = fotosElegidas(criterio, al);
+      if (el.error) return el.error;
+      if (!el.fotos.length) return 'No he encontrado en «' + al.name + '» fotos con ese criterio. No he quitado nada.';
+      const fuera = new Set(el.fotos);
+      const vista = albumALaVista() === al;
+      avisoConDeshacer(nFotos(el.fotos.length, el.fotos) + ' ' + concuerda('quitad', el.fotos.length, el.fotos) + ' de «' + al.name + '»', [al]);
+      al.photos = al.photos.filter((x) => !fuera.has(x));
+      albumSync(al);
+      ayudaCerrar();
+      if (vista) NidoAlbums.open(al.id); // desde el detalle de una foto que ya no está en el álbum, se vuelve al álbum
+      return 'Hecho: he quitado ' + nFotos(el.fotos.length, el.fotos) + ' del álbum «' + al.name + '», que ahora tiene ' + nFotos(al.photos.length) +
+        '. No he borrado ' + (soloVideos(el.fotos) ? 'ninguno' : 'ninguna') + ': ' + (el.fotos.length === 1 ? 'sigue' : 'siguen') + ' en «Todas tus fotos».';
+    }
+
     if (/anadir|agregar|meter|poner/.test(accion)) {
       const al = buscarAlbum(nombre);
-      if (!al) return 'No encuentro ningún álbum llamado «' + nombre + '». Los que hay: ' + (NidoAlbums.list.map((x) => x.name).join(', ') || 'ninguno') + '.';
-      const fotos = fotosPorCriterio(criterio).filter((f) => !al.photos.some((x) => x.src === f.src));
-      if (!fotos.length) return 'No he encontrado fotos nuevas con ese criterio para añadir a «' + al.name + '».';
-      al.photos.push(...fotos);
+      if (!al) return noEncuentro(nombre);
+      if (al.auto) return esAuto(al, 'cambiar');
+      const el = fotosElegidas(criterio, origenDeEstas(criterio));
+      if (el.error) return el.error;
+      const fotos = el.fotos.filter((f) => !al.photos.some((x) => mismaSrc(x.src, f.src)));
+      if (!fotos.length) return el.fotos.length ? 'Esas fotos ya estaban en «' + al.name + '». No he añadido nada.' : 'No he encontrado fotos nuevas con ese criterio para añadir a «' + al.name + '».';
+      al.photos.push(...fotos.map((f) => ({ src: f.src, tag: f.tag })));
       albumSync(al);
       NidoAlbums.current = al;
       ayudaCerrar();
       NidoAlbums.open(al.id);
-      return 'Hecho: he añadido ' + fotos.length + (fotos.length === 1 ? ' foto' : ' fotos') + ' a «' + al.name + '», que ya tiene ' + al.photos.length + '.';
+      return 'Hecho: he añadido ' + nFotos(fotos.length, fotos) + ' a «' + al.name + '», que ya tiene ' + al.photos.length + '.';
     }
     if (/renombrar|cambiar|llamar/.test(accion)) {
       const al = buscarAlbum(nombre);
-      if (!al) return 'No encuentro ningún álbum llamado «' + nombre + '». Los que hay: ' + (NidoAlbums.list.map((x) => x.name).join(', ') || 'ninguno') + '.';
+      if (!al) return noEncuentro(nombre);
       if (al.auto) return 'El álbum «' + al.name + '» lo pone Nido solo y no se puede renombrar.';
       if (!nuevo) return 'Falta el nombre nuevo. Pregúntale cómo quiere llamarlo.';
+      // Dos álbumes con el mismo nombre no se podrían distinguir hablando (y uno automático taparía al suyo): se pregunta otro nombre.
+      const otro = NidoAlbums.list.find((x) => x !== al && normV(x.name) === normV(nuevo));
+      if (otro) return 'Ya hay un álbum llamado «' + otro.name + '». No he cambiado nada. Pregúntale otro nombre.';
       const antes = al.name;
       al.name = cap1(nuevo);
       albumesLists().forEach((list) => {
@@ -1066,7 +1407,7 @@
       if (NidoAlbums.current === al) albumRender();
       return 'Hecho: «' + antes + '» ahora se llama «' + al.name + '».';
     }
-    return 'No sé hacer «' + p.accion + '» con álbumes. Puedo crear uno, añadirle fotos o cambiarle el nombre.';
+    return 'No sé hacer «' + p.accion + '» con álbumes. Puedo crear uno, añadirle fotos, pasar fotos de un álbum a otro, quitarlas de un álbum o cambiarle el nombre.';
   }
   window.NidoAlbumAcciones = { gestionar: gestionarAlbumes };
 
@@ -1081,6 +1422,24 @@
   function ayudaEntender(dicho) {
     const t = normV(dicho);
     const nav = (pantalla) => { ayudaCerrar(); showScreen(pantalla); return true; };
+
+    // "pasa estas fotos al álbum Viaje" / "mueve esta foto a Navidad en casa" / "quita esta foto del álbum": va antes que
+    // "llamado X" (si no, "pásala al álbum llamado Viaje" crearía un álbum) y antes que "abre el álbum X" (lo nombra también).
+    // Sin conexión no hay Nidi que pregunte: si algo falta, se dice en el bocadillo la primera frase del resultado (el hecho),
+    // no la instrucción para Nidi que va detrás.
+    const hazConAlbum = (p) => {
+      const r = gestionarAlbumes(p);
+      if (!/^Hecho:/.test(r) && !(window.NidoAgente && window.NidoAgente.activa)) ayudaTexto(r.replace(/\.\s.*$/, '.')); // sin lookbehind: Safari antiguo no lo entiende y no cargaría app.js
+      return true;
+    };
+    const cualesDicho = /\b(esta|este|esa|ese)\s+(foto|video|imagen)\b|\b(pasala|pasalo|muevela|muevelo|quitala|quitalo|sacala|sacalo)\b/.test(t) ? 'esta foto'
+      : /\b(estas|esas|estos|esos)\b/.test(t) ? 'estas fotos' : '';
+    const mover = (dicho || '').match(/\b(?:pasa|p[aá]sal[ao]s?|mueve|mu[eé]vel[ao]s?|lleva|ll[eé]val[ao]s?)\b.*?\b(?:al|a mi|en el|a)\s+(?:[aá]lbum\s+)?(?:(?:llamado|llamada|de nombre)\s+)?(.+?)[.!?]*$/i);
+    if (mover && cualesDicho && (/\balbum\b/.test(t) || buscarDestino(mover[1]))) return hazConAlbum({ accion: 'mover', nombre: mover[1].replace(/^[aá]lbum\s+/i, ''), criterio: cualesDicho });
+    if (/\b(quita|quitala|quitalo|saca|sacala|sacalo)\b.*\balbum\b/.test(t) && cualesDicho) {
+      const de = (dicho || '').match(/\bdel\s+[aá]lbum\s+(?:de\s+)?(.+?)[.!?]*$/i); // "del álbum Viaje"; "del álbum" a secas = el que tiene delante
+      return hazConAlbum({ accion: 'quitar', nombre: de ? de[1] : '', criterio: cualesDicho });
+    }
 
     // "crea un álbum llamado Vacaciones" → se crea ya con ese nombre (no se vuelve a preguntar)
     const conNombre = (dicho || '').match(/[aá]lbum.*?\b(?:llamado|llamada|que se llame|de nombre|se llama)\s+(.+?)[.!?]*$/i); // del texto original: así conserva tildes y ñ
@@ -1104,6 +1463,12 @@
 
     // "crea un álbum" / "quiero un álbum nuevo"
     if (/\b(crea|crear|nuevo|nueva|hacer|haz)\b.*\balbum\b|\balbum\b.*\b(nuevo|nueva)\b/.test(t)) {
+      // Con Nidi hablando no se abre la pregunta de siempre («¿Cómo quieres llamar a tu nuevo álbum? Toca en el micrófono…»): pediría
+      // tocar OTRO micrófono en mitad de la conversación. Nidi pregunta el nombre y lo crea con gestionar_albumes.
+      if (nidiHablando()) {
+        ultimoResultadoAlbum = 'Todavía no he creado nada: falta el nombre. Pregúntale cómo quiere llamar el álbum (y si quiere meter ya algunas fotos) y créalo con gestionar_albumes, accion=crear.';
+        return true;
+      }
       ayudaCerrar();
       showScreen('albumes');
       setTimeout(() => { const b = document.querySelector('[data-screen="albumes"] [data-album-action="nuevo"]'); if (b) b.click(); }, 600);
@@ -1127,8 +1492,15 @@
         // La herramienta del agente: reutiliza el mismo entendimiento de órdenes que el modo sin conexión.
         abrir: (pedido) => { ultimoResultadoAlbum = null; const ok = ayudaEntender(pedido); return ultimoResultadoAlbum || (ok ? 'Hecho: he abierto lo que pedía.' : 'No he encontrado eso en la app.'); },
         gestionar: (p) => gestionarAlbumes(p),
+        // personas, ver fotos, señalar botones…: js/agente-acciones.js
+        herramientas: window.NidoAgenteAcciones && window.NidoAgenteAcciones.crear({
+          avisar: (m, ms) => nidoToast(currentScreen(), m, null, null, ms || 3000),
+          cerrarAyuda: ayudaCerrar,
+        }),
         mensaje: (t) => ayudaTexto(t.replace(/\[[^\]]*\]\s*/g, '')),
-        usuario: (t) => { if (t) { ayudaUsuario(t); ayudaTexto('…'); } },
+        // Los avisos que manda la propia app (NidoAgente.decir, «[Aviso de la app…]») pueden volver como si los hubiera dicho la persona:
+        // no se enseñan en su bocadillo.
+        usuario: (t) => { if (t && !/^\s*\[Aviso de la app/.test(t)) { ayudaUsuario(t); ayudaTexto('…'); } },
         estado: (e) => {
           ayudaEstadoBoton(e);
           if (e === 'cerrado') {

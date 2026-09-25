@@ -129,6 +129,10 @@
   transform: translate(-50%, -50%) rotate(-8.82deg) skewX(-1.21deg);
   pointer-events: none;
 }
+/* Álbum con una sola foto: solo la carta de delante (ver albumStackTrasera en app.js). */
+.album-stack--single .album-stack__back {
+  display: none;
+}
 .album-stack__back img {
   width: 100%;
   height: 100%;
@@ -290,28 +294,41 @@
   padding-top: 8.4375rem; /* 135px, igual que album-detalle: no hay fila de botones arriba */
 }
 
-/* .is-selectable son .photo-card normales dentro de .album-grid — ya
-   heredan el radio 20px/sin sombra de la regla `.album-grid .photo-card`
-   de más arriba, y el "toque simple abre el detalle" de openDetalle() en
-   app.js. Esto solo añade el velo+check de selección. */
+/* .is-selectable son .photo-card normales dentro de .album-grid (radio 20px, sin sombra, de `.album-grid .photo-card`).
+   Figma 685:8075 (25-sep): TODAS llevan velo negro al 40 % y un círculo en el centro — vacío (40px, borde blue-light) si
+   no está elegida, check azul (44px) si lo está. El círculo vacío es lo que dice «esto se puede marcar» sin explicarlo;
+   antes solo aparecía algo al elegir (con mantener pulsado), y una persona que no lo sabía no veía nada que tocar. */
 .select-overlay {
   position: absolute;
   inset: 0;
-  /* Sin velo oscuro: en la captura actual de Figma (685:8075) las elegidas solo llevan el check azul. */
-  background: transparent;
-  opacity: 0;
-  transition: opacity 0.15s ease;
+  border-radius: inherit;
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
   pointer-events: none;
 }
-.photo-card.is-selectable.is-selected .select-overlay {
-  opacity: 1;
+/* `.photo-card .select-overlay …`: tiene que ganar a `.photo-card img` (components.css), que estira toda imagen de la tarjeta a
+   su tamaño entero con object-fit: cover; sin esto los círculos salían del tamaño de la foto. */
+.photo-card .select-overlay img {
+  position: static;
+  object-fit: contain;
+  flex-shrink: 0;
 }
-.select-overlay img {
-  width: 2.75rem; /* 44px — estaba en 48px */
+.photo-card .select-overlay .select-overlay__vacio {
+  width: 2.5rem; /* 40px */
+  height: 2.5rem;
+}
+.photo-card .select-overlay .select-overlay__check {
+  width: 2.75rem; /* 44px */
   height: 2.75rem;
+  display: none;
+}
+.photo-card.is-selectable.is-selected .select-overlay__vacio {
+  display: none;
+}
+.photo-card.is-selectable.is-selected .select-overlay__check {
+  display: block;
 }
 
 /* El footer de 2 botones (Volver + Añadir) reutiliza .bottom-fade +

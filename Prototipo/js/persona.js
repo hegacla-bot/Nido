@@ -26,6 +26,7 @@ window.PersonaSelect = (function () {
   // para el avatar de la cabecera de "sus fotos" (sin canvas, ver buildAvatar).
   // name: título de la cabecera de la persona (Figma: "Ainhoa Nieta"); ask: cómo se la nombra
   // en "¿Quieres ver más fotos de …?".
+  let personaAbiertaId = null; // ficha de persona que se ha abierto (la usa el asistente de voz para saber de quién se habla)
   const PERSONAS = {
     clara: { name: 'Clara', ask: 'Clara', photos: ['people-grupo-venecia.jpg', 'album-museo.webp', 'album-venecia.webp', 'prueba-selector.jpg', 'people-group-1.png'] },
     ainhoa: { name: 'Ainhoa Nieta', ask: 'tu nieta Ainhoa', photos: ['people-grupo-venecia.jpg', 'album-museo.webp', 'prueba-selector.jpg', 'people-group-2.png', 'people-group-1.png'] },
@@ -422,6 +423,10 @@ window.PersonaSelect = (function () {
   function fillPersonaScreen(personId) {
     const persona = PERSONAS[personId];
     if (!persona) return;
+    // La ficha que el asistente cree abierta es SIEMPRE la que está pintada en pantalla: se apunta aquí, en el único sitio que la
+    // pinta. Antes se apuntaba en tres sitios sueltos y el camino principal (mantener pulsada una cara → «Sí, enséñame más»)
+    // no pasaba por ninguno: la pantalla enseñaba a Clara y Nidi seguía creyendo que era la ficha de Ana.
+    personaAbiertaId = personId;
     document.querySelectorAll('[data-persona-name]').forEach((el) => {
       el.textContent = persona.name;
     });
@@ -668,7 +673,9 @@ window.PersonaSelect = (function () {
       // Si la búsqueda no encuentra nada (en un móvil justo de memoria puede fallar a medias) se conserva la lista de antes: vaciarla
       // dejaba la pantalla de la persona sin fotos.
       if (imgs.length) entry.photos = imgs.map((i) => i.currentSrc || i.src);
-      fillPersonaScreen(id);
+      // Si mientras buscaba se ha abierto la ficha de OTRA persona, no se le pinta encima esta (y tampoco se cambia la ficha abierta).
+      const enFicha = /^persona-(fotos|imagenes|videos)$/.test(window.NidoNav.current());
+      if (!enFicha || personaAbiertaId === id) fillPersonaScreen(id);
       if (entry.photos.length) personAlbum(person, entry.photos);
     } finally { scanning[id] = false; }
   }
@@ -847,9 +854,14 @@ window.PersonaSelect = (function () {
     if (cont) cont.hidden = false;
   }
 
-  async function createWithPerson(style) {
+  // Devuelve { ok, ms } o { ok: false, error } (lo usa el asistente de voz para contarle a la persona qué ha pasado; los botones lo ignoran).
+  // opciones (solo el asistente): source = foto que usar en vez de la abierta; volverA = pantalla a la que volver si falla (con aviso).
+  const CREAR_TOPE_MS = 90000; // sin respuesta en 90 s se da por fallida: nunca quedarse para siempre en «Creando imagen»
+  async function createWithPerson(style, opciones) {
+    opciones = opciones || {};
+    if (opciones.source) createSource = opciones.source; // así «Volver a intentarlo» repite con la misma foto
     const source = createSource || (activeZone && activeZone.sourceEl);
-    if (!source) return;
+    if (!source) return { ok: false, error: 'No hay ninguna foto para la felicitación.' };
     lastStyle = style;
     // Pantalla completa "Creando imagen" (759:5110) mientras trabaja la IA; el resultado (o el error)
     // se enseña después en el detalle. Mínimo 1,2s para que no parpadee si falla al instante.
@@ -874,8 +886,9 @@ window.PersonaSelect = (function () {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ imageBase64, style }),
+        signal: window.AbortSignal && AbortSignal.timeout ? AbortSignal.timeout(CREAR_TOPE_MS) : undefined,
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({ error: 'respuesta no válida del servidor (' + res.status + ')' }));
       if (!res.ok || !data.imageBase64) throw new Error(data.error || 'fallo al generar');
       document.querySelector('[data-felicitacion-img]').src = base64AUrlObjeto(data.imageBase64);
       const caption = document.querySelector('[data-felicitacion-caption]');
@@ -894,13 +907,22 @@ window.PersonaSelect = (function () {
       const first = yoGrid.querySelector('.yo-generar-wrap');
       first.insertAdjacentElement('afterend', done);
       window.NidoNav.show('felicitacion-generada'); // el resultado ya es pantalla propia (763:5138)
+      return { ok: true, ms: Date.now() - started };
     } catch (err) {
       // Nunca dejar al usuario colgado en "Creando..." sin explicación — antes
       // esto volvía al menú en silencio y parecía que "no había hecho nada".
       console.error('crear-imagen falló:', err);
+      const error = err && err.name === 'TimeoutError' ? 'tardó demasiado' : String((err && err.message) || err);
       const detail = document.querySelector('[data-persona-step="error"] [data-persona-error-detail]');
-      if (detail) detail.textContent = String((err && err.message) || err);
-      await finish('error');
+      if (detail) detail.textContent = error;
+      if (opciones.volverA) {
+        // Pedida por el asistente desde fuera del detalle (p. ej. la ficha de alguien): se vuelve a donde estaba, no a una foto cualquiera.
+        const wait = 1200 - (Date.now() - started);
+        if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+        window.NidoNav.show(opciones.volverA);
+        if (window.nidoToast) window.nidoToast(opciones.volverA, 'No se ha podido crear la felicitación.', null, null, 5000);
+      } else await finish('error');
+      return { ok: false, error };
     }
   }
 
@@ -1057,7 +1079,9 @@ window.PersonaSelect = (function () {
     const album = window.NidoAlbums.create(name, photos && photos.length ? { photos } : undefined);
     window.NidoAlbums.open(album.id);
     window.nidoToast('album-nuevo', 'Álbum «' + album.name + '» creado', null, null, 3500);
-    if (!albumNuevoOnboardingSeen) {
+    // Con Nidi hablando no sale el tour de primera vez: taparía lo que Nidi acaba de anunciar y pediría un toque que Nidi no conoce.
+    // No se da por visto: saldrá la primera vez que la persona cree un álbum ella sola.
+    if (!albumNuevoOnboardingSeen && !(window.NidoAgente && window.NidoAgente.activa)) {
       albumNuevoOnboardingSeen = true;
       document.querySelector('.ob-album-nuevo').classList.add('is-visible');
       window.Mascota.enterOnboardingPollito(document.querySelector('.ob-album-nuevo'));
@@ -1251,7 +1275,9 @@ window.PersonaSelect = (function () {
         return;
       }
       const styleBtn = event.target.closest('[data-persona-style]');
-      if (styleBtn) createWithPerson(styleBtn.dataset.personaStyle);
+      // «Crear algo con esta persona»: la foto es la de la persona elegida, no la que se usó en una felicitación anterior (createSource
+      // se queda con la última, también con la que eligió Nidi).
+      if (styleBtn) { if (activeZone && activeZone.sourceEl) createSource = activeZone.sourceEl; createWithPerson(styleBtn.dataset.personaStyle); }
     });
   }
 
@@ -1264,12 +1290,15 @@ window.PersonaSelect = (function () {
   // Cuando ya hay personas reconocidas de verdad, las de ejemplo (Clara, Ainhoa nieta…) dejan de contar: si no, "fotos de Clara"
   // abriría la persona de ejemplo, que no tiene ninguna de las fotos reales.
   const hayReales = () => Object.keys(PERSONAS).some((id) => PERSONAS[id].dynamic);
+  // Si lo dicho es EXACTAMENTE el nombre completo de alguien, gana esa persona: con «Ana» y «Ana nieta» en la lista, «Ana» abre
+  // a «Ana» (antes ganaba la primera que empezaba por Ana, y la ficha nueva no se podía abrir por su nombre).
   function personIdByName(texto) {
     const t = ' ' + norm(texto) + ' ';
+    const cuentan = Object.keys(PERSONAS).filter((id) => id !== 'sinnombre' && PERSONAS[id].name && (!hayReales() || PERSONAS[id].dynamic));
+    const exacta = cuentan.find((id) => ' ' + norm(PERSONAS[id].name) + ' ' === t);
+    if (exacta) return exacta;
     let best = null, bestLen = 0;
-    Object.keys(PERSONAS).forEach((id) => {
-      if (id === 'sinnombre') return;
-      if (hayReales() && !PERSONAS[id].dynamic) return;
+    cuentan.forEach((id) => {
       const nombres = [norm(PERSONAS[id].name), norm(PERSONAS[id].name).split(' ')[0]];
       nombres.forEach((n) => { if (n.length > 2 && t.includes(' ' + n + ' ') && n.length > bestLen) { best = id; bestLen = n.length; } });
     });
@@ -1288,5 +1317,261 @@ window.PersonaSelect = (function () {
   // Fotos (direcciones) de una persona reconocida; sirve al asistente para armar álbumes por persona.
   const fotosDePersona = (id) => ((PERSONAS[id] && PERSONAS[id].photos) || []).map(srcOfFoto);
 
-  return { buildHotspots, closeSelection, composeFelicitacionBlob, personIdByName, nombres, fotosDePersona, crearAlbum: createAlbum, openPerson, openFelicitacionDesdeYo: () => openFelicitacion(true) };
+  // ---------------------------------------------------------------
+  // Para el asistente de voz (js/agente-acciones.js): qué ficha o foto hay abierta, guardar el nombre que dice la persona
+  // y sacar la foto (reducida y sin metadatos) para que Nidi pueda «verla». Todo devuelve datos sencillos, nunca toca el DOM
+  // más de lo que ya haría la persona con los dedos.
+  // ---------------------------------------------------------------
+  const esFicha = () => /^persona-(fotos|imagenes|videos)$/.test(window.NidoNav.current());
+  // Nombre de una persona; null si aún no lo tiene (las de ejemplo cuentan con el suyo).
+  function nombreReal(id) {
+    const r = window.Reconocimiento && Reconocimiento.byId(id);
+    if (r) return r.name || null;
+    return PERSONAS[id] && !PERSONAS[id].dynamic && id !== 'sinnombre' ? PERSONAS[id].name : null;
+  }
+  function personasParaAgente() {
+    return Object.keys(PERSONAS)
+      .filter((id) => id !== 'sinnombre' && (!hayReales() || PERSONAS[id].dynamic))
+      .map((id) => ({ id, nombre: nombreReal(id), nFotos: (PERSONAS[id].photos || []).length, real: !!PERSONAS[id].dynamic }));
+  }
+  function fichaAbierta() {
+    const id = personaAbiertaId;
+    if (!esFicha() || !id || id === 'sinnombre' || !PERSONAS[id]) return null;
+    return { id, nombre: nombreReal(id), nFotos: (PERSONAS[id].photos || []).length, real: !!PERSONAS[id].dynamic };
+  }
+  function fechaDeFoto(el) {
+    const src = el && (el.currentSrc || el.src);
+    const it = ((window.NidoGaleria && window.NidoGaleria.items) || []).find((x) => x.src === src);
+    const d = it && it.date instanceof Date ? it.date : null;
+    return d && !isNaN(d) ? d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : null;
+  }
+  function fotoAbiertaInfo() {
+    if (window.NidoNav.current() !== 'detalle-foto') return null;
+    const el = currentPhotoEl();
+    return el ? { tipo: el.tagName === 'VIDEO' ? 'vídeo' : 'foto', fecha: fechaDeFoto(el) } : null;
+  }
+
+  // Deletreado tal cual lo oye Nidi («J-O-S-É», «j o s é», «J. O. S. É.»): si todas las partes son letras sueltas, se juntan.
+  const juntarDeletreo = (t) => {
+    const partes = t.trim().split(/[\s.\-]+/).filter(Boolean);
+    return partes.length > 1 && partes.every((x) => x.length === 1) ? partes.join('').toLowerCase() : t;
+  };
+  // Mayúscula en cada palabra del nombre, salvo las partículas («María de la Luz») y el parentesco que va detrás («Maite cuñada»,
+  // igual que «Clara nieta» en la biblioteca).
+  const PARENTESCO = /^(niet[oa]s?|hij[oa]s?|prim[oa]s?|t[ií][oa]s?|herman[oa]s?|cuñad[oa]s?|sobrin[oa]s?|abuel[oa]s?|madre|padre|mam[aá]|pap[aá]|suegr[oa]|yerno|nuera|amig[oa]|vecin[oa]|espos[oa]|marido|mujer|novi[oa]|bisniet[oa])$/i;
+  const capNombre = (t) => t.trim().replace(/\s+/g, ' ').split(' ')
+    .map((w, i) => (i > 0 && (/^(de|del|la|las|los|y|e|van|von)$/i.test(w) || PARENTESCO.test(w)) ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1))).join(' ');
+
+  // Comprueba el nombre que ha oído Nidi para la ficha (la abierta, o la del id que se diga) SIN guardarlo.
+  // Devuelve {ok:false, mensaje} (lo que Nidi le cuenta a la persona) o {ok:true, id, person, nombre}.
+  function validarNombre(p) {
+    p = p || {};
+    // Sin id, SOLO la ficha que se ve ahora (la misma que ver_contexto le dice a Nidi). personaAbiertaId se queda con la última ficha
+    // aunque la persona ya esté en Home o viendo una foto: usarlo a secas renombraba en silencio a alguien que no estaba en pantalla.
+    const ficha = fichaAbierta();
+    const id = p.id || (ficha && ficha.id);
+    if (!id || id === 'sinnombre' || !PERSONAS[id]) return { ok: false, mensaje: 'No hay ninguna ficha de persona abierta. Abre primero la ficha de esa persona (abrir_persona) y vuelve a intentarlo.' };
+    const person = window.Reconocimiento && Reconocimiento.byId(id);
+    if (!person) return { ok: false, mensaje: 'Esta ficha es de ejemplo y no se le puede cambiar el nombre.' };
+    const nombre = capNombre(juntarDeletreo(String(p.nombre || '').replace(/[^\p{L}\p{M}\s'’.-]/gu, '')));
+    if (!nombre || nombre.length > 40) return { ok: false, mensaje: 'No he podido quedarme con ese nombre. Pídele que lo repita o que lo deletree letra a letra.' };
+    const otra = Reconocimiento.people.find((x) => x !== person && x.name && norm(x.name) === norm(nombre));
+    if (otra) return { ok: false, duplicado: true, mensaje: 'Ya existe otra ficha que se llama «' + otra.name + '». Pregúntale si es la misma persona o si quiere distinguirlas (por ejemplo con el apellido o «mi nieta Clara»).' };
+    // «Ana» con «Ana nieta» ya en la lista (o al revés): al decir «Ana» no se sabría a cuál de las dos se refiere.
+    const pal = (x) => norm(x).split(' ');
+    const casi = Reconocimiento.people.find((x) => x !== person && x.name && pal(x.name)[0] === pal(nombre)[0] && (pal(x.name).length === 1 || pal(nombre).length === 1));
+    if (casi) return { ok: false, duplicado: true, mensaje: 'Ya conozco a «' + casi.name + '». Si es otra persona, pregúntale cómo distinguirlas (por ejemplo «' + nombre.split(' ')[0] + ' prima» o con el apellido) y guarda ese nombre; si es la misma, díselo.' };
+    if (person.name && norm(person.name) !== norm(nombre) && !p.sobrescribir) return { ok: false, yaTiene: true, mensaje: 'Esta ficha ya se llama «' + person.name + '». Si quiere llamarla «' + nombre + '», pídele que lo confirme y repite con sobrescribir=true.' };
+    return { ok: true, id, person, nombre };
+  }
+
+  // ---------------------------------------------------------------
+  // Guardar al momento y dejar corregir (25-sep, decidido con la usuaria). Antes Nidi pedía un «sí» antes de guardar, pero una
+  // persona mayor puede decir el nombre, creer que ya está y no contestar nunca: el nombre se perdía sin que lo supiera. Ahora lo
+  // que cree y lo que pasa coinciden siempre: se guarda en cuanto lo dice, Nidi se lo lee («Ya lo he guardado como José, ¿está
+  // bien?») y sale «Guardado: José · Deshacer». Un nombre mal oído se ve y se arregla; uno perdido, no.
+  // ---------------------------------------------------------------
+  const DESHACER_MS = 8000;
+  let ultimoGuardado = null; // { id, nombre, antes }: el último nombre que ha puesto Nidi, para corregirlo sin pedir permiso otra vez
+  const avisarNidi = (texto) => { if (window.NidoAgente && window.NidoAgente.activa) window.NidoAgente.decir('[Aviso de la app, no lo ha dicho la persona] ' + texto); };
+
+  // Pone el nombre en todas partes: Personas, cabecera de la ficha, álbum «Fotos de …» y grupos. Con nombre null la ficha vuelve a
+  // quedarse sin nombre (y su álbum automático desaparece).
+  function aplicarNombre(person, nombre) {
+    const id = person.id;
+    Reconocimiento.rename(person, nombre);
+    registerPerson(person); // vuelve a pintar el círculo en Personas
+    if (id === personaAbiertaId) document.querySelectorAll('[data-persona-name]').forEach((el) => { el.textContent = nombreDe(person); });
+    const fotos = PERSONAS[id].photos || [];
+    if (nombre) personAlbum(person, fotos); // «Fotos de …» con el nombre nuevo
+    else if (window.NidoAlbums && window.NidoAlbums.removeKey) window.NidoAlbums.removeKey('persona:' + id);
+    setTimeout(() => organizarBiblioteca(), 400); // los grupos («Clara y Ana») se rehacen con lo nuevo
+    return fotos.length;
+  }
+
+  function deshacerNombre() {
+    const u = ultimoGuardado;
+    if (!u) return null;
+    const person = Reconocimiento.byId(u.id);
+    if (!person || person.name !== u.nombre) { ultimoGuardado = null; return null; }
+    aplicarNombre(person, u.antes);
+    ultimoGuardado = null;
+    return u;
+  }
+
+  function guardarNombre(v) {
+    const { id, person, nombre } = v;
+    const corrige = ultimoGuardado && ultimoGuardado.id === id && person.name === ultimoGuardado.nombre;
+    const antes = corrige ? ultimoGuardado.antes : person.name; // al corregir, «Deshacer» vuelve a como estaba ANTES de Nidi
+    const n = aplicarNombre(person, nombre);
+    ultimoGuardado = { id, nombre, antes: antes || null };
+    if (window.nidoToast) {
+      window.nidoToast(window.NidoNav.current(), 'Guardado: ' + nombre, 'Deshacer', () => {
+        const u = deshacerNombre();
+        if (!u) return;
+        window.nidoToast(window.NidoNav.current(), u.antes ? 'Vuelve a llamarse ' + u.antes : 'Nombre quitado', null, null, 3000);
+        avisarNidi('Ha tocado «Deshacer»: el nombre «' + u.nombre + '» se ha quitado' + (u.antes ? ' y vuelve a llamarse «' + u.antes + '»' : ' y la ficha vuelve a estar sin nombre') + '. Pregúntale cómo se llama.');
+      }, DESHACER_MS);
+    }
+    return { ok: true, id, nombre, antes: antes || null, nFotos: n,
+      mensaje: 'Hecho: guardado como «' + nombre + '»' + (n ? ' (' + n + (n === 1 ? ' foto).' : ' fotos).') : '.') +
+        ' Díselo y compruébalo con ella en una sola frase: «Ya lo he guardado como ' + nombre + '. ¿Está bien?». Si te corrige, vuelve a llamar con el nombre bueno (se cambia solo). Si no quería guardarlo, llama con deshacer=true.' };
+  }
+
+  // p: { nombre, sobrescribir, deshacer, id }
+  function nombrarPersonaAgente(p) {
+    p = p || {};
+    if (p.deshacer) {
+      const u = deshacerNombre();
+      return u ? { ok: true, mensaje: 'Hecho: he quitado «' + u.nombre + '»' + (u.antes ? '; vuelve a llamarse «' + u.antes + '».' : '; la ficha vuelve a estar sin nombre.') + ' Pregúntale cómo se llama.' }
+        : { ok: false, mensaje: 'No hay ningún nombre recién guardado que quitar.' };
+    }
+    // Corregir el nombre que acaba de poner Nidi («no, es Josefa») no necesita sobrescribir: es el mismo momento.
+    const f = fichaAbierta();
+    const id = p.id || (f && f.id);
+    const r = id && window.Reconocimiento && Reconocimiento.byId(id);
+    if (r && ultimoGuardado && ultimoGuardado.id === id && r.name === ultimoGuardado.nombre) p = Object.assign({}, p, { sobrescribir: true });
+    const v = validarNombre(p);
+    return v.ok ? guardarNombre(v) : v;
+  }
+
+  // Abre la primera ficha sin nombre (con más fotos primero), para que Nidi pregunte quién es.
+  function abrirFichaSinNombre() {
+    const sin = personasParaAgente().filter((x) => x.real && !x.nombre).sort((a, b) => b.nFotos - a.nFotos)[0];
+    if (!sin) return null;
+    openPerson(sin.id);
+    return sin;
+  }
+
+  // La foto o el fotograma que se está viendo, listo para enviar: máx. 896 px y recomprimida en un canvas (eso quita el EXIF y el GPS).
+  const MAX_VER = 896;
+  async function reducirParaVer(el) {
+    const w0 = el.videoWidth || el.naturalWidth, h0 = el.videoHeight || el.naturalHeight;
+    if (!w0 || !h0) throw new Error('sin_datos');
+    const k = Math.min(1, MAX_VER / Math.max(w0, h0));
+    const c = document.createElement('canvas');
+    c.width = Math.round(w0 * k);
+    c.height = Math.round(h0 * k);
+    c.getContext('2d').drawImage(el, 0, 0, c.width, c.height);
+    let url = c.toDataURL('image/jpeg', 0.82);
+    if (url.length < 3000 && el.tagName === 'IMG') { // Safari puede devolver el canvas en blanco: se lee el archivo y se vuelve a intentar
+      const blob = await (await fetch(el.currentSrc || el.src)).blob();
+      const bmp = await createImageBitmap(blob);
+      const k2 = Math.min(1, MAX_VER / Math.max(bmp.width, bmp.height));
+      c.width = Math.round(bmp.width * k2);
+      c.height = Math.round(bmp.height * k2);
+      c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+      url = c.toDataURL('image/jpeg', 0.82);
+    }
+    return url.split(',')[1];
+  }
+  // Quién sale, según el reconocimiento DEL DISPOSITIVO (de izquierda a derecha). El modelo de visión nunca identifica a nadie por la cara.
+  async function personasEnFoto(el) {
+    if (el.tagName === 'VIDEO' || !window.Reconocimiento) return [];
+    try {
+      const caras = await Promise.race([Reconocimiento.detect(el), new Promise((_, ko) => setTimeout(() => ko(new Error('tiempo')), 6000))]);
+      // Con cada nombre va DÓNDE está esa cara (izquierda / centro / derecha, y delante si es grande): con solo el orden, el modelo
+      // de visión le ponía el nombre a quien le parecía (a veces a alguien de otro sexo).
+      // Con 3 o más caras, además el puesto («la 2.ª empezando por la izquierda»): dos pueden caer a la vez «en el centro».
+      const orden = caras.slice().sort((a, b) => a.box.x - b.box.x);
+      return orden.map((f, i) => {
+        const q = Reconocimiento.match(f.descriptor);
+        const cx = (f.box.x + f.box.w / 2) / (f.natural.w || 1);
+        const lado = cx < 0.36 ? 'a la izquierda' : cx > 0.64 ? 'a la derecha' : 'en el centro';
+        const puesto = orden.length > 2 ? ', la ' + (i + 1) + '.ª de ' + orden.length + ' empezando por la izquierda' : '';
+        return { nombre: q && q.name ? q.name : null, posicion: lado + (f.box.w / (f.natural.w || 1) >= 0.22 ? ', delante' : '') + puesto };
+      });
+    } catch (e) { return []; }
+  }
+  async function fotoParaVer() {
+    if (window.NidoNav.current() !== 'detalle-foto') return null;
+    const el = currentPhotoEl();
+    if (!el) return null;
+    const [imageBase64, personas] = await Promise.all([reducirParaVer(el), personasEnFoto(el)]);
+    return { imageBase64, tipo: el.tagName === 'VIDEO' ? 'video' : 'foto', personas, fecha: fechaDeFoto(el) };
+  }
+
+  // ---- Felicitación hecha por Nidi de principio a fin (herramienta crear_felicitacion) ----
+  // Es el mismo camino que con los dedos (createWithPerson: «Creando imagen» → «Felicitación» con su pie y su botón Compartir,
+  // y se guarda en «Mis felicitaciones»); solo cambia de dónde sale la foto:
+  //   1. usarFotoAbierta → la foto (o el fotograma del vídeo) que tiene abierta; si no hay ninguna, no se inventa otra.
+  //   2. personaId → una buena foto de esa persona: la de su cara más grande (la misma que eligió el reconocimiento para su
+  //      círculo en Personas), o si no, la primera suya.
+  //   3. sin nada → la foto abierta; si tampoco, la persona de la ficha abierta; si tampoco, se devuelve sinFoto para que Nidi pregunte.
+  // Devuelve siempre { ok, mensaje-base… }; el texto final lo compone agente-acciones.js.
+  let felicitacionEnCurso = null;
+  const cargarImagen = (src) => new Promise((ok, ko) => {
+    const img = new Image();
+    img.onload = () => ok(img);
+    img.onerror = () => ko(new Error('No se ha podido abrir la foto de esa persona'));
+    img.src = src;
+  });
+  function mejorFotoDe(id) {
+    const fotos = fotosDePersona(id);
+    const person = window.Reconocimiento && Reconocimiento.byId(id);
+    const cara = person && person.avatar && person.avatar.src;
+    return cara && fotos.includes(cara) ? cara : fotos[0] || null;
+  }
+  async function crearFelicitacionAgente(p) {
+    p = p || {};
+    if (felicitacionEnCurso) return { ok: false, ocupado: true };
+    if (!CAPTIONS[p.estilo]) return { ok: false, error: 'estilo desconocido: ' + p.estilo };
+    const enDetalle = window.NidoNav.current() === 'detalle-foto';
+    const ficha = fichaAbierta();
+    let source = null, origen = 'yo', volverA = null, personaId = p.personaId || null;
+    if (p.usarFotoAbierta || (!personaId && enDetalle)) {
+      source = enDetalle ? currentPhotoEl() : null;
+      if (!source) return { ok: false, sinFotoAbierta: true };
+      origen = 'detalle';
+    } else {
+      if (!personaId && ficha) personaId = ficha.id;
+      if (!personaId) return { ok: false, sinFoto: true };
+      const src = mejorFotoDe(personaId);
+      if (!src) return { ok: false, personaSinFotos: true, nombre: nombreReal(personaId) };
+      source = await cargarImagen(src);
+      // «Volver» de la felicitación lleva a Yo, donde queda guardada (felicitacion-back en app.js); si falla, se vuelve a donde estaba.
+      volverA = window.NidoNav.current();
+    }
+    // Mismo estado que dejaría el botón «Felicitación»: la pantalla de estilos empieza sin nada elegido la próxima vez.
+    window.felicitacionOrigin = origen;
+    felicitacionStyle = null;
+    document.querySelectorAll('[data-felicitacion-card]').forEach((c) => c.classList.remove('is-selected'));
+    felicitacionEnCurso = createWithPerson(p.estilo, { source, volverA });
+    try {
+      const r = await felicitacionEnCurso;
+      return Object.assign(r, { estilo: p.estilo, titulo: CAPTIONS[p.estilo], persona: personaId ? nombreReal(personaId) : null, conFotoAbierta: origen === 'detalle' });
+    } finally { felicitacionEnCurso = null; }
+  }
+
+  const agente = {
+    estado: () => ({ ficha: fichaAbierta(), personas: personasParaAgente(), foto: fotoAbiertaInfo() }),
+    nombrarPersona: nombrarPersonaAgente,
+    abrirFichaSinNombre,
+    fotoParaVer,
+    crearFelicitacion: crearFelicitacionAgente,
+    estilosFelicitacion: () => Object.keys(CAPTIONS),
+    creandoFelicitacion: () => !!felicitacionEnCurso,
+  };
+
+  return { buildHotspots, closeSelection, composeFelicitacionBlob, personIdByName, nombres, fotosDePersona, crearAlbum: createAlbum, openPerson, openFelicitacionDesdeYo: () => openFelicitacion(true), agente };
 })();

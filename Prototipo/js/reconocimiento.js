@@ -147,6 +147,9 @@ window.Reconocimiento = (function () {
   function setAvatar(person, avatar) { person.avatar = avatar; save(); }
   const avatarOf = (img, f) => ({ src: img.currentSrc || img.src, nw: f.natural.w, nh: f.natural.h, x: f.box.x, y: f.box.y, w: f.box.w, h: f.box.h });
 
+  // Las caras de fondo, diminutas o borrosas (menos del 6 % del ancho de la foto), no cuentan como personas.
+  const caraGrande = (f) => f.box.w / f.natural.w >= 0.06;
+
   // Recorre TODA la biblioteca: agrupa las caras (misma persona = misma huella) y devuelve, por persona, en qué fotos sale.
   // Las caras que coinciden con una persona guardada se le asignan; las nuevas que salen en 2 o más fotos distintas se
   // guardan como personas SIN nombre (Nido luego pregunta quién es). También devuelve qué parejas salen juntas.
@@ -155,7 +158,7 @@ window.Reconocimiento = (function () {
     let n = 0;
     for (const img of imgs) {
       // Las caras de fondo, diminutas o borrosas, no cuentan como personas.
-      try { (await detect(img)).filter((f) => f.box.w / f.natural.w >= 0.06).forEach((f) => found.push({ img, f })); } catch (e) { /* una foto que falla no para el resto */ }
+      try { (await detect(img)).filter(caraGrande).forEach((f) => found.push({ img, f })); } catch (e) { /* una foto que falla no para el resto */ }
       if (onProgress) onProgress(++n, imgs.length);
       await new Promise((ok) => setTimeout(ok, 25)); // respiro para que la pantalla siga respondiendo mientras se busca
     }
@@ -201,7 +204,11 @@ window.Reconocimiento = (function () {
     for (const img of imgs) {
       try {
         const faces = await detect(img);
-        if (faces.some((f) => dist(f.descriptor, person.descriptors[0]) <= MATCH_DIST || match(f.descriptor) === person)) out.push(img);
+        // Mismo criterio que organize (el que llena «Fotos de …»): una cara que cuente (caraGrande) y que se parezca MÁS a esta
+        // persona que a ninguna otra. Antes valía cualquier cara de fondo y estar a ≤ MATCH_DIST de su primera huella aunque se
+        // pareciera más a otra: al abrir una ficha le crecían las fotos (Clara 9 → 12, una sin nombre 7 → 13) y las cifras que
+        // decía Nidi dejaban de coincidir con la pantalla y con el álbum.
+        if (faces.some((f) => caraGrande(f) && match(f.descriptor) === person)) out.push(img);
       } catch (e) { /* una foto que falla no detiene las demás */ }
       if (onProgress) onProgress(++n, imgs.length);
     }

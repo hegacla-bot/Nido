@@ -27,7 +27,7 @@
   background: var(--color-white);
   display: flex;
   align-items: center;
-  padding: 0.8125rem 1.71875rem;
+  padding: var(--bubble-pad-y) 1.71875rem;
   color: var(--color-primary-blue-dark);
   font-size: var(--font-size-label-medium);
   font-weight: var(--font-weight-regular);
@@ -103,12 +103,16 @@
   box-shadow: 2px 4px 16px 0 rgba(123, 123, 135, 0.3), 2px 4px 4px 0 #868693;
 }
 .ob-step-1 .onboarding-tooltip {
-  left: 3.1548rem; top: 25.3540rem; width: 12rem; height: 4.375rem; /* 50, 381, 192×70 */
-  padding: 0 1.5rem; /* texto de 144px */
+  left: 5.25rem; top: 28.875rem; width: 12rem; height: auto; /* 84, 461, 192×70 */
+  padding: var(--bubble-pad-y) 1.5rem; /* texto de 144px */
   border-radius: var(--radius-bubble) var(--radius-bubble) 0 var(--radius-bubble);
 }
 .ob-step-1 .onboarding-pollito {
-  left: 9.125rem; top: 28.1875rem; width: 16.125rem; height: 19.25rem; /* 146, 451, 258×308 */
+  /* Alto recalculado a partir del aspect ratio real de la imagen (24-sep: el pollito
+     flotaba con un hueco por encima del CTA -- object-fit:contain lo encogia porque
+     la caja no tenia las proporciones de la imagen actual). Ancho y pies-sobre-el-CTA
+     (top+height) se mantienen igual que en el diseno de Figma. */
+  left: 9.125rem; top: 31.3911rem; width: 16.125rem; height: 16.0464rem;
 }
 
 /* ---- Paso 2 · destaca "Personas" (759:4520) ---- */
@@ -130,12 +134,12 @@
   box-shadow: 2px 4px 16px 0 rgba(123, 123, 135, 0.3), 2px 4px 4px 0 #868693;
 }
 .ob-step-2 .onboarding-tooltip {
-  left: 9.75rem; top: 23.8125rem; width: 13.5rem; height: 5.625rem; /* 156, 381, 216×90 */
-  padding: 0 1.71875rem; /* texto de 161px */
+  left: 8.34375rem; top: 27.1875rem; width: 13.5rem; height: auto; /* 133.5, 436.5, 216×90 */
+  padding: var(--bubble-pad-y) 1.71875rem; /* texto de 161px */
   border-radius: var(--radius-bubble) var(--radius-bubble) var(--radius-bubble) 0;
 }
 .ob-step-2 .onboarding-pollito {
-  left: -1.875rem; top: 28.0625rem; width: 15.625rem; height: 19.5rem; /* -30, 449, 250×312 */
+  left: -1.875rem; top: 30.9807rem; width: 15.625rem; height: 16.5818rem;
 }
 
 /* ---- Paso 3 · destaca "Yo" (759:4608) ---- */
@@ -157,14 +161,13 @@
   box-shadow: 2px 4px 16px 0 rgba(123, 123, 135, 0.3), 2px 4px 4px 0 #868693;
 }
 .ob-step-3 .onboarding-tooltip {
-  left: 7.8125rem; top: 21.6875rem; width: 15.5rem; height: 5.625rem; /* 125, 347, 248×90 */
-  padding: 0 1.25rem; /* texto de 208px */
+  left: 7.8125rem; top: 26.5312rem; width: 15.5rem; height: auto; /* 125, 426, 248×90 */
+  padding: var(--bubble-pad-y) 1.25rem; /* texto de 208px */
   border-radius: var(--radius-bubble) var(--radius-bubble) var(--radius-bubble) 0;
 }
 .ob-step-3 .onboarding-pollito {
-  /* caja 262.65×345.6 con -0.52° de giro, tal cual Figma */
-  left: -0.095rem; top: 25.8709rem; width: 16.4158rem; height: 21.5997rem;
-  transform: rotate(-0.52deg);
+  /* pollito-onboarding-3-v3.webp: contorno visible, con el giro de -0,52° de Figma ya aplicado en la imagen. */
+  left: 2rem; top: 33.53125rem; width: 12.25rem; height: 13.59375rem; /* 32, 536.5, 196×217.5 */
 }
 
 /* ---- Paso 4 · destaca el título "Mis recuerdos" (759:4688) ---- */
@@ -182,13 +185,18 @@
   text-shadow: none;
 }
 .ob-step-4 .onboarding-tooltip {
-  left: 0.9375rem; top: 20rem; width: 13.5rem; height: 5.625rem; /* 15, 320, 216×90 */
-  padding: 0 1.21875rem; /* texto de 177px */
+  left: 2.125rem; top: 26.5312rem; width: 13.5rem; height: auto; /* 34, 426, 216×90 */
+  padding: var(--bubble-pad-y) 1.21875rem; /* texto de 177px */
   border-radius: var(--radius-bubble) var(--radius-bubble) 0 var(--radius-bubble);
 }
-.ob-step-4 .onboarding-pollito,
+/* Cada paso lleva una imagen distinta (4b: pensativo · 5: pollito-2) con su propio aspect
+   ratio, así que ya no pueden compartir una sola caja de tamaño fijo (ver ob-step-1). */
+.ob-step-4 .onboarding-pollito {
+  /* pollito-onboarding-4-v3.webp: contorno visible de la pose de Figma. */
+  left: 11.09375rem; top: 33.5rem; width: 10.9375rem; height: 13.09375rem; /* 177.5, 536, 175×209.5 */
+}
 .ob-step-5 .onboarding-pollito {
-  left: -1.875rem; top: 28.0625rem; width: 15.625rem; height: 19.5rem; /* -30, 449, 250×312 */
+  left: 2rem; top: 33.53125rem; width: 12.25rem; height: 13.59375rem; /* tamaño y pose = los del tour nuevo (pollito-onboarding-N-v3.webp), pies sobre el botón */
 }
 
 /* ---- Onboarding dentro de Álbumes (757:4368) ---- */
@@ -203,22 +211,22 @@
   padding: 1rem 2rem; /* 16px 32px, como Figma (aquí hay hueco de sobra) */
 }
 .ob-albumes .onboarding-tooltip {
-  left: 9.1875rem; top: 24.4375rem; width: 12.9375rem; height: 4.375rem; /* 147, 391, 207×70 */
-  padding: 0 1.25rem; /* texto de 167px */
+  left: 9.1875rem; top: 28.5938rem; width: 12.9375rem; height: auto; /* 147, 391, 207×70 */
+  padding: var(--bubble-pad-y) 1.25rem; /* texto de 167px */
   border-radius: var(--radius-bubble) var(--radius-bubble) var(--radius-bubble) 0;
 }
 .ob-albumes .onboarding-pollito {
-  left: -1.875rem; top: 28.0625rem; width: 15.625rem; height: 19.5rem; /* -30, 449, 250×312 */
+  left: 2rem; top: 34.15625rem; width: 12.25rem; height: 13.59375rem; /* tamaño y pose = los del tour nuevo (pollito-onboarding-N-v3.webp), pies sobre el botón */
 }
 
 /* ---- Onboarding de Álbumes · paso 2 (765:5243) ---- */
 .ob-albumes-2 .onboarding-tooltip {
-  left: 9.75rem; top: 19.3125rem; width: 12.9375rem; height: 4.375rem; /* 156, 309, 207×70 */
-  padding: 0 1.25rem;
+  left: 9.75rem; top: 19.375rem; width: 12.9375rem; height: auto; /* 156, 309, 207×70: Figma 765:5243; encima de «Todas tus fotos», no pegada al pollito */
+  padding: var(--bubble-pad-y) 1.25rem;
   border-radius: var(--radius-bubble) var(--radius-bubble) var(--radius-bubble) 0;
 }
 .ob-albumes-2 .onboarding-pollito {
-  left: -1.875rem; top: 28.0625rem; width: 15.625rem; height: 19.5rem; /* -30, 449, 250×312 */
+  left: 2rem; top: 34.15625rem; width: 12.25rem; height: 13.59375rem; /* tamaño y pose = los del tour nuevo (pollito-onboarding-N-v3.webp), pies sobre el botón */
 }
 /* "Todas tus fotos ›" de la primera tarjeta, repetido en blanco sobre el velo */
 .onboarding-caption {
@@ -265,12 +273,12 @@
   padding: 1rem 2rem;
 }
 .ob-detalle [data-detalle-step="1"] .onboarding-tooltip {
-  left: 1.625rem; top: 23rem; width: 14.9375rem; height: 5.1875rem; /* 26, 368, 239×83 */
-  padding: 0 1.625rem; /* texto de 187px */
+  left: 1.625rem; top: 28.25rem; width: 14.9375rem; height: auto; /* 26, 368, 239×83 */
+  padding: var(--bubble-pad-y) 1.625rem; /* texto de 187px */
   border-radius: var(--radius-bubble) var(--radius-bubble) 0 var(--radius-bubble);
 }
 .ob-detalle [data-detalle-step="1"] .onboarding-pollito {
-  left: 9.125rem; top: 28.1875rem; width: 16.125rem; height: 19.25rem; /* 146, 451, 258×308 */
+  left: 11.1875rem; top: 35.21875rem; width: 12.34375rem; height: 12.09375rem; /* tamaño y pose = los del tour nuevo (pollito-onboarding-N-v3.webp), pies sobre el botón */
 }
 
 /* ---- Onboarding del detalle · paso 2 "Eliminar" (765:5385) ---- */
@@ -286,12 +294,12 @@
   height: 100%;
 }
 .ob-detalle [data-detalle-step="2"] .onboarding-tooltip {
-  left: 8.1875rem; top: 22.5625rem; width: 14.9375rem; height: 4.4375rem; /* 131, 361, 239×71 */
-  padding: 0 1.1875rem; /* texto de 201px */
+  left: 8.1875rem; top: 29.1562rem; width: 14.9375rem; height: auto; /* 131, 361, 239×71 */
+  padding: var(--bubble-pad-y) 1.1875rem; /* texto de 201px */
   border-radius: var(--radius-bubble) var(--radius-bubble) var(--radius-bubble) 0;
 }
 .ob-detalle [data-detalle-step="2"] .onboarding-pollito {
-  left: -0.4375rem; top: 28.125rem; width: 16.125rem; height: 19.25rem; /* -7, 450, 258×308 */
+  left: 2.34375rem; top: 34.71875rem; width: 11.8125rem; height: 12.6875rem; /* tamaño y pose = los del tour nuevo (pollito-onboarding-N-v3.webp), pies sobre el botón */
 }
 
 /* Todo lo destacado avanza el paso al tocarlo (ver js/app.js); el pollito no bloqueaba nada antes. */
@@ -317,13 +325,13 @@
   box-shadow: 2px 4px 16px 0 rgba(123, 123, 135, 0.3), 2px 4px 4px 0 #868693;
 }
 .ob-yo .onboarding-tooltip {
-  left: 6.3125rem; top: 22.0625rem; width: 17rem; height: 5.6875rem; /* 101, 353, 272×91 */
-  padding: 0 1.25rem; /* texto de 232px */
+  left: 6.3125rem; top: 27.1875rem; width: 17rem; height: auto; /* 101, 353, 272×91 */
+  padding: var(--bubble-pad-y) 1.25rem; /* texto de 232px */
   border-radius: var(--radius-bubble);
   border-bottom-left-radius: 0;
 }
 .ob-yo .onboarding-pollito {
-  left: -1.875rem; top: 28.0625rem; width: 15.625rem; height: 19.5rem; /* -30, 449, 250×312 */
+  left: 2rem; top: 34.15625rem; width: 12.25rem; height: 13.59375rem; /* tamaño y pose = los del tour nuevo (pollito-onboarding-N-v3.webp), pies sobre el botón */
 }
 .ob-yo .onboarding-cta {
   top: 46rem; /* 736px */
@@ -341,13 +349,13 @@
   box-shadow: 2px 4px 16px 0 rgba(123, 123, 135, 0.3), 2px 4px 4px 0 #868693;
 }
 .ob-yo [data-layer-step="2"] .onboarding-tooltip {
-  left: 8.5rem; top: 23.3125rem; width: 13.5625rem; height: 4.3125rem; /* 136, 373, 217×69 */
-  padding: 0 1.625rem; /* texto de 165px */
+  left: 8.5rem; top: 29.1562rem; width: 13.5625rem; height: auto; /* 136, 373, 217×69 */
+  padding: var(--bubble-pad-y) 1.625rem; /* texto de 165px */
   border-radius: var(--radius-bubble);
   border-bottom-left-radius: 0;
 }
 .ob-yo [data-layer-step="2"] .onboarding-pollito {
-  left: -0.4375rem; top: 28.125rem; width: 16.125rem; height: 19.25rem; /* -7, 450, 258×308 */
+  left: 2.34375rem; top: 34.71875rem; width: 11.8125rem; height: 12.6875rem; /* tamaño y pose = los del tour nuevo (pollito-onboarding-N-v3.webp), pies sobre el botón */
 }
 .ob-yo .onboarding-cta { height: 4.25rem; } /* 68px */
 
@@ -359,8 +367,8 @@
 /* Misma composición que el resto de pasos (p. ej. Yo · 765:5758): pollito de frente abajo a la izquierda, señalando hacia arriba (al avatar), y el
    bocadillo sobre él con la esquina inferior izquierda recta. */
 .ob-step-5 .onboarding-tooltip {
-  left: 6.3125rem; top: 22.0625rem; width: 17rem; height: 5.6875rem; /* 101, 353, 272×91 */
-  padding: 0 1.25rem;
+  left: 6.3108rem; top: 27.9688rem; width: 17rem; height: auto; /* 101, 425,5, 272×91: 20px sobre la cabeza del pollito, como los pasos 1-4 */
+  padding: var(--bubble-pad-y) 1.25rem;
 }
 
 /* =====================================================================
@@ -396,6 +404,15 @@
   top: 46.625rem; /* 746px */
   height: 4.25rem; /* 68px */
 }
+/* El tour sobre Home (pasos 1-5) no tiene pantalla real debajo con botón inferior, así que sigue
+   Figma (736px, 759:4508): el pollito se sienta sobre el botón y sus pies lo pisan ~10px. */
+.ob-step-1 .onboarding-cta,
+.ob-step-2 .onboarding-cta,
+.ob-step-3 .onboarding-cta,
+.ob-step-4 .onboarding-cta,
+.ob-step-5 .onboarding-cta {
+  top: 46rem; /* 736px */
+}
 
 /* =====================================================================
    Efecto "aquí", versión limpia (como el halo del micrófono): sin líneas ni aros sueltos; el elemento
@@ -430,21 +447,28 @@
 /* ---- Onboarding de Personas (806:7232) ---- */
 .ob-personas__title {
   position: absolute;
-  left: 1.25rem; top: 8.1875rem; width: 22.0625rem; /* 20, 131, 353 */
-  margin: 0;
+  left: 1.25rem; top: 8.1875rem; /* 20, 131 */
+  /* Mismo halo que «Mis recuerdos» del paso 4: solo el texto, esquinas redondeadas y un pelín de aire
+     (el margen negativo lo deja donde estaba). Antes ocupaba los 353px de ancho y salía un rectángulo. */
+  width: fit-content;
+  padding: 0.25rem 0.5rem;
+  margin: -0.25rem -0.5rem;
+  border-radius: 0.75rem;
   z-index: 31;
   font-size: var(--font-size-label-large);
   font-weight: var(--font-weight-bold);
   line-height: normal;
   color: var(--color-white);
+  text-shadow: none;
 }
 .ob-personas .onboarding-tooltip {
-  left: 0.9375rem; top: 20rem; width: 15.3125rem; height: 5.625rem; /* 15, 320, 245×90 */
-  padding: 0 1.125rem; /* texto de 209px */
+  left: 0.9375rem; top: 27rem; width: 15.3125rem; height: auto; /* 15, 320, 245×90 */
+  padding: var(--bubble-pad-y) 1.125rem; /* texto de 209px */
   border-radius: var(--radius-bubble) var(--radius-bubble) 0 var(--radius-bubble);
 }
 .ob-personas .onboarding-pollito {
-  left: 8.0625rem; top: 27.8125rem; width: 16.5rem; height: 20.625rem; /* 129, 445, 264×330 */
+  /* mismo pollito de espaldas (4-v2) a 0,8×, centrado donde estaba y con los pies a la altura de los demás (~754px) */
+  left: 9.7125rem; top: 33.98125rem; width: 13.2rem; height: 13.1438rem;
 }
 .ob-personas .onboarding-cta {
   top: 46rem; /* 736px */

@@ -11,12 +11,24 @@ import os from 'node:os';
 import { createRequire } from 'node:module';
 
 const ROOT = path.dirname(new URL(import.meta.url).pathname);
-const PORT = 8990;
+const PORT = Number(process.env.PORT) || 8990; // PORT=8998 node servidor-local.mjs → otra copia para pruebas, sin tocar la del 8990
 const ENV_PATH = path.join(ROOT, '.env');
 if (fs.existsSync(ENV_PATH)) {
   fs.readFileSync(ENV_PATH, 'utf8').split('\n').forEach((l) => { const m = l.match(/^([A-Z_]+)=(.*)$/); if (m) process.env[m[1]] = m[2].trim(); });
 } else {
   console.log('⚠️  No encuentro .env — el agente de voz y crear-imagen no podrán conectar.');
+}
+// Una función que falla (p. ej. un cuerpo malformado) responde 500 en vez de tumbar el servidor entero.
+async function conFuncion(res, llamar) {
+  try {
+    const out = await llamar();
+    res.writeHead(out.statusCode, { 'content-type': 'application/json', ...(out.headers || {}) });
+    res.end(out.body);
+  } catch (err) {
+    console.error('Función local falló:', (err && err.message) || err);
+    if (!res.headersSent) res.writeHead(500, { 'content-type': 'application/json' });
+    res.end(JSON.stringify({ error: 'fallo interno' }));
+  }
 }
 const require = createRequire(import.meta.url);
 
@@ -74,19 +86,19 @@ http.createServer(async (req, res) => {
     return;
   }
   if (req.url.startsWith('/.netlify/functions/agente-voz')) {
-    const { handler } = require('./netlify/functions/agente-voz.js');
-    const out = await handler();
-    res.writeHead(out.statusCode, { 'content-type': 'application/json', ...(out.headers || {}) });
-    res.end(out.body);
+    await conFuncion(res, () => require('./netlify/functions/agente-voz.js').handler());
+    return;
+  }
+  if (req.url.startsWith('/.netlify/functions/ver-foto')) {
+    let body = '';
+    for await (const chunk of req) body += chunk;
+    await conFuncion(res, () => require('./netlify/functions/ver-foto.js').handler({ httpMethod: req.method, body }));
     return;
   }
   if (req.url.startsWith('/.netlify/functions/crear-imagen')) {
     let body = '';
     for await (const chunk of req) body += chunk;
-    const { handler } = require('./netlify/functions/crear-imagen.js');
-    const out = await handler({ httpMethod: 'POST', body });
-    res.writeHead(out.statusCode, { 'content-type': 'application/json', ...(out.headers || {}) });
-    res.end(out.body);
+    await conFuncion(res, () => require('./netlify/functions/crear-imagen.js').handler({ httpMethod: 'POST', body }));
     return;
   }
   let p = decodeURIComponent(req.url.split('?')[0]);

@@ -3,8 +3,13 @@
 // La clave de ElevenLabs vive solo aquí, en el servidor (variable de entorno secreta
 // ELEVENLABS_API_KEY). El navegador pide una URL firmada que caduca a los pocos minutos y
 // con ella abre la conversación; así nadie que abra la página puede usar la cuenta.
+//
+// Qué agente se abre: la variable de entorno ELEVENLABS_AGENT_ID (el id del agente nuevo, el que
+// se crea con agente/PROMPT.md y agente/HERRAMIENTAS.md; no es secreto, es solo un nombre). Si no está puesta, se usa el
+// agente de siempre (el id de abajo), así nada se rompe mientras no se cambie. Cómo ponerla: agente/LEEME.md.
+// En local (servidor-local.mjs) se lee del .env, igual que la clave; tras cambiarlo hay que reiniciar ese servidor.
 
-const AGENT_ID = process.env.ELEVENLABS_AGENT_ID || 'agent_6001m325cmttf4ns277mgny82k4d';
+const AGENT_ID = (process.env.ELEVENLABS_AGENT_ID || '').trim() || 'agent_6001m325cmttf4ns277mgny82k4d';
 
 exports.handler = async () => {
   const key = process.env.ELEVENLABS_API_KEY;
