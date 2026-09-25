@@ -3924,3 +3924,9 @@ prueba las alternativas del navegador y da mensajes específicos para micrófono
 - Ojo: `.photo-card img` (components.css) estira toda imagen de la tarjeta; los iconos del círculo usan `.photo-card .select-overlay …` para ganarle.
 - La cuadrícula ya se rellena con las fotos que hay en la app (cargarGaleria), en el mismo orden que «Todas tus fotos»; las 9 del HTML son de relleno. Comprobado en Chromium sin ventana con la biblioteca real: 42/42, marcar y desmarcar, sin errores.
 - «Añadir» dice cuántas hay marcadas («Añadir 2»; sin ninguna, «Añadir»), `contarSeleccion()` en app.js; se pone a cero al volver a entrar y al rehacer la cuadrícula. Probado sin ventana: marcar 3 → «Añadir 3», desmarcar 1 → «Añadir 2», añade 2 al álbum, al volver sale «Añadir» sin nada marcado.
+
+### 25-sep · Mantener el dedo sobre una cara con Nidi escuchando (sin segundo micrófono)
+- Antes: con una cara que Nido no conoce salía «No he reconocido a esta persona · Toca en el micrófono y dime quién es» (reconocimiento de voz del navegador), un segundo micrófono que chocaba con Nidi.
+- Ahora, SOLO si Nidi está activo (`nidiEscucha()` en persona.js): cara sin nombre → se abre su ficha (se crea la persona si Nido no la tenía), «Volver» lleva a la foto, y Nidi recibe «Ha mantenido el dedo sobre una persona… pregúntale quién es… nombrar_persona». Sin cara → Nidi recibe «ahí no he encontrado ninguna cara…». Persona de ejemplo → «¿Quieres ver más fotos de …?» sin micrófono. Cara con nombre: igual que siempre («¿Quieres ver más fotos de …?»). Sin Nidi, todo igual que antes.
+- PROMPT.md: ahora sí le dice a Nidi que pida mantener el dedo sobre la cara, y explica los avisos.
+- Probado sin ventana con la biblioteca real y Nidi simulado: cara sin nombre → ficha + aviso, sin otro micrófono; «Volver» → foto; foto sin caras → aviso; sin Nidi → sale la pregunta de siempre. Sin errores.

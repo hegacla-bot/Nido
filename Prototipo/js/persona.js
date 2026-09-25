@@ -399,13 +399,46 @@ window.PersonaSelect = (function () {
       if (zone.known && zone.known.name) {
         Reconocimiento.reinforce(zone.known, zone.descriptor);
         showPersonConfirm(zone.known);
+      } else if (nidiEscucha()) {
+        nombrarDesdeFotoConNidi(zone);
       } else {
         openAsk(true);
       }
       return;
     }
     fillPersonaFotos(zone); // la pantalla de la persona queda lista antes de que se confirme
+    if (nidiEscucha()) { // persona de ejemplo: ya tiene nombre, así que sin micrófono se pasa directo a «¿Quieres ver más fotos de …?»
+      const persona = PERSONAS[zone.personId];
+      document.querySelector('[data-persona-confirm-title]').textContent = '¿Quieres ver más fotos de ' + (persona ? persona.ask : 'esta persona') + '?';
+      document.querySelector('[data-persona-confirm]').classList.add('is-visible');
+      return;
+    }
     openAsk(false);
+  }
+
+  // ---------------------------------------------------------------
+  // Con Nidi escuchando, mantener el dedo sobre una cara que Nido no conoce NO abre «Toca en el micrófono y dime quién es»:
+  // esa pregunta usa el reconocimiento de voz del navegador, un segundo micrófono que choca con el de Nidi (25-sep). En su lugar
+  // se abre la ficha de esa persona (se crea si Nido aún no la tenía) y se le pide a Nidi que pregunte quién es y guarde el
+  // nombre con nombrar_persona. Sin Nidi, todo sigue como siempre.
+  // ---------------------------------------------------------------
+  const nidiEscucha = () => !!(window.NidoAgente && window.NidoAgente.activa);
+  function nombrarDesdeFotoConNidi(zone) {
+    let person = zone.known;
+    if (!person) { person = Reconocimiento.addPerson(null, zone.descriptor, zone.avatar); zone.known = person; }
+    registerPerson(person);
+    closeSelection();
+    window.NidoNav.returnTo('detalle-foto'); // «Volver» de la ficha lleva de nuevo a la foto
+    // El aviso de siempre al abrir una ficha sin nombre (app.js, agenteAvisoFicha) solo sale una vez por ficha: aquí se manda uno
+    // propio siempre, porque la persona acaba de señalar a alguien concreto, y se marca como preguntada para que no lleguen dos.
+    if (window.NidoAgenteFichaPreguntada) window.NidoAgenteFichaPreguntada(person.id);
+    openPerson(person.id);
+    avisarNidi('Ha mantenido el dedo sobre una persona de la foto que Nido todavía no sabe quién es, y le he abierto su ficha. Pregúntale amablemente quién es y, cuando te lo diga, guárdalo con nombrar_persona.');
+  }
+  function sinCaraConNidi() {
+    activeZone = null;
+    closeSelection();
+    avisarNidi('Ha mantenido el dedo sobre la foto, pero ahí no he encontrado ninguna cara. Pregúntale de quién quiere hablar, o dile que pruebe manteniendo el dedo justo encima de la cara.');
   }
 
   // ---------------------------------------------------------------
@@ -1104,7 +1137,7 @@ window.PersonaSelect = (function () {
     try {
       const faces = await Reconocimiento.detect(imgEl);
       const face = Reconocimiento.faceAt(faces, pct[0], pct[1]);
-      if (!face) { buscando(false); activeZone = null; openAsk(true); return; }
+      if (!face) { buscando(false); activeZone = null; if (nidiEscucha()) sinCaraConNidi(); else openAsk(true); return; }
       const item = imgEl.closest('.detail-media__item');
       const zone = makeZone(item, imgEl, { name: 'esta persona', personId: null, face: Reconocimiento.faceBox(face), points: Reconocimiento.bustPolygon(face) });
       zone.dynamic = true;
@@ -1117,7 +1150,7 @@ window.PersonaSelect = (function () {
       console.error('reconocimiento falló:', err);
       buscando(false);
       activeZone = null;
-      openAsk(true);
+      if (nidiEscucha()) sinCaraConNidi(); else openAsk(true);
     }
   }
 
