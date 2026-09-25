@@ -14,13 +14,13 @@
   {
     "type": "client",
     "name": "abrir_en_la_app",
-    "description": "Mueve la app a donde la persona quiere ir. Sirve para: el inicio, Álbumes, Personas, Yo, Mis documentos, Ajustes, «todas mis fotos» («Todas tus fotos»: todas las fotos que hay en Nido), un álbum por su nombre («el álbum Viaje») y «felicitación» (abre la pantalla para que la haga ella misma). Para ver a una persona usa abrir_persona; para crear o cambiar álbumes usa gestionar_albumes (si le pides «crear un álbum» sin nombre, te dirá que preguntes el nombre); para que tú hagas la felicitación usa crear_felicitacion. Devuelve «Hecho: …» si lo ha abierto o «No he encontrado eso en la app.».",
+    "description": "Mueve la app a donde la persona quiere ir. Sirve para: el inicio, Álbumes, Personas, Yo, Mis documentos, Ajustes, «todas mis fotos» («Todas tus fotos»: todas las fotos que hay en Nido), un álbum por su nombre («el álbum Viaje»), «felicitación» (abre la pantalla para que la haga ella misma), «vuelve a la felicitación» (vuelve a enseñar la última que habéis hecho, sin repetirla), «mis felicitaciones» (Yo, donde se guardan), «mis documentos» o un papel de Mis documentos por su nombre o por lo que es («el horario del autobús», «mi tarjeta sanitaria»; se abre en grande para que lo leas con ver_foto) y «atrás» (pulsa el botón Volver de la pantalla). Para ver a una persona usa abrir_persona; para crear o cambiar álbumes usa gestionar_albumes (si le pides «crear un álbum» sin nombre, te dirá que preguntes el nombre); para que tú hagas la felicitación usa crear_felicitacion. Devuelve «Hecho: …» si lo ha abierto o «No he encontrado eso en la app.».",
     "parameters": {
       "type": "object",
       "properties": {
         "pedido": {
           "type": "string",
-          "description": "Adónde quiere ir, en pocas palabras y en español, como lo diría la persona: «el inicio», «álbumes», «personas», «yo», «mis documentos», «ajustes», «todas mis fotos», «el álbum Navidad 2024», «felicitación»."
+          "description": "Adónde quiere ir, en pocas palabras y en español, como lo diría la persona: «el inicio», «álbumes», «personas», «yo», «mis documentos», «ajustes», «todas mis fotos», «el álbum Navidad 2024», «felicitación», «vuelve a la felicitación», «mis felicitaciones», «el horario del autobús», «atrás»."
         }
       },
       "required": [
@@ -33,7 +33,7 @@
   {
     "type": "client",
     "name": "gestionar_albumes",
-    "description": "Crea álbumes, les añade fotos, pasa fotos de un álbum a otro, quita fotos de un álbum o le cambia el nombre, para que la persona no tenga que hacerlo a mano. Úsala solo cuando la persona lo pida. Antes de quitar TODAS las fotos de un álbum, confírmalo con ella. «Quitar» no borra la foto del teléfono: sigue en «Todas tus fotos». Los álbumes que pone Nido solo (por año, Navidad, verano o «Fotos de …») no se pueden cambiar; sí se pueden copiar sus fotos a un álbum de la persona. Si la herramienta dice que el álbum de destino no existe, pregúntale si quiere crearlo y, si dice que sí, repite la llamada con crear_si_no_existe=true. Usa el nombre del álbum tal como es (el contexto te da la lista): un nombre parecido no vale y te devolverá la lista para que preguntes. Cuenta con tus palabras la frase que devuelve: si empieza por «Hecho:» se ha hecho; si no, dice qué falta o qué preguntar.",
+    "description": "Crea álbumes, les añade fotos, pasa fotos de un álbum a otro, quita fotos de un álbum o le cambia el nombre, para que la persona no tenga que hacerlo a mano. Úsala solo cuando la persona lo pida. Antes de quitar TODAS las fotos de un álbum, confírmalo con ella. «Quitar» no borra la foto del teléfono: sigue en «Todas tus fotos». Los álbumes que pone Nido solo (por año, Navidad o verano) no se pueden cambiar; sí se pueden copiar sus fotos a un álbum de la persona. Si la herramienta dice que el álbum de destino no existe, pregúntale si quiere crearlo y, si dice que sí, repite la llamada con crear_si_no_existe=true. Usa el nombre del álbum tal como es (el contexto te da la lista): un nombre parecido no vale y te devolverá la lista para que preguntes. Cuenta con tus palabras la frase que devuelve: si empieza por «Hecho:» se ha hecho; si no, dice qué falta o qué preguntar.",
     "parameters": {
       "type": "object",
       "properties": {
@@ -144,7 +144,7 @@
   {
     "type": "client",
     "name": "ver_foto",
-    "description": "Mira la foto (o el vídeo) que la persona tiene abierta en grande y te cuenta lo que se ve, junto con los nombres de quienes reconoce Nido en el propio móvil. Solo funciona con una foto abierta: si no la hay, ábrela antes con abrir_foto. Úsala cuando te pregunte por la foto, cuando quiera charlar de ella o cuando necesites verla para ayudar; no la uses con cada foto por costumbre. Antes, di «Déjame que la mire» (tarda unos segundos). No leas la descripción: coméntala y haz una pregunta. Nunca digas quién es alguien por su cara: los nombres solo los da la app.",
+    "description": "Mira la foto (o el vídeo) que la persona tiene abierta en grande y te cuenta lo que se ve, junto con los nombres de quienes reconoce Nido en el propio móvil. Solo funciona con una foto abierta: si no la hay, ábrela antes con abrir_foto. Úsala solo cuando te pida que la mires, cuando pregunte algo que solo se sabe viéndola (qué hay, qué pone, dónde es) o para leerle un papel de Mis documentos (pasa su pregunta: «¿a qué hora pasa el autobús a la playa?»). Para empezar a charlar de una foto no la uses: la foto saldría del móvil; empieza con lo que te cuenta la app (quién sale y la fecha). Antes, di «Déjame que la mire» (tarda unos segundos). No leas la descripción: coméntala y haz una pregunta. Nunca digas quién es alguien por su cara: los nombres solo los da la app.",
     "parameters": {
       "type": "object",
       "properties": {
@@ -180,7 +180,7 @@
   {
     "type": "client",
     "name": "crear_felicitacion",
-    "description": "Crea una felicitación de principio a fin sin que la persona toque nada: elige la foto, la pinta con el estilo elegido y la deja en pantalla con su título. Úsala cuando pida una felicitación. Si no sabes el tipo, pregúntalo antes; si no sabes con qué foto o de quién, pregúntalo también. De qué foto sale: si dices una persona, una buena foto suya; si no, la foto que tiene abierta en grande; si no hay ninguna, la de la ficha de persona que tenga abierta. Si nombra a alguien pero quiere usar la foto que está viendo, pasa usar_foto_abierta=true. Tarda unos 10 segundos: avísale de que espere. Al terminar, el botón «Compartir» brilla y tiene que pulsarlo ella (tú no puedes enviarla). Si tarda más de la cuenta te dirá «se está creando» y la app te avisará cuando esté.",
+    "description": "Crea una felicitación de principio a fin sin que la persona toque nada: elige la foto, la pinta y la deja en pantalla con su título. Úsala cuando pida una felicitación. Hay cuatro tipos listos (cumpleanos, aniversario, navidad, anonuevo) y cualquier otra ocasión que quiera (santo, jubilación, bautizo, graduación, ánimo, gracias…) con estilo=otra: entonces tú le propones el título que irá encima y ella lo confirma, y pasas en decoracion cómo decorarla, solo con cosas que se ven. Si no sabes la ocasión, pregúntala; si no sabes con qué foto o de quién, pregúntalo también. De qué foto sale: si dices una persona, una buena foto suya; si no, la foto que tiene abierta en grande; si no hay ninguna, la de la ficha de persona que tenga abierta. Si nombra a alguien pero quiere usar la foto que está viendo, pasa usar_foto_abierta=true. Tarda unos 10 segundos: avísale de que espere. Al terminar, el botón «Compartir» brilla y tiene que pulsarlo ella (tú no puedes enviarla). Si tarda más de la cuenta te dirá «se está creando» y la app te avisará cuando esté. Si luego se sale sin querer, vuelve a enseñársela con abrir_en_la_app «vuelve a la felicitación», no la hagas otra vez.",
     "parameters": {
       "type": "object",
       "properties": {
@@ -190,9 +190,18 @@
             "cumpleanos",
             "aniversario",
             "navidad",
-            "anonuevo"
+            "anonuevo",
+            "otra"
           ],
-          "description": "Tipo de felicitación. cumpleanos (también «cumple»), aniversario (también boda, bodas de oro), navidad (también Nochebuena, Reyes), anonuevo (también Nochevieja, fin de año)."
+          "description": "Tipo de felicitación. cumpleanos (también «cumple»), aniversario (también boda, bodas de oro), navidad (también Nochebuena, Reyes), anonuevo (también Nochevieja, fin de año) u otra (cualquier otra ocasión: entonces titulo y decoracion son obligatorios)."
+        },
+        "titulo": {
+          "type": "string",
+          "description": "Solo con estilo=otra: el texto que irá encima de la imagen, corto (máximo 40 letras) y con sus palabras, confirmado con ella. Por ejemplo «¡Feliz santo, Carmen!» o «¡Felicidades por tu jubilación!»."
+        },
+        "decoracion": {
+          "type": "string",
+          "description": "Solo con estilo=otra: cómo decorarla, descrito solo con cosas que se ven y sin nombrar la ocasión ni poner palabras (la IA las escribe mal). Por ejemplo «flores de primavera, mariposas y colores suaves» o «confeti dorado y globos azules»."
         },
         "persona": {
           "type": "string",

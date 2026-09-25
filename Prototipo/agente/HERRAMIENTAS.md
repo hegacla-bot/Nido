@@ -33,13 +33,13 @@ Al final está el mismo contenido en JSON, en el formato de *client tools* de El
 
 **Descripción para Nidi**
 
-> Mueve la app a donde la persona quiere ir. Sirve para: el inicio, Álbumes, Personas, Yo, Mis documentos, Ajustes, «todas mis fotos» («Todas tus fotos»: todas las fotos que hay en Nido), un álbum por su nombre («el álbum Viaje») y «felicitación» (abre la pantalla para que la haga ella misma). Para ver a una persona usa abrir_persona; para crear o cambiar álbumes usa gestionar_albumes (si le pides «crear un álbum» sin nombre, te dirá que preguntes el nombre); para que tú hagas la felicitación usa crear_felicitacion. Devuelve «Hecho: …» si lo ha abierto o «No he encontrado eso en la app.».
+> Mueve la app a donde la persona quiere ir. Sirve para: el inicio, Álbumes, Personas, Yo, Mis documentos, Ajustes, «todas mis fotos» («Todas tus fotos»: todas las fotos que hay en Nido), un álbum por su nombre («el álbum Viaje»), «felicitación» (abre la pantalla para que la haga ella misma), «vuelve a la felicitación» (vuelve a enseñar la última que habéis hecho, sin repetirla), «mis felicitaciones» (Yo, donde se guardan), «mis documentos» o un papel de Mis documentos por su nombre o por lo que es («el horario del autobús», «mi tarjeta sanitaria»; se abre en grande para que lo leas con ver_foto) y «atrás» (pulsa el botón Volver de la pantalla). Para ver a una persona usa abrir_persona; para crear o cambiar álbumes usa gestionar_albumes (si le pides «crear un álbum» sin nombre, te dirá que preguntes el nombre); para que tú hagas la felicitación usa crear_felicitacion. Devuelve «Hecho: …» si lo ha abierto o «No he encontrado eso en la app.».
 
 **Parámetros**
 
 | Nombre | Tipo | Obligatorio | Descripción |
 |---|---|---|---|
-| `pedido` | string | sí | Adónde quiere ir, en pocas palabras y en español, como lo diría la persona: «el inicio», «álbumes», «personas», «yo», «mis documentos», «ajustes», «todas mis fotos», «el álbum Navidad 2024», «felicitación». |
+| `pedido` | string | sí | Adónde quiere ir, en pocas palabras y en español, como lo diría la persona: «el inicio», «álbumes», «personas», «yo», «mis documentos», «ajustes», «todas mis fotos», «el álbum Navidad 2024», «felicitación», «vuelve a la felicitación», «mis felicitaciones», «el horario del autobús», «atrás». |
 
 **Ajustes del panel**: Wait for response = activado · Response timeout = **10 s**.
 
@@ -47,7 +47,7 @@ Al final está el mismo contenido en JSON, en el formato de *client tools* de El
 
 **Dónde está en el código**: `js/agente.js` (clientTools) → `hooks.abrir(pedido)` → `ayudaEntender(pedido)` en `js/app.js` (el mismo entendimiento de frases que el modo sin conexión). Acepta también `request` como nombre del parámetro.
 
-**Ojo**: Con Nidi hablando, un pedido «crea un álbum» SIN nombre ya no abre el flujo manual (que pedía tocar otro micrófono): devuelve la frase de arriba para que Nidi pregunte el nombre. Con Nidi hablando tampoco salen los tours de primera vez (Personas, Yo, detalle de foto, álbum nuevo). El nombre de una persona gana a un álbum: «el álbum Fotos de Clara nieta» abre la ficha de Clara.
+**Ojo**: Con Nidi hablando, un pedido «crea un álbum» SIN nombre ya no abre el flujo manual (que pedía tocar otro micrófono): devuelve la frase de arriba para que Nidi pregunte el nombre. Con Nidi hablando tampoco salen los tours de primera vez (Personas, Yo, detalle de foto, álbum nuevo). El nombre de una persona gana a un álbum: «las fotos de Clara nieta» abre su ficha (desde el 25-sep ya no hay álbumes «Fotos de …»).
 
 ---
 
@@ -55,7 +55,7 @@ Al final está el mismo contenido en JSON, en el formato de *client tools* de El
 
 **Descripción para Nidi**
 
-> Crea álbumes, les añade fotos, pasa fotos de un álbum a otro, quita fotos de un álbum o le cambia el nombre, para que la persona no tenga que hacerlo a mano. Úsala solo cuando la persona lo pida. Antes de quitar TODAS las fotos de un álbum, confírmalo con ella. «Quitar» no borra la foto del teléfono: sigue en «Todas tus fotos». Los álbumes que pone Nido solo (por año, Navidad, verano o «Fotos de …») no se pueden cambiar; sí se pueden copiar sus fotos a un álbum de la persona. Si la herramienta dice que el álbum de destino no existe, pregúntale si quiere crearlo y, si dice que sí, repite la llamada con crear_si_no_existe=true. Usa el nombre del álbum tal como es (el contexto te da la lista): un nombre parecido no vale y te devolverá la lista para que preguntes. Cuenta con tus palabras la frase que devuelve: si empieza por «Hecho:» se ha hecho; si no, dice qué falta o qué preguntar.
+> Crea álbumes, les añade fotos, pasa fotos de un álbum a otro, quita fotos de un álbum o le cambia el nombre, para que la persona no tenga que hacerlo a mano. Úsala solo cuando la persona lo pida. Antes de quitar TODAS las fotos de un álbum, confírmalo con ella. «Quitar» no borra la foto del teléfono: sigue en «Todas tus fotos». Los álbumes que pone Nido solo (por año, Navidad o verano) no se pueden cambiar; sí se pueden copiar sus fotos a un álbum de la persona. Si la herramienta dice que el álbum de destino no existe, pregúntale si quiere crearlo y, si dice que sí, repite la llamada con crear_si_no_existe=true. Usa el nombre del álbum tal como es (el contexto te da la lista): un nombre parecido no vale y te devolverá la lista para que preguntes. Cuenta con tus palabras la frase que devuelve: si empieza por «Hecho:» se ha hecho; si no, dice qué falta o qué preguntar.
 
 **Parámetros**
 
@@ -119,7 +119,7 @@ Al final está el mismo contenido en JSON, en el formato de *client tools* de El
 
 **Dónde está en el código**: `js/agente-acciones.js` → `nombrarPersona()` → `PersonaSelect.agente.nombrarPersona()` (`nombrarPersonaAgente` en `js/persona.js`).
 
-**Ojo**: El código acepta también `persona_id`, pero Nidi no conoce los ids internos (el contexto no los da), así que no se da de alta en el panel. El nombre se guarda con cada palabra en mayúscula salvo de/del/la/y… y el parentesco que va detrás: «maite cuñada» queda «Maite cuñada», como «Clara nieta» en la biblioteca. Un deletreo («J-O-S-É», «j o s é») se junta: «José». Al guardar cierra la capa de ayuda para que se vea el nombre nuevo. Corregir el nombre que acaba de poner Nidi no pide sobrescribir; «Deshacer» (botón o deshacer=true) devuelve la ficha a como estaba antes de Nidi y quita su álbum «Fotos de …» si se queda sin nombre.
+**Ojo**: El código acepta también `persona_id`, pero Nidi no conoce los ids internos (el contexto no los da), así que no se da de alta en el panel. El nombre se guarda con cada palabra en mayúscula salvo de/del/la/y… y el parentesco que va detrás: «maite cuñada» queda «Maite cuñada», como «Clara nieta» en la biblioteca. Un deletreo («J-O-S-É», «j o s é») se junta: «José». Al guardar cierra la capa de ayuda para que se vea el nombre nuevo. Corregir el nombre que acaba de poner Nidi no pide sobrescribir; «Deshacer» (botón o deshacer=true) devuelve la ficha a como estaba antes de Nidi.
 
 ---
 
@@ -147,7 +147,7 @@ Al final está el mismo contenido en JSON, en el formato de *client tools* de El
 
 **Descripción para Nidi**
 
-> Mira la foto (o el vídeo) que la persona tiene abierta en grande y te cuenta lo que se ve, junto con los nombres de quienes reconoce Nido en el propio móvil. Solo funciona con una foto abierta: si no la hay, ábrela antes con abrir_foto. Úsala cuando te pregunte por la foto, cuando quiera charlar de ella o cuando necesites verla para ayudar; no la uses con cada foto por costumbre. Antes, di «Déjame que la mire» (tarda unos segundos). No leas la descripción: coméntala y haz una pregunta. Nunca digas quién es alguien por su cara: los nombres solo los da la app.
+> Mira la foto (o el vídeo) que la persona tiene abierta en grande y te cuenta lo que se ve, junto con los nombres de quienes reconoce Nido en el propio móvil. Solo funciona con una foto abierta: si no la hay, ábrela antes con abrir_foto. Úsala solo cuando te pida que la mires, cuando pregunte algo que solo se sabe viéndola (qué hay, qué pone, dónde es) o para leerle un papel de Mis documentos (pasa su pregunta: «¿a qué hora pasa el autobús a la playa?»). Para empezar a charlar de una foto no la uses: la foto saldría del móvil; empieza con lo que te cuenta la app (quién sale y la fecha). Antes, di «Déjame que la mire» (tarda unos segundos). No leas la descripción: coméntala y haz una pregunta. Nunca digas quién es alguien por su cara: los nombres solo los da la app.
 
 **Parámetros**
 
@@ -187,19 +187,21 @@ Al final está el mismo contenido en JSON, en el formato de *client tools* de El
 
 **Descripción para Nidi**
 
-> Crea una felicitación de principio a fin sin que la persona toque nada: elige la foto, la pinta con el estilo elegido y la deja en pantalla con su título. Úsala cuando pida una felicitación. Si no sabes el tipo, pregúntalo antes; si no sabes con qué foto o de quién, pregúntalo también. De qué foto sale: si dices una persona, una buena foto suya; si no, la foto que tiene abierta en grande; si no hay ninguna, la de la ficha de persona que tenga abierta. Si nombra a alguien pero quiere usar la foto que está viendo, pasa usar_foto_abierta=true. Tarda unos 10 segundos: avísale de que espere. Al terminar, el botón «Compartir» brilla y tiene que pulsarlo ella (tú no puedes enviarla). Si tarda más de la cuenta te dirá «se está creando» y la app te avisará cuando esté.
+> Crea una felicitación de principio a fin sin que la persona toque nada: elige la foto, la pinta y la deja en pantalla con su título. Úsala cuando pida una felicitación. Hay cuatro tipos listos (cumpleanos, aniversario, navidad, anonuevo) y cualquier otra ocasión que quiera (santo, jubilación, bautizo, graduación, ánimo, gracias…) con estilo=otra: entonces tú le propones el título que irá encima y ella lo confirma, y pasas en decoracion cómo decorarla, solo con cosas que se ven. Si no sabes la ocasión, pregúntala; si no sabes con qué foto o de quién, pregúntalo también. De qué foto sale: si dices una persona, una buena foto suya; si no, la foto que tiene abierta en grande; si no hay ninguna, la de la ficha de persona que tenga abierta. Si nombra a alguien pero quiere usar la foto que está viendo, pasa usar_foto_abierta=true. Tarda unos 10 segundos: avísale de que espere. Al terminar, el botón «Compartir» brilla y tiene que pulsarlo ella (tú no puedes enviarla). Si tarda más de la cuenta te dirá «se está creando» y la app te avisará cuando esté. Si luego se sale sin querer, vuelve a enseñársela con abrir_en_la_app «vuelve a la felicitación», no la hagas otra vez.
 
 **Parámetros**
 
 | Nombre | Tipo | Obligatorio | Descripción |
 |---|---|---|---|
-| `estilo` | string (uno de: `cumpleanos`, `aniversario`, `navidad`, `anonuevo`) | sí | Tipo de felicitación. cumpleanos (también «cumple»), aniversario (también boda, bodas de oro), navidad (también Nochebuena, Reyes), anonuevo (también Nochevieja, fin de año). |
+| `estilo` | string (uno de: `cumpleanos`, `aniversario`, `navidad`, `anonuevo`, `otra`) | sí | Tipo de felicitación. cumpleanos (también «cumple»), aniversario (también boda, bodas de oro), navidad (también Nochebuena, Reyes), anonuevo (también Nochevieja, fin de año) u otra (cualquier otra ocasión: entonces titulo y decoracion son obligatorios). |
+| `titulo` | string | no | Solo con estilo=otra: el texto que irá encima de la imagen, corto (máximo 40 letras) y con sus palabras, confirmado con ella. Por ejemplo «¡Feliz santo, Carmen!» o «¡Felicidades por tu jubilación!». |
+| `decoracion` | string | no | Solo con estilo=otra: cómo decorarla, descrito solo con cosas que se ven y sin nombrar la ocasión ni poner palabras (la IA las escribe mal). Por ejemplo «flores de primavera, mariposas y colores suaves» o «confeti dorado y globos azules». |
 | `persona` | string | no | Opcional: nombre de la persona cuya foto usar, tal como lo conoce Nido («Clara», «Carlos hijo»); se usa una buena foto suya. «esta» = la de la ficha abierta. |
 | `usar_foto_abierta` | boolean | no | Opcional: true para usar exactamente la foto que tiene abierta en grande, aunque hayas dicho una persona. |
 
 **Ajustes del panel**: Wait for response = activado · Response timeout = **30 s** (La herramienta contesta como tarde a los 18 s (`ESPERA_MAX_MS`); pintar tarda 7-10 s en local. Con 30 s en el panel hay margen.).
 
-**Qué devuelve**: «Hecho: ya tiene en pantalla la felicitación de cumpleaños con una foto de Clara nieta («¡Feliz cumpleaños!»; ha tardado 9 s). Queda guardada en «Mis felicitaciones», en Yo. Para enviarla puede compartirla con el botón «Compartir»… (lo estoy marcando, brilla)…» · falta el tipo · tipo que no existe («bautizo») · «No conozco a X. Nido conoce a: …» · falta la foto · no hay foto abierta · ya se está creando otra · sin conexión · «No se ha podido crear la felicitación: <motivo sencillo> (detalle técnico: …)…». Si pasan 18 s: «La felicitación se está creando…», y cuando acaba llega a Nidi «[Aviso de la app, no lo ha dicho la persona] Hecho: …».
+**Qué devuelve**: «Hecho: ya tiene en pantalla la felicitación de cumpleaños con una foto de Clara nieta («¡Feliz cumpleaños!»; ha tardado 9 s). Queda guardada en «Mis felicitaciones», en Yo. Para enviarla puede compartirla con el botón «Compartir»… (lo estoy marcando, brilla)…» · falta el tipo · otra ocasión sin título o decoración («bautizo»): te pide proponerlos y llamar con estilo=otra · «No conozco a X. Nido conoce a: …» · falta la foto · no hay foto abierta · ya se está creando otra · sin conexión · «No se ha podido crear la felicitación: <motivo sencillo> (detalle técnico: …)…». Si pasan 18 s: «La felicitación se está creando…», y cuando acaba llega a Nidi «[Aviso de la app, no lo ha dicho la persona] Hecho: …».
 
 **Dónde está en el código**: `js/agente-acciones.js` → `crearFelicitacion()` → `PersonaSelect.agente.crearFelicitacion()` (`js/persona.js`, mismo camino que los botones: «Creando imagen» → felicitación → «Mis felicitaciones») → `/.netlify/functions/crear-imagen` (Cloudflare). Acepta también `tipo` en vez de `estilo`, y sinónimos hablados.
 
@@ -244,13 +246,13 @@ Cada objeto es un `tool_config` de tipo `client`. Por API se crean una a una (`P
   {
     "type": "client",
     "name": "abrir_en_la_app",
-    "description": "Mueve la app a donde la persona quiere ir. Sirve para: el inicio, Álbumes, Personas, Yo, Mis documentos, Ajustes, «todas mis fotos» («Todas tus fotos»: todas las fotos que hay en Nido), un álbum por su nombre («el álbum Viaje») y «felicitación» (abre la pantalla para que la haga ella misma). Para ver a una persona usa abrir_persona; para crear o cambiar álbumes usa gestionar_albumes (si le pides «crear un álbum» sin nombre, te dirá que preguntes el nombre); para que tú hagas la felicitación usa crear_felicitacion. Devuelve «Hecho: …» si lo ha abierto o «No he encontrado eso en la app.».",
+    "description": "Mueve la app a donde la persona quiere ir. Sirve para: el inicio, Álbumes, Personas, Yo, Mis documentos, Ajustes, «todas mis fotos» («Todas tus fotos»: todas las fotos que hay en Nido), un álbum por su nombre («el álbum Viaje»), «felicitación» (abre la pantalla para que la haga ella misma), «vuelve a la felicitación» (vuelve a enseñar la última que habéis hecho, sin repetirla), «mis felicitaciones» (Yo, donde se guardan), «mis documentos» o un papel de Mis documentos por su nombre o por lo que es («el horario del autobús», «mi tarjeta sanitaria»; se abre en grande para que lo leas con ver_foto) y «atrás» (pulsa el botón Volver de la pantalla). Para ver a una persona usa abrir_persona; para crear o cambiar álbumes usa gestionar_albumes (si le pides «crear un álbum» sin nombre, te dirá que preguntes el nombre); para que tú hagas la felicitación usa crear_felicitacion. Devuelve «Hecho: …» si lo ha abierto o «No he encontrado eso en la app.».",
     "parameters": {
       "type": "object",
       "properties": {
         "pedido": {
           "type": "string",
-          "description": "Adónde quiere ir, en pocas palabras y en español, como lo diría la persona: «el inicio», «álbumes», «personas», «yo», «mis documentos», «ajustes», «todas mis fotos», «el álbum Navidad 2024», «felicitación»."
+          "description": "Adónde quiere ir, en pocas palabras y en español, como lo diría la persona: «el inicio», «álbumes», «personas», «yo», «mis documentos», «ajustes», «todas mis fotos», «el álbum Navidad 2024», «felicitación», «vuelve a la felicitación», «mis felicitaciones», «el horario del autobús», «atrás»."
         }
       },
       "required": [
@@ -263,7 +265,7 @@ Cada objeto es un `tool_config` de tipo `client`. Por API se crean una a una (`P
   {
     "type": "client",
     "name": "gestionar_albumes",
-    "description": "Crea álbumes, les añade fotos, pasa fotos de un álbum a otro, quita fotos de un álbum o le cambia el nombre, para que la persona no tenga que hacerlo a mano. Úsala solo cuando la persona lo pida. Antes de quitar TODAS las fotos de un álbum, confírmalo con ella. «Quitar» no borra la foto del teléfono: sigue en «Todas tus fotos». Los álbumes que pone Nido solo (por año, Navidad, verano o «Fotos de …») no se pueden cambiar; sí se pueden copiar sus fotos a un álbum de la persona. Si la herramienta dice que el álbum de destino no existe, pregúntale si quiere crearlo y, si dice que sí, repite la llamada con crear_si_no_existe=true. Usa el nombre del álbum tal como es (el contexto te da la lista): un nombre parecido no vale y te devolverá la lista para que preguntes. Cuenta con tus palabras la frase que devuelve: si empieza por «Hecho:» se ha hecho; si no, dice qué falta o qué preguntar.",
+    "description": "Crea álbumes, les añade fotos, pasa fotos de un álbum a otro, quita fotos de un álbum o le cambia el nombre, para que la persona no tenga que hacerlo a mano. Úsala solo cuando la persona lo pida. Antes de quitar TODAS las fotos de un álbum, confírmalo con ella. «Quitar» no borra la foto del teléfono: sigue en «Todas tus fotos». Los álbumes que pone Nido solo (por año, Navidad o verano) no se pueden cambiar; sí se pueden copiar sus fotos a un álbum de la persona. Si la herramienta dice que el álbum de destino no existe, pregúntale si quiere crearlo y, si dice que sí, repite la llamada con crear_si_no_existe=true. Usa el nombre del álbum tal como es (el contexto te da la lista): un nombre parecido no vale y te devolverá la lista para que preguntes. Cuenta con tus palabras la frase que devuelve: si empieza por «Hecho:» se ha hecho; si no, dice qué falta o qué preguntar.",
     "parameters": {
       "type": "object",
       "properties": {
@@ -374,7 +376,7 @@ Cada objeto es un `tool_config` de tipo `client`. Por API se crean una a una (`P
   {
     "type": "client",
     "name": "ver_foto",
-    "description": "Mira la foto (o el vídeo) que la persona tiene abierta en grande y te cuenta lo que se ve, junto con los nombres de quienes reconoce Nido en el propio móvil. Solo funciona con una foto abierta: si no la hay, ábrela antes con abrir_foto. Úsala cuando te pregunte por la foto, cuando quiera charlar de ella o cuando necesites verla para ayudar; no la uses con cada foto por costumbre. Antes, di «Déjame que la mire» (tarda unos segundos). No leas la descripción: coméntala y haz una pregunta. Nunca digas quién es alguien por su cara: los nombres solo los da la app.",
+    "description": "Mira la foto (o el vídeo) que la persona tiene abierta en grande y te cuenta lo que se ve, junto con los nombres de quienes reconoce Nido en el propio móvil. Solo funciona con una foto abierta: si no la hay, ábrela antes con abrir_foto. Úsala solo cuando te pida que la mires, cuando pregunte algo que solo se sabe viéndola (qué hay, qué pone, dónde es) o para leerle un papel de Mis documentos (pasa su pregunta: «¿a qué hora pasa el autobús a la playa?»). Para empezar a charlar de una foto no la uses: la foto saldría del móvil; empieza con lo que te cuenta la app (quién sale y la fecha). Antes, di «Déjame que la mire» (tarda unos segundos). No leas la descripción: coméntala y haz una pregunta. Nunca digas quién es alguien por su cara: los nombres solo los da la app.",
     "parameters": {
       "type": "object",
       "properties": {
@@ -410,7 +412,7 @@ Cada objeto es un `tool_config` de tipo `client`. Por API se crean una a una (`P
   {
     "type": "client",
     "name": "crear_felicitacion",
-    "description": "Crea una felicitación de principio a fin sin que la persona toque nada: elige la foto, la pinta con el estilo elegido y la deja en pantalla con su título. Úsala cuando pida una felicitación. Si no sabes el tipo, pregúntalo antes; si no sabes con qué foto o de quién, pregúntalo también. De qué foto sale: si dices una persona, una buena foto suya; si no, la foto que tiene abierta en grande; si no hay ninguna, la de la ficha de persona que tenga abierta. Si nombra a alguien pero quiere usar la foto que está viendo, pasa usar_foto_abierta=true. Tarda unos 10 segundos: avísale de que espere. Al terminar, el botón «Compartir» brilla y tiene que pulsarlo ella (tú no puedes enviarla). Si tarda más de la cuenta te dirá «se está creando» y la app te avisará cuando esté.",
+    "description": "Crea una felicitación de principio a fin sin que la persona toque nada: elige la foto, la pinta y la deja en pantalla con su título. Úsala cuando pida una felicitación. Hay cuatro tipos listos (cumpleanos, aniversario, navidad, anonuevo) y cualquier otra ocasión que quiera (santo, jubilación, bautizo, graduación, ánimo, gracias…) con estilo=otra: entonces tú le propones el título que irá encima y ella lo confirma, y pasas en decoracion cómo decorarla, solo con cosas que se ven. Si no sabes la ocasión, pregúntala; si no sabes con qué foto o de quién, pregúntalo también. De qué foto sale: si dices una persona, una buena foto suya; si no, la foto que tiene abierta en grande; si no hay ninguna, la de la ficha de persona que tenga abierta. Si nombra a alguien pero quiere usar la foto que está viendo, pasa usar_foto_abierta=true. Tarda unos 10 segundos: avísale de que espere. Al terminar, el botón «Compartir» brilla y tiene que pulsarlo ella (tú no puedes enviarla). Si tarda más de la cuenta te dirá «se está creando» y la app te avisará cuando esté. Si luego se sale sin querer, vuelve a enseñársela con abrir_en_la_app «vuelve a la felicitación», no la hagas otra vez.",
     "parameters": {
       "type": "object",
       "properties": {
@@ -420,9 +422,18 @@ Cada objeto es un `tool_config` de tipo `client`. Por API se crean una a una (`P
             "cumpleanos",
             "aniversario",
             "navidad",
-            "anonuevo"
+            "anonuevo",
+            "otra"
           ],
-          "description": "Tipo de felicitación. cumpleanos (también «cumple»), aniversario (también boda, bodas de oro), navidad (también Nochebuena, Reyes), anonuevo (también Nochevieja, fin de año)."
+          "description": "Tipo de felicitación. cumpleanos (también «cumple»), aniversario (también boda, bodas de oro), navidad (también Nochebuena, Reyes), anonuevo (también Nochevieja, fin de año) u otra (cualquier otra ocasión: entonces titulo y decoracion son obligatorios)."
+        },
+        "titulo": {
+          "type": "string",
+          "description": "Solo con estilo=otra: el texto que irá encima de la imagen, corto (máximo 40 letras) y con sus palabras, confirmado con ella. Por ejemplo «¡Feliz santo, Carmen!» o «¡Felicidades por tu jubilación!»."
+        },
+        "decoracion": {
+          "type": "string",
+          "description": "Solo con estilo=otra: cómo decorarla, descrito solo con cosas que se ven y sin nombrar la ocasión ni poner palabras (la IA las escribe mal). Por ejemplo «flores de primavera, mariposas y colores suaves» o «confeti dorado y globos azules»."
         },
         "persona": {
           "type": "string",

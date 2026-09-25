@@ -204,7 +204,7 @@ window.Reconocimiento = (function () {
     for (const img of imgs) {
       try {
         const faces = await detect(img);
-        // Mismo criterio que organize (el que llena «Fotos de …»): una cara que cuente (caraGrande) y que se parezca MÁS a esta
+        // Mismo criterio que organize (el que llena las fichas de Personas): una cara que cuente (caraGrande) y que se parezca MÁS a esta
         // persona que a ninguna otra. Antes valía cualquier cara de fondo y estar a ≤ MATCH_DIST de su primera huella aunque se
         // pareciera más a otra: al abrir una ficha le crecían las fotos (Clara 9 → 12, una sin nombre 7 → 13) y las cifras que
         // decía Nidi dejaban de coincidir con la pantalla y con el álbum.

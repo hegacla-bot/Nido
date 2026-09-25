@@ -624,11 +624,9 @@ window.PersonaSelect = (function () {
     });
   }
 
-  // Álbum "Fotos de X" de cada persona con nombre (se crea o se actualiza solo).
-  function personAlbum(person, srcs) {
-    if (!person.name || !srcs.length || !window.NidoAlbums) return;
-    window.NidoAlbums.upsert('persona:' + person.id, 'Fotos de ' + person.name, srcs.map((src) => ({ src, tag: 'IMG' })));
-  }
+  // (25-sep) Ya no hay álbum automático «Fotos de X» por persona: repetía en Álbumes lo que ya está en Personas, y delante de los
+  // álbumes de fechas. Cada persona se ve en un solo sitio, su ficha. Nidi sigue pudiendo hacer álbumes «con las fotos de Clara»
+  // (app.js, filtrarPorCriterio saca las fotos de la ficha).
 
   // ---- Al añadir fotos: Nido busca a las personas, las agrupa y rehace la pantalla Personas con lo que hay de verdad ----
   function limpiarEjemplosPersonas() {
@@ -684,7 +682,6 @@ window.PersonaSelect = (function () {
         registerPerson(o.person);
         const e = PERSONAS[o.person.id];
         e.photos = o.imgs.map((i) => i.currentSrc || i.src);
-        personAlbum(o.person, e.photos);
       });
       pintarGrupos(res.grupos);
       pintarVacio(res.personas.length === 0);
@@ -709,7 +706,6 @@ window.PersonaSelect = (function () {
       // Si mientras buscaba se ha abierto la ficha de OTRA persona, no se le pinta encima esta (y tampoco se cambia la ficha abierta).
       const enFicha = /^persona-(fotos|imagenes|videos)$/.test(window.NidoNav.current());
       if (!enFicha || personaAbiertaId === id) fillPersonaScreen(id);
-      if (entry.photos.length) personAlbum(person, entry.photos);
     } finally { scanning[id] = false; }
   }
 
@@ -850,6 +846,9 @@ window.PersonaSelect = (function () {
   };
 
   let lastStyle = null; // para "Volver a intentarlo" sin obligar a elegir otra vez
+  let lastExtra = {}; // y, si era una felicitación libre (estilo «otra»), su título y su decoración
+  // La última felicitación hecha, para volver a enseñarla si la persona se sale sin querer («vuelve a la felicitación», 25-sep).
+  let ultimaFelicitacion = null; // { url, titulo, style }
 
   // Felicitación (botón de la pantalla de detalle): abre directamente el selector de estilo sobre la
   // foto que se está viendo — no hace falta haber seleccionado a nadie. Usa el mismo flujo de IA
@@ -896,6 +895,11 @@ window.PersonaSelect = (function () {
     const source = createSource || (activeZone && activeZone.sourceEl);
     if (!source) return { ok: false, error: 'No hay ninguna foto para la felicitación.' };
     lastStyle = style;
+    // Felicitación libre (25-sep): «otra» no es un estilo fijo; la persona dice qué quiere (santo, jubilación, bautizo…) y Nidi pasa
+    // el TÍTULO que va encima (texto real, nunca pintado por la IA) y una DECORACIÓN descrita solo con cosas que se ven.
+    const titulo = style === 'otra' ? String(opciones.titulo || '').trim().slice(0, 40) : (CAPTIONS[style] || '');
+    const decoracion = style === 'otra' ? String(opciones.decoracion || '').trim().slice(0, 160) : '';
+    lastExtra = { titulo, decoracion };
     // Pantalla completa "Creando imagen" (759:5110) mientras trabaja la IA; el resultado (o el error)
     // se enseña después en el detalle. Mínimo 1,2s para que no parpadee si falla al instante.
     window.NidoNav.show('felicitacion-cargando');
@@ -918,14 +922,16 @@ window.PersonaSelect = (function () {
       const res = await fetch(CREATE_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64, style }),
+        body: JSON.stringify(style === 'otra' ? { imageBase64, style, decoracion } : { imageBase64, style }),
         signal: window.AbortSignal && AbortSignal.timeout ? AbortSignal.timeout(CREAR_TOPE_MS) : undefined,
       });
       const data = await res.json().catch(() => ({ error: 'respuesta no válida del servidor (' + res.status + ')' }));
       if (!res.ok || !data.imageBase64) throw new Error(data.error || 'fallo al generar');
-      document.querySelector('[data-felicitacion-img]').src = base64AUrlObjeto(data.imageBase64);
+      const url = base64AUrlObjeto(data.imageBase64);
+      document.querySelector('[data-felicitacion-img]').src = url;
+      ultimaFelicitacion = { url, titulo, style };
       const caption = document.querySelector('[data-felicitacion-caption]');
-      caption.textContent = CAPTIONS[style] || '';
+      caption.textContent = titulo;
       // Una tipografía por tipo de creación — ver las reglas --cumpleanos/etc. en persona.css.
       caption.className = 'persona-create-result__caption persona-create-result__caption--' + style;
       const wait = 1200 - (Date.now() - started);
@@ -935,8 +941,9 @@ window.PersonaSelect = (function () {
       const done = document.createElement('div');
       done.className = 'photo-card photo-card--square-2col';
       done.innerHTML = '<img alt="Felicitación creada con IA" />';
-      done.querySelector('img').src = base64AUrlObjeto(data.imageBase64);
-      done.dataset.caption = CAPTIONS[style] || '';
+      done.querySelector('img').src = url;
+      done.dataset.caption = titulo;
+      done.dataset.felicitacionEstilo = style; // para volver a abrirla con su título y su letra (mostrarFelicitacion)
       const first = yoGrid.querySelector('.yo-generar-wrap');
       first.insertAdjacentElement('afterend', done);
       window.NidoNav.show('felicitacion-generada'); // el resultado ya es pantalla propia (763:5138)
@@ -971,6 +978,7 @@ window.PersonaSelect = (function () {
     aniversario: { font: "italic 700 44px 'Playfair Display'", rot: 0, fill: '#f4d58d', stroke: '#7a4f1a', sw: 1, glow: 'rgba(244,213,141,0.5)' },
     navidad: { font: "700 52px 'Mountains of Christmas'", rot: -2, fill: '#d6483a', stroke: '#fff', sw: 4, drop: '#2f6b45' },
     anonuevo: { font: "400 36px 'Bungee'", rot: -1.5, fill: '#ffd166', stroke: '#7a3ea1', sw: 2, glow: 'rgba(255,209,102,0.85)' },
+    otra: { font: "700 42px 'Fredoka'", rot: -2, fill: '#ffffff', stroke: '#516dff', sw: 5 }, // libre: blanca con borde azul, se lee sobre cualquier fondo
   };
 
   function loadImage(src) {
@@ -1304,7 +1312,7 @@ window.PersonaSelect = (function () {
         return;
       }
       if (event.target.closest('[data-persona-action="reintentar"]')) {
-        if (lastStyle) createWithPerson(lastStyle);
+        if (lastStyle) createWithPerson(lastStyle, lastExtra);
         return;
       }
       const styleBtn = event.target.closest('[data-persona-style]');
@@ -1428,16 +1436,21 @@ window.PersonaSelect = (function () {
   let ultimoGuardado = null; // { id, nombre, antes }: el último nombre que ha puesto Nidi, para corregirlo sin pedir permiso otra vez
   const avisarNidi = (texto) => { if (window.NidoAgente && window.NidoAgente.activa) window.NidoAgente.decir('[Aviso de la app, no lo ha dicho la persona] ' + texto); };
 
-  // Pone el nombre en todas partes: Personas, cabecera de la ficha, álbum «Fotos de …» y grupos. Con nombre null la ficha vuelve a
-  // quedarse sin nombre (y su álbum automático desaparece).
+  // Pone el nombre en todas partes: Personas, cabecera de la ficha y grupos. Con nombre null la ficha vuelve a quedarse sin nombre.
   function aplicarNombre(person, nombre) {
     const id = person.id;
     Reconocimiento.rename(person, nombre);
     registerPerson(person); // vuelve a pintar el círculo en Personas
-    if (id === personaAbiertaId) document.querySelectorAll('[data-persona-name]').forEach((el) => { el.textContent = nombreDe(person); });
+    if (id === personaAbiertaId) {
+      // El nombre de la cabecera da un destello: lleva la mirada a lo que ha cambiado, para que se VEA que está guardado.
+      document.querySelectorAll('[data-persona-name]').forEach((el) => {
+        el.textContent = nombreDe(person);
+        el.classList.remove('is-recien');
+        void el.offsetWidth;
+        el.classList.add('is-recien');
+      });
+    }
     const fotos = PERSONAS[id].photos || [];
-    if (nombre) personAlbum(person, fotos); // «Fotos de …» con el nombre nuevo
-    else if (window.NidoAlbums && window.NidoAlbums.removeKey) window.NidoAlbums.removeKey('persona:' + id);
     setTimeout(() => organizarBiblioteca(), 400); // los grupos («Clara y Ana») se rehacen con lo nuevo
     return fotos.length;
   }
@@ -1568,7 +1581,9 @@ window.PersonaSelect = (function () {
   async function crearFelicitacionAgente(p) {
     p = p || {};
     if (felicitacionEnCurso) return { ok: false, ocupado: true };
-    if (!CAPTIONS[p.estilo]) return { ok: false, error: 'estilo desconocido: ' + p.estilo };
+    const libre = p.estilo === 'otra';
+    if (libre && (!String(p.titulo || '').trim() || !String(p.decoracion || '').trim())) return { ok: false, faltaLibre: true };
+    if (!libre && !CAPTIONS[p.estilo]) return { ok: false, error: 'estilo desconocido: ' + p.estilo };
     const enDetalle = window.NidoNav.current() === 'detalle-foto';
     const ficha = fichaAbierta();
     let source = null, origen = 'yo', volverA = null, personaId = p.personaId || null;
@@ -1589,19 +1604,55 @@ window.PersonaSelect = (function () {
     window.felicitacionOrigin = origen;
     felicitacionStyle = null;
     document.querySelectorAll('[data-felicitacion-card]').forEach((c) => c.classList.remove('is-selected'));
-    felicitacionEnCurso = createWithPerson(p.estilo, { source, volverA });
+    felicitacionEnCurso = createWithPerson(p.estilo, { source, volverA, titulo: p.titulo, decoracion: p.decoracion });
     try {
       const r = await felicitacionEnCurso;
-      return Object.assign(r, { estilo: p.estilo, titulo: CAPTIONS[p.estilo], persona: personaId ? nombreReal(personaId) : null, conFotoAbierta: origen === 'detalle' });
+      return Object.assign(r, { estilo: p.estilo, titulo: libre ? String(p.titulo).trim().slice(0, 40) : CAPTIONS[p.estilo], persona: personaId ? nombreReal(personaId) : null, conFotoAbierta: origen === 'detalle' });
     } finally { felicitacionEnCurso = null; }
   }
+
+  // Enseña una felicitación ya hecha en su pantalla (título encima, «Compartir» y «Volver»), sin volver a crearla.
+  function mostrarFelicitacion(u) {
+    document.querySelector('[data-felicitacion-img]').src = u.url;
+    const caption = document.querySelector('[data-felicitacion-caption]');
+    caption.textContent = u.titulo || '';
+    caption.className = 'persona-create-result__caption' + (u.style ? ' persona-create-result__caption--' + u.style : '');
+    if (u.origen) window.felicitacionOrigin = u.origen; // «Volver» lleva a Yo (felicitacion-back en app.js)
+    window.NidoNav.show('felicitacion-generada');
+  }
+  // Tocar una felicitación de «Mis felicitaciones» (Yo) la abre como felicitación, no como una foto más (25-sep): antes salía en el
+  // detalle de foto, sin su título, con «Felicitación» y «Eliminar», y quien se había salido sin querer no podía volver a enviarla.
+  // Captura y antes que el manejador general de las fotos (persona.js se carga antes que app.js).
+  document.addEventListener('click', (event) => {
+    const card = event.target.closest('[data-screen="yo"] .grid-2 .photo-card');
+    const img = card && card.querySelector('img');
+    if (!img) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    mostrarFelicitacion({ url: img.currentSrc || img.src, titulo: card.dataset.caption || '', style: card.dataset.felicitacionEstilo || '', origen: 'yo' });
+  }, true);
 
   const agente = {
     estado: () => ({ ficha: fichaAbierta(), personas: personasParaAgente(), foto: fotoAbiertaInfo() }),
     nombrarPersona: nombrarPersonaAgente,
     abrirFichaSinNombre,
     fotoParaVer,
+    // Lo que sabe el PROPIO MÓVIL de la foto abierta (fecha y quién sale, con el reconocimiento del dispositivo), sin mandar nada fuera.
+    // Con esto Nidi empieza a charlar de una foto por su cuenta; solo la «mira» (ver_foto, nube) si la persona quiere.
+    async infoFotoAbierta() {
+      if (window.NidoNav.current() !== 'detalle-foto') return null;
+      const el = currentPhotoEl();
+      if (!el) return null;
+      return { tipo: el.tagName === 'VIDEO' ? 'vídeo' : 'foto', fecha: fechaDeFoto(el), personas: await personasEnFoto(el) };
+    },
     crearFelicitacion: crearFelicitacionAgente,
+    // Vuelve a enseñar la última felicitación hecha (la persona se salió sin querer). null si aún no se ha hecho ninguna.
+    abrirUltimaFelicitacion() {
+      const u = ultimaFelicitacion;
+      if (!u) return null;
+      mostrarFelicitacion(u);
+      return { titulo: u.titulo };
+    },
     estilosFelicitacion: () => Object.keys(CAPTIONS),
     creandoFelicitacion: () => !!felicitacionEnCurso,
   };

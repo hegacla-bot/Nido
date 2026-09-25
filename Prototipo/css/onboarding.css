@@ -467,10 +467,13 @@
   border-radius: var(--radius-bubble) var(--radius-bubble) 0 var(--radius-bubble);
 }
 .ob-personas .onboarding-pollito {
-  /* mismo pollito de espaldas (4-v2) a 0,8×, centrado donde estaba y con los pies a la altura de los demás (~754px) */
-  left: 9.7125rem; top: 33.98125rem; width: 13.2rem; height: 13.1438rem;
+  /* mismo pollito de espaldas (4-v2) a 0,8×, centrado donde estaba; bajado 10px junto con «Siguiente» (25-sep) para seguir sentado encima */
+  left: 9.7125rem; top: 34.60625rem; width: 13.2rem; height: 13.1438rem;
 }
 .ob-personas .onboarding-cta {
-  top: 46rem; /* 736px */
-  height: 4.25rem; /* 68px */
+  /* Justo encima de «Volver» (25-sep): misma regla que .bottom-action (components.css) — pegado al borde de abajo a 38px — en vez
+     de un top fijo, que lo dejaba 10px más arriba y asomaba el borde de «Volver» por debajo. */
+  top: auto;
+  bottom: 2.375rem;
+  height: 4.25rem; /* 68px, igual que «Volver» */
 }

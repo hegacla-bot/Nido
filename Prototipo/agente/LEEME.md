@@ -97,7 +97,8 @@ Si algo falla, Nidi ya sabe decir «no he podido verla, ¿lo intentamos otra vez
 
 Esto resuelve la tensión 2 de la sección 10 del documento maestro («mandar fotos familiares a una API de terceros contradice lo que promete el producto»). La decisión es **mandar lo mínimo, solo cuando hace falta y a la vista**:
 
-- **Qué foto sale del móvil.** Solo **la foto que la persona tiene abierta**, y solo cuando Nidi necesita verla: porque la persona pregunta por ella o porque quiere charlar de ella. Nunca la biblioteca, nunca varias fotos, nunca en segundo plano.
+- **Qué foto sale del móvil.** Solo **la foto que la persona tiene abierta**, y solo cuando la persona le pide que la mire o pregunta algo que solo se sabe viéndola (o un dato de un papel de Mis documentos). Nunca la biblioteca, nunca varias fotos, nunca en segundo plano.
+- **Iniciativa de Nidi sin enviar nada (25-sep).** Cuando la persona se queda mirando una foto, Nidi empieza a charlar con lo que sabe el propio móvil (la fecha y quién sale, del reconocimiento del dispositivo); no manda la foto a la nube si ella no quiere que la mire. Los papeles de Mis documentos (DNI, tarjetas) solo se leen si pide un dato concreto.
 - **Cómo sale.** Reducida a **896 px** y recomprimida en un canvas del navegador. Eso quita todos los metadatos: **sin EXIF y sin GPS**. La fecha, si hace falta, va aparte como texto («24 de diciembre de 2024»).
 - **Se ve.** Mientras se manda, sale en pantalla «Nidi está mirando esta foto…».
 - **Quién sale lo dice el móvil, no la nube.** El reconocimiento de caras es del propio dispositivo (face-api en el navegador; las huellas no salen del móvil). Al modelo de visión solo le llegan **nombres** («Clara nieta», «una persona que Nido aún no sabe quién es»), y tiene **prohibido identificar a nadie por la cara**.

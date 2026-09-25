@@ -81,11 +81,21 @@ exports.handler = async (event) => {
   }
 
   const { imageBase64, style } = payload;
-  const prompt = PROMPTS[style];
+  let prompt = PROMPTS[style];
+  // Felicitación libre (25-sep, «otra»): la persona elige la ocasión (santo, jubilación, bautizo…) y el asistente manda una
+  // DECORACIÓN descrita solo con cosas que se ven. Se limpia y se acota, y se mete en la misma plantilla que los estilos fijos
+  // (sin rótulos, franja de arriba despejada para el título, caras reconocibles). El título lo pone la app encima, nunca la IA.
+  if (style === 'otra') {
+    const decoracion = String(payload.decoracion || '').replace(/[\r\n"«»<>{}]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 160);
+    if (decoracion) {
+      prompt = 'Convierte esta foto en una ilustración alegre y festiva, decorada con ' + decoracion + '. ' +
+        SOLO_DECORACION + ' ' + ESPACIO_TITULAR + ' ' + RECONOCIBLE;
+    }
+  }
   if (!imageBase64 || !prompt) {
     return {
       statusCode: 400,
-      body: JSON.stringify({ error: `Falta imageBase64 o "style" no es uno de: ${Object.keys(PROMPTS).join(', ')}` }),
+      body: JSON.stringify({ error: `Falta imageBase64 o "style" no es uno de: ${Object.keys(PROMPTS).join(', ')}, otra (con decoracion)` }),
     };
   }
 

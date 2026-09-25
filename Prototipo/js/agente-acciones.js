@@ -208,10 +208,12 @@ window.NidoAgenteAcciones = (function () {
       const boton = document.querySelector('[data-screen="felicitacion-generada"] [data-persona-action="compartir-whatsapp"]');
       if (boton && pantalla() === 'felicitacion-generada') marcar(boton, 15000);
       const de = r.persona ? ' con una foto de ' + r.persona : r.conFotoAbierta ? ' con la foto que tenía abierta' : '';
-      return 'Hecho: ya tiene en pantalla la felicitación de ' + NOMBRE_ESTILO[r.estilo] + de + ' («' + r.titulo + '»; ha tardado ' + Math.round((r.ms || 0) / 1000) + ' s). ' +
+      const cual = r.estilo === 'otra' ? '«' + r.titulo + '»' : 'de ' + NOMBRE_ESTILO[r.estilo] + ' («' + r.titulo + '»)';
+      return 'Hecho: ya tiene en pantalla la felicitación ' + cual + de + ' (ha tardado ' + Math.round((r.ms || 0) / 1000) + ' s). ' +
         'Queda guardada en «Mis felicitaciones», en Yo. Para enviarla puede compartirla con el botón «Compartir», abajo a la derecha (lo estoy marcando, brilla): ' +
         'tiene que pulsarlo la persona, el móvil no deja abrir WhatsApp sin su toque. Si no quiere enviarla ahora, «Volver».';
     }
+    if (r.faltaLibre) return 'Falta el título o la decoración de la felicitación. Pregúntaselos y vuelve a llamar con estilo=otra, titulo y decoracion.';
     if (r.ocupado) return 'Ya estoy creando una felicitación. Dile que espere un momento; cuando esté, la app te avisará.';
     if (r.sinFotoAbierta) return 'No tiene ninguna foto abierta. Pregúntale con quién quiere la felicitación (Nido conoce a: ' + (conocidas().join(', ') || 'nadie por su nombre todavía') + ') o ábrele la foto que quiera con abrir_foto.';
     if (r.sinFoto) return 'Falta la foto. Pregúntale con quién quiere la felicitación (Nido conoce a: ' + (conocidas().join(', ') || 'nadie por su nombre todavía') + ') o si quiere usar una foto concreta (ábrela con abrir_foto y vuelve a llamar con usar_foto_abierta=true).';
@@ -224,9 +226,14 @@ window.NidoAgenteAcciones = (function () {
     const api = ps();
     if (!api || !api.crearFelicitacion) return 'No puedo crear felicitaciones ahora mismo.';
     const dicho = String(p.estilo || p.tipo || '').trim();
-    if (!dicho) return 'Falta saber de qué es la felicitación. Pregúntale si es de cumpleaños, de aniversario, de Navidad o de Año Nuevo.';
-    const estilo = estiloDe(dicho);
-    if (!estilo) return 'No sé hacer felicitaciones de «' + dicho + '». Puedo hacerlas de cumpleaños, de aniversario, de Navidad o de Año Nuevo: pregúntale cuál le va mejor.';
+    const titulo = String(p.titulo || '').trim(), decoracion = String(p.decoracion || '').trim();
+    if (!dicho && !(titulo && decoracion)) return 'Falta saber de qué es la felicitación. Pregúntale para qué ocasión la quiere: cumpleaños, aniversario, Navidad, Año Nuevo o cualquier otra que se le ocurra.';
+    // Cuatro estilos fijos y, para cualquier otra ocasión (santo, jubilación, bautizo, graduación…), la libre: estilo=otra con título y decoración.
+    let estilo = norm(dicho) === 'otra' ? 'otra' : estiloDe(dicho);
+    if (!estilo && titulo && decoracion) estilo = 'otra';
+    const pideLibre = 'Para una felicitación de «' + (dicho && norm(dicho) !== 'otra' ? dicho : 'otra ocasión') + '» hacen falta dos cosas: el título que irá encima (corto y con sus palabras; propónselo y confírmalo, por ejemplo «¡Feliz santo, Carmen!») ' +
+      'y cómo decorarla, descrito solo con cosas que se ven y sin nombrar la ocasión ni poner palabras (por ejemplo «flores de primavera y colores suaves» o «confeti dorado y globos azules»). Luego llama con estilo=otra, titulo y decoracion.';
+    if (!estilo || (estilo === 'otra' && !(titulo && decoracion))) return pideLibre;
     if (api.creandoFelicitacion()) return textoFelicitacion({ ocupado: true });
     if (!navigator.onLine) return 'No hay conexión a internet y las felicitaciones la necesitan. Díselo con naturalidad y ofrécele hacerla cuando vuelva la conexión.';
     let personaId = null;
@@ -236,7 +243,7 @@ window.NidoAgenteAcciones = (function () {
       if (!personaId) return 'No conozco a «' + nombre + '». Nido conoce a: ' + (conocidas().join(', ') || 'nadie por su nombre todavía') + '. Pregúntale si se refiere a alguien de esa lista o si prefiere hacerla con una foto concreta.';
     }
     if (ctx.cerrarAyuda) ctx.cerrarAyuda(); // que vea «Creando imagen» y luego la felicitación, sin la capa de ayuda encima
-    const trabajo = api.crearFelicitacion({ estilo, personaId, usarFotoAbierta: bool(p.usar_foto_abierta) });
+    const trabajo = api.crearFelicitacion({ estilo, personaId, usarFotoAbierta: bool(p.usar_foto_abierta), titulo, decoracion });
     const r = await Promise.race([trabajo, new Promise((ok) => setTimeout(() => ok(null), ESPERA_MAX_MS))]);
     if (r) return textoFelicitacion(r);
     // Tarda más de lo que ElevenLabs espera a una herramienta: se contesta ya y el resultado se le cuenta a Nidi cuando llegue.

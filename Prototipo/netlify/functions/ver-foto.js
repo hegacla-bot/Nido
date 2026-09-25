@@ -40,6 +40,7 @@ const SISTEMA =
   '- No hables de la calidad técnica de la foto ni de metadatos, salvo que te lo pregunten.\n' +
   '- Si te hacen una pregunta concreta sobre la foto, respóndela primero y con precisión.\n' +
   '- Si la imagen no es una foto (pantalla, documento), di qué es en una frase; si hay texto legible importante (un documento, un cartel) puedes leerlo si te lo piden.\n' +
+  '- Si es un documento (un horario, un cartel, una entrada) y te preguntan un dato, léelo EXACTO tal como está escrito (horas, fechas, líneas, lugares) y, si hay varios, di los que respondan a la pregunta. Si el dato no aparece, dilo; no lo deduzcas. Si la imagen es pequeña o borrosa y no lees un número con total seguridad, di que no se lee bien y que conviene mirarlo en el papel, en vez de dar un número que podría estar mal.\n' +
   '- Tono amable y natural. No empieces con «En la imagen»; empieza directamente por lo que ves.';
 
 function textoUsuario({ pregunta, personas, fecha, tipo }) {

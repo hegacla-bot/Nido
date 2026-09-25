@@ -314,6 +314,18 @@
   -webkit-text-stroke: 3px #ffffff;
 }
 
+/* Libre («otra», 25-sep): el título lo dice la persona (santo, jubilación…), así que una letra que valga para todo:
+   Fredoka blanca con borde azul de Nido, legible sobre cualquier decoración que salga. */
+.persona-create-result__caption--otra {
+  font-family: 'Fredoka', var(--font-family);
+  color: #ffffff;
+  -webkit-text-stroke: 5px var(--color-primary-blue);
+  paint-order: stroke fill;
+  font-size: 2.5rem;
+  line-height: 1.1;
+  transform: rotate(-2deg);
+}
+
 /* Aniversario — elegante, no de fiesta: serif cursiva dorada, sin el
    contorno grueso "de pegatina" (desentonaría con "romántico"). */
 .persona-create-result__caption--aniversario {

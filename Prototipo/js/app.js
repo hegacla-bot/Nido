@@ -65,7 +65,7 @@
   function showScreen(name) {
     if (name !== currentScreen()) idlePantalla = null; // pantalla nueva: puede volver a ofrecerse ayuda si se queda quieta
     idleArmar(); // cambiar de pantalla (también por voz) cuenta como actividad
-    if (window.NidoAgente && window.NidoAgente.activa && window.NidoAgenteContexto) setTimeout(() => { window.NidoAgente.contexto(window.NidoAgenteContexto('Ahora')); agenteAvisoFicha(); }, 400);
+    if (window.NidoAgente && window.NidoAgente.activa && window.NidoAgenteContexto) setTimeout(() => { window.NidoAgente.contexto(window.NidoAgenteContexto('Ahora')); agenteAvisoFicha(); agentePista(); }, 400);
     screens.forEach((screen) => {
       const willBeActive = screen.dataset.screen === name;
       const wasActive = screen.classList.contains('is-active');
@@ -526,7 +526,14 @@
   // El botón dice cuántas hay marcadas («Añadir 3», 25-sep): así se sabe lo que va a pasar antes de pulsarlo.
   function contarSeleccion() {
     const n = document.querySelectorAll('[data-select-grid] .is-selected').length;
-    document.querySelectorAll('[data-select-add-label]').forEach((el) => { el.textContent = n ? 'Añadir ' + n : 'Añadir'; });
+    document.querySelectorAll('[data-select-add-label]').forEach((el) => {
+      const texto = n ? 'Añadir ' + n : 'Añadir';
+      if (el.textContent === texto) return;
+      el.textContent = texto;
+      el.classList.remove('is-salto');
+      void el.offsetWidth; // reinicia la animación aunque el número cambie muy seguido
+      if (n) el.classList.add('is-salto');
+    });
   }
   document.querySelectorAll('[data-select-grid]').forEach((grid) => {
     grid.addEventListener('click', (event) => {
@@ -989,6 +996,8 @@
       '<p class="ayuda-layer__bubble ayuda-layer__bubble--tu" data-ayuda-tu hidden></p>' +
       '<p class="ayuda-layer__bubble ayuda-layer__bubble--nidi" data-ayuda-texto></p>' +
       '<img class="ayuda-layer__pollito" src="assets/img/pollito-ayuda-v3.webp" alt="" />' +
+      '<div class="ayuda-layer__sugerencias" data-sugerencias></div>' +
+      '<button class="btn btn--soft btn--horizontal btn--lg ayuda-layer__ver" data-ayuda="ver">Ver pantalla</button>' +
       '<button class="ayuda-layer__mic" data-ayuda="hablar" aria-label="Hablar"><img src="assets/icons/mic-escuchar.svg" alt="" /></button>' +
       '<button class="btn btn--type2 btn--horizontal btn--lg ayuda-layer__close" data-ayuda="cerrar"><span data-ayuda-cerrar-texto>Cancelar</span></button>';
     screens[0].parentElement.appendChild(ayudaLayer);
@@ -998,11 +1007,15 @@
   // El micrófono avisa a quién le toca: late cuando escucha (habla tú) y se atenúa mientras habla Nidi.
   let ayudaLento = null;
   function ayudaEstadoBoton(estado) {
+    agenteEstado = estado;
+    pastillaEstado(); // la pastilla de arriba cambia a la vez que el botón del micrófono
     const layer = ayudaBuild();
     const mic = layer.querySelector('[data-ayuda="hablar"]');
     mic.classList.toggle('is-listening', estado === 'escuchando');
     mic.classList.toggle('is-nidi', estado === 'hablando' || estado === 'conectando');
-    if (estado === 'escuchando' && !layer.classList.contains('ayuda-layer--respuesta')) ayudaTexto('Te escucho. Dime qué necesitas.');
+    ayudaModoNidi();
+    // «Te escucho» solo si Nidi aún no ha dicho nada: antes, al terminar de hablar, su frase se borraba y quedaba «Te escucho».
+    if (estado === 'escuchando' && !nidiHaDicho && !layer.classList.contains('ayuda-layer--respuesta')) ayudaTexto('Te escucho. Dime qué necesitas.');
     clearTimeout(ayudaLento);
     if (estado === 'conectando') {
       ayudaTexto('Conectando con Nidi…');
@@ -1018,6 +1031,7 @@
     tu.hidden = false;
     layer.classList.add('ayuda-layer--respuesta');
     layer.querySelector('[data-ayuda-cerrar-texto]').textContent = 'Gracias';
+    ayudaModoNidi(); // con Nidi, el botón sigue siendo «Terminar»
   }
   function ayudaReset() {
     const layer = ayudaBuild();
@@ -1067,7 +1081,12 @@
   }
 
   // ---- Conversación de voz con el asistente (ElevenLabs, js/agente.js) ----
+  // La pastilla dice de quién es el turno (25-sep). Mientras Nidi habla, el micrófono está CERRADO (agente.js, para que el eco no la
+  // interrumpa): si la persona contesta antes de que termine, no se la oye. Antes ponía siempre «Nidi te escucha», también mientras
+  // hablaba Nidi. Ahora: hablando → barritas de sonido y «Nidi está hablando»; escuchando → punto verde que late y «Habla ahora».
   let agentePill = null;
+  let agenteEstado = 'conectando';
+  const PILL_TEXTO = { conectando: 'Conectando con Nidi…', hablando: 'Nidi está hablando', escuchando: 'Habla ahora' };
   function agentePastilla() {
     const on = window.NidoAgente && window.NidoAgente.activa;
     if (!agentePill) {
@@ -1075,15 +1094,157 @@
       agentePill = document.createElement('button');
       agentePill.className = 'agente-pill';
       agentePill.dataset.agente = 'terminar';
-      agentePill.innerHTML = '<span class="agente-pill__dot"></span>Nidi te escucha · Toca para terminar';
+      agentePill.innerHTML = '<span class="agente-pill__senal" aria-hidden="true"><i></i><i></i><i></i></span>' +
+        '<span class="agente-pill__texto" aria-live="polite"></span><span class="agente-pill__fin">· Toca para terminar</span>';
       screens[0].parentElement.appendChild(agentePill);
     }
+    pastillaEstado();
     agentePill.classList.toggle('is-visible', !!on && !ayudaBuild().classList.contains('is-visible'));
+  }
+  function pastillaEstado() {
+    if (!agentePill || !PILL_TEXTO[agenteEstado]) return;
+    agentePill.dataset.estado = agenteEstado;
+    agentePill.querySelector('.agente-pill__texto').textContent = PILL_TEXTO[agenteEstado];
   }
   function agenteTerminar() {
     if (window.NidoAgente) window.NidoAgente.stop();
     if (agentePill) agentePill.classList.remove('is-visible');
     ayudaEstadoBoton('cerrado');
+  }
+
+  // ---- Panel de Nidi durante la conversación (25-sep) ----
+  // En vez del pollito grande, tres botones cortos con cosas que se le pueden pedir a Nidi en ESTA pantalla: quien no sabe cómo
+  // pedir algo («los abuelos no saben decir cosas técnicas») toca uno y es como si se lo dijera. Abajo, «Ver pantalla» (cierra el
+  // panel y seguís hablando) y «Terminar».
+  let nidiHaDicho = false;
+  let ultimaAccionNidi = 0, ultimoHablaPersona = 0;
+  const pistasDadas = new Set();
+  const SUGERENCIAS = {
+    home: ['¿Qué puedo hacer aquí?', 'Enséñame fotos de mi familia', 'Hazme una felicitación'],
+    albumes: ['Abre un álbum', 'Crea un álbum nuevo', '¿Qué puedo hacer aquí?'],
+    'album-detalle': ['Quiero subir fotos', 'Enséñame las de Navidad', 'Haz un álbum con estas fotos'],
+    'album-nuevo': ['Añade fotos a este álbum', 'Cámbiale el nombre', 'Vuelve a mis álbumes'],
+    'album-seleccionar': ['¿Cómo elijo las fotos?', 'Elige tú las de este año', 'Vuelve atrás'],
+    'detalle-foto': ['¿Qué ves en esta foto?', 'Haz una felicitación con esta foto', 'Pásala a un álbum'],
+    personas: ['¿Quiénes son?', 'Enséñame fotos de alguien', '¿Qué puedo hacer aquí?'],
+    'persona-fotos': ['Hazle una felicitación', 'Haz un álbum con sus fotos', 'Vuelve a Personas'],
+    yo: ['Enséñame la última felicitación', 'Hazme una felicitación', 'Ve al inicio'],
+    'felicitacion-estilo': ['Hazla tú por mí', '¿Cuál me recomiendas?', 'Vuelve atrás'],
+    'felicitacion-generada': ['Quiero enviarla', 'Hazme otra distinta', 'Ve al inicio'],
+    'mis-documentos': ['¿A qué hora pasa el autobús?', 'Enséñame mi tarjeta sanitaria', '¿Qué papeles tengo aquí?'],
+  };
+  const SUGERENCIAS_OTRAS = ['¿Qué puedo hacer aquí?', 'Vuelve atrás', 'Ve al inicio'];
+  function sugerenciasDe(pantalla) {
+    const api = window.PersonaSelect && window.PersonaSelect.agente;
+    const ficha = api ? api.estado().ficha : null;
+    if (/^persona-/.test(pantalla) && ficha && ficha.real && !ficha.nombre) return ['Te digo quién es', '¿Qué fotos tiene?', 'Vuelve a Personas'];
+    return SUGERENCIAS[pantalla] || SUGERENCIAS_OTRAS;
+  }
+  function ayudaModoNidi() {
+    const layer = ayudaBuild();
+    const nidi = !!(window.NidoAgente && window.NidoAgente.activa);
+    layer.classList.toggle('ayuda-layer--nidi', nidi);
+    layer.querySelector('[data-ayuda-cerrar-texto]').textContent = nidi ? 'Terminar' : (layer.classList.contains('ayuda-layer--respuesta') ? 'Gracias' : 'Cancelar');
+    if (!nidi) return;
+    const cont = layer.querySelector('[data-sugerencias]');
+    const lista = sugerenciasDe(currentScreen());
+    if (cont.dataset.pantalla === currentScreen() + '|' + lista.join('|')) return;
+    cont.dataset.pantalla = currentScreen() + '|' + lista.join('|');
+    cont.innerHTML = '';
+    lista.forEach((t) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'ayuda-layer__sugerencia';
+      b.dataset.sugerencia = '';
+      b.textContent = t;
+      cont.appendChild(b);
+    });
+  }
+  // Tocar una sugerencia = decírsela a Nidi (le llega como un turno de la persona) y verla en su bocadillo, como si la hubiera dicho.
+  function agenteSugerencia(texto) {
+    if (!(window.NidoAgente && window.NidoAgente.activa)) return;
+    ultimoHablaPersona = Date.now();
+    ayudaUsuario(texto);
+    ayudaTexto('…');
+    window.NidoAgente.decir(texto);
+  }
+  // Marca la hora de cada herramienta que usa Nidi: si una pantalla nueva la ha abierto ella, ya está hablando de ella y no hace falta pista.
+  function conMarca(herr) {
+    if (!herr) return herr;
+    const out = {};
+    Object.keys(herr).forEach((k) => { out[k] = (...a) => { ultimaAccionNidi = Date.now(); return herr[k](...a); }; });
+    return out;
+  }
+  // Nidi proactiva: al llegar a una pantalla nueva (una vez por pantalla y conversación), si nadie habla en unos segundos, le cuenta en
+  // una frase qué puede hacer ahí. No si la ha abierto Nidi (ya lo está contando), ni si la persona está hablando o Nidi está hablando.
+  const PISTAS = {
+    home: 'ver sus recuerdos o entrar en Álbumes, Personas o Yo',
+    albumes: 'abrir un álbum o crear uno nuevo',
+    'album-detalle': 'ver todas sus fotos, subir más o hacer un álbum con ellas',
+    'album-nuevo': 'ver las fotos de este álbum y añadir más',
+    'detalle-foto': 'charlar sobre la foto, hacer una felicitación con ella o pasarla a un álbum',
+    personas: 'ver las fotos de cada persona y decirte quién es quién',
+    'persona-fotos': 'ver sus fotos y vídeos, hacerle una felicitación o hacer un álbum con sus fotos',
+    yo: 'ver sus felicitaciones, sus documentos y los ajustes',
+    'felicitacion-estilo': 'elegir de qué es la felicitación, o pedirte que la hagas tú',
+    'felicitacion-generada': 'enviarla con el botón Compartir o hacer otra',
+    'mis-documentos': 'ver sus papeles guardados (horarios, tarjetas, entradas…) y pedirte que le leas algo de ellos',
+  };
+  // 12 s (25-sep; antes 5): la persona lee y decide despacio; con 5 s Nidi interrumpía a quien solo estaba mirando. Así solo habla si
+  // de verdad parece perdida («la mascota aparece cuando alguien se queda bloqueado», CLAUDE.md §13) y gasta menos minutos.
+  const PISTA_ESPERA_MS = 12000;
+  // Qué le toca decir a Nidi en esta pantalla y con qué clave se recuerda que ya lo dijo. En una foto la clave es la propia foto: cada
+  // foto nueva es un recuerdo nuevo del que charlar (25-sep: «falta la parte de preguntar por las personas y los momentos»).
+  function pistaDe(p) {
+    const avisoNidi = '[Aviso de la app, no lo ha dicho la persona] ';
+    if (p === 'detalle-foto') {
+      const f = fotoAbierta();
+      if (!f) return null;
+      if (f.origen === 'mis-documentos') {
+        return { clave: 'doc|' + f.src, texto: avisoNidi + 'Lleva un rato mirando un papel de Mis documentos sin decir nada. Si no estabais con otra cosa, pregúntale si quiere que se lo leas o que busques algo en él (con ver_foto y su pregunta).' };
+      }
+      // Sin mirar la foto (25-sep, privacidad): la iniciativa de Nidi arranca con lo que sabe el móvil; la foto solo sale a la nube
+      // (ver_foto) si la persona quiere que la mire. El texto se completa justo antes de enviarlo (agentePista), con quién sale y la fecha.
+      return { clave: 'foto|' + f.src, foto: true };
+    }
+    if (/^persona-/.test(p)) {
+      const api = window.PersonaSelect && window.PersonaSelect.agente;
+      const ficha = api ? api.estado().ficha : null;
+      if (ficha && ficha.real && !ficha.nombre) return null; // ahí ya le pregunta quién es (agenteAvisoFicha)
+      if (ficha && ficha.nombre) return { clave: 'ficha|' + ficha.id, texto: avisoNidi + 'Lleva un rato en la ficha de «' + ficha.nombre + '» sin decir nada. Si no estabais con otra cosa, interésate por esa persona con cariño ' +
+        '(qué tal está, qué recuerda con ella, cuándo la vio por última vez) con UNA pregunta, u ofrécele ver alguna foto suya o hacerle una felicitación.' };
+    }
+    if (!PISTAS[p]) return null;
+    return { clave: p, texto: avisoNidi + 'Acaba de llegar a otra pantalla y lleva un rato sin decir nada. Si no estabais en mitad de otra cosa, cuéntale en una frase qué puede hacer aquí (' +
+      PISTAS[p] + ') y ofrécele dos opciones concretas. Si ya se lo has contado antes, no lo repitas: pregúntale solo si necesita algo.' };
+  }
+  // Una foto que mira en silencio: Nidi empieza a charlar con lo que sabe el móvil (fecha y quién sale), sin mandar la foto a ningún sitio.
+  async function avisoFoto(clave) {
+    const api = window.PersonaSelect && window.PersonaSelect.agente;
+    const info = api && api.infoFotoAbierta ? await api.infoFotoAbierta() : null;
+    const f = fotoAbierta();
+    if (!info || !f || 'foto|' + f.src !== clave || !(window.NidoAgente && window.NidoAgente.activa)) return; // ya ha pasado a otra
+    const conNombre = info.personas.filter((x) => x.nombre).map((x) => x.nombre + ' (' + x.posicion + ')');
+    const sin = info.personas.length - conNombre.length;
+    const sabe = [info.fecha ? 'es ' + (info.tipo === 'vídeo' ? 'un vídeo' : 'una foto') + ' del ' + info.fecha : '',
+      conNombre.length ? 'salen ' + conNombre.join(', ') : '', sin ? (sin === 1 ? 'hay 1 persona' : 'hay ' + sin + ' personas') + ' que Nido aún no sabe quién es' : ''].filter(Boolean).join('; ');
+    window.NidoAgente.decir('[Aviso de la app, no lo ha dicho la persona] Lleva un rato mirando una foto en grande sin decir nada. Lo que sabe el móvil, sin mirarla: ' +
+      (sabe || 'nada (no tiene fecha y no se reconoce a nadie)') + '. Si no estabais hablando de otra cosa, empieza a charlar con eso, como alguien de visita: una frase cálida y UNA pregunta sobre quién sale, dónde fue o qué recuerda de ese día. ' +
+      'NO uses ver_foto por tu cuenta: la foto saldría del móvil. Úsala solo si ella te pide que la mires o pregunta algo que solo se sabe viéndola. Si ya habéis hablado de esta foto, no la repitas.');
+  }
+  function agentePista() {
+    const p = currentScreen();
+    const pista = pistaDe(p);
+    if (!pista || pistasDadas.has(pista.clave) || Date.now() - ultimaAccionNidi < 4000) return;
+    setTimeout(() => {
+      if (!(window.NidoAgente && window.NidoAgente.activa) || currentScreen() !== p || agenteEstado !== 'escuchando') return;
+      if (Date.now() - ultimoHablaPersona < PISTA_ESPERA_MS || Date.now() - ultimaAccionNidi < PISTA_ESPERA_MS) return;
+      const ahora = pistaDe(p); // puede haber cambiado (otra foto, la ficha ya tiene nombre)
+      if (!ahora || ahora.clave !== pista.clave || pistasDadas.has(ahora.clave)) return;
+      pistasDadas.add(ahora.clave);
+      if (ahora.foto) { avisoFoto(ahora.clave); return; }
+      window.NidoAgente.decir(ahora.texto);
+    }, PISTA_ESPERA_MS);
   }
 
   // Lo que el asistente sabe de la app en cada momento: solo esto, nunca las fotos.
@@ -1110,6 +1271,7 @@
       ' Personas que Nido conoce por su nombre: ' + (conNombre.join(', ') || 'ninguna todavía') + '.' +
       (sinNombre.length ? ' Fichas de personas SIN nombre: ' + sinNombre.length + '.' : '') +
       ' Álbumes creados por la persona: ' + (albumes.join(', ') || 'ninguno') + '.' +
+      ' En Mis documentos (dentro de Yo) guarda fotos de papeles útiles: ' + (documentosEnPantalla().map((i) => i.alt).join(', ') || 'ninguno') + '.' +
       (automaticos.length ? ' Álbumes que pone Nido solo (se pueden abrir y copiar sus fotos, no cambiar): ' + automaticos.join(', ') + '.' : '');
   };
 
@@ -1131,7 +1293,7 @@
   // álbum a otro, quitarlas de un álbum y renombrar ----
   // Devuelve siempre una frase corta y VERDADERA que el asistente le cuenta a la persona (y le sirve para saber si ha salido bien):
   // empieza por «Hecho:» solo si se ha hecho, con los números reales. Si falta algo, la frase dice qué preguntar.
-  // Los álbumes automáticos (al.auto: por año, Navidad, verano o «Fotos de …», los pone Nido con NidoAlbums.upsert) no se tocan
+  // Los álbumes automáticos (al.auto: por año, Navidad o verano, los pone Nido con NidoAlbums.upsert) no se tocan
   // a mano: upsert les vuelve a poner sus fotos cada vez que se cargan fotos o se reconoce a alguien, así que un cambio a mano
   // se perdería sin avisar. Se pueden usar como ORIGEN (se copian las fotos, sin quitarlas de allí), nunca como destino.
 
@@ -1287,7 +1449,7 @@
     const origenTxt = (p.origen || '').trim();
     const crearSiNoExiste = p.crear_si_no_existe === true || p.crear_si_no_existe === 'true';
     const noEncuentro = (n) => (sinArticulo(normV(n)) ? 'No encuentro ningún álbum llamado «' + n + '».' : 'Falta saber qué álbum. Pregúntale cuál.') + ' Los que hay: ' + listaAlbumes() + '.';
-    const esAuto = (al, que) => 'El álbum «' + al.name + '» lo pone Nido solo (por fechas o por persona) y no se puede ' + que + ' a mano. Pregúntale si prefiere un álbum suyo o crear uno nuevo.';
+    const esAuto = (al, que) => 'El álbum «' + al.name + '» lo pone Nido solo (por fechas) y no se puede ' + que + ' a mano. Pregúntale si prefiere un álbum suyo o crear uno nuevo.';
 
     if (/crear|crea|nuevo/.test(accion)) {
       if (!nombre) return 'Falta el nombre del álbum. Pregúntale cómo quiere llamarlo.';
@@ -1423,6 +1585,16 @@
     const t = normV(dicho);
     const nav = (pantalla) => { ayudaCerrar(); showScreen(pantalla); return true; };
 
+    // «vuelve atrás» / «la pantalla de antes»: pulsa el «Volver» que se ve, el mismo que tocaría la persona.
+    if (/\b(atras|anterior|pantalla de antes)\b|^(vuelve|volver|regresa)$/.test(t)) {
+      const volver = Array.from(document.querySelectorAll('.screen.is-active button, .screen.is-active [data-nav]'))
+        .find((b) => b.offsetParent && /^volver$/i.test((b.innerText || '').trim()));
+      ayudaCerrar();
+      if (!volver) { ultimoResultadoAlbum = 'En esta pantalla no hay botón de volver. Pregúntale adónde quiere ir (el inicio, Álbumes, Personas, Yo).'; return true; }
+      volver.click();
+      return true;
+    }
+
     // "pasa estas fotos al álbum Viaje" / "mueve esta foto a Navidad en casa" / "quita esta foto del álbum": va antes que
     // "llamado X" (si no, "pásala al álbum llamado Viaje" crearía un álbum) y antes que "abre el álbum X" (lo nombra también).
     // Sin conexión no hay Nidi que pregunte: si algo falta, se dice en el bocadillo la primera frase del resultado (el hecho),
@@ -1475,6 +1647,20 @@
       return true;
     }
     // "hazme una felicitación"
+    // «el horario del bus», «mi DNI»: el papel de Mis documentos (sin esperar: aquí no hay quien lea luego)
+    const doc = documentoDe(t);
+    if (doc) { abrirDocumento(doc); return true; }
+    // «mis felicitaciones» → Yo, donde están guardadas
+    if (/\bmis felicitaciones\b/.test(t)) return nav('yo');
+    // «vuelve a la felicitación» / «enséñame la de antes»: la última hecha, sin repetirla (25-sep: se salió sin querer y hubo que
+    // empezar de nuevo). Va antes que «felicitación» a secas, que abre la pantalla para hacer una.
+    if (/felicitacion/.test(t) && /\b(ultima|de antes|hecha|hemos hecho|has hecho|otra vez|vuelve|volver|volvamos|regresa|ensename|ver)\b/.test(t) && !/\b(hazme|haz|crea|crear|nueva|distinta)\b/.test(t)) {
+      const api = window.PersonaSelect && window.PersonaSelect.agente;
+      const f = api && api.abrirUltimaFelicitacion ? (ayudaCerrar(), api.abrirUltimaFelicitacion()) : null;
+      ultimoResultadoAlbum = f ? 'Hecho: he vuelto a abrir la felicitación «' + f.titulo + '». Para enviarla, que pulse «Compartir».'
+        : 'Todavía no se ha hecho ninguna felicitación. Pregúntale si quiere que hagáis una.';
+      return true;
+    }
     if (/felicitacion|felicitar/.test(t)) { ayudaCerrar(); window.PersonaSelect.openFelicitacionDesdeYo(); showScreen('felicitacion-estilo'); return true; }
 
     const hit = PANTALLAS_VOZ.find(([re]) => re.test(t));
@@ -1483,24 +1669,75 @@
 
   window.NidoAyuda = { entender: (t) => ayudaEntender(t) }; // para pruebas y para otros módulos
 
+  // ---- Mis documentos (Yo): fotos de papeles útiles (25-sep) ----
+  // Nidi decía «la app no sirve para eso» cuando le preguntaban el horario del autobús, que está aquí. Ahora sabe qué papeles hay
+  // (NidoAgenteContexto) y abre el que se pida por su nombre o por lo que es («el bus», «el DNI»); para leer un dato, ver_foto.
+  const DOCUMENTOS_VOZ = [
+    [/\b(bus|autobus|autobuses|guagua)\b/, 'Horario de autobús'],
+    [/\btren(es)?\b/, 'Horario de tren'],
+    [/\b(dni|carne de identidad|carnet de identidad|documento de identidad)\b/, 'DNI'],
+    [/\beuropea\b/, 'Tarjeta sanitaria europea'],
+    [/\b(tarjeta sanitaria|tarjeta del medico|tarjeta de la seguridad social|sip)\b/, 'Tarjeta sanitaria'],
+    [/\bcartel\b/, 'Cartel de fiestas'],
+    [/\b(entrada|entradas|espectaculo)\b/, 'Entrada de espectáculo'],
+  ];
+  const documentosEnPantalla = () => {
+    const vistos = new Set();
+    return Array.from(document.querySelectorAll('[data-screen="mis-documentos"] .photo-card img'))
+      .filter((i) => i.alt && !vistos.has(i.alt) && vistos.add(i.alt));
+  };
+  // Qué documento pide la frase: por su nombre exacto («Horario de tren») o por lo que es. null si no habla de un papel.
+  function documentoDe(t) {
+    const docs = documentosEnPantalla();
+    const exacto = docs.find((i) => t.includes(normV(i.alt)));
+    if (exacto) return exacto;
+    if (!/\b(horario|horarios|hora|documento|documentos|papel|papeles|dni|carne|carnet|tarjeta|cartel|entrada|entradas|bus|autobus|tren|guagua)\b/.test(t)) return null;
+    const hit = DOCUMENTOS_VOZ.find(([re]) => re.test(t));
+    return hit ? docs.find((i) => i.alt === hit[1]) || null : null;
+  }
+  // Abre el documento en grande (lo mismo que tocarlo en Mis documentos) y espera a que esté abierto, para que un ver_foto justo después lo encuentre.
+  async function abrirDocumento(img) {
+    ayudaCerrar();
+    showScreen('mis-documentos');
+    await new Promise((ok) => setTimeout(ok, 500));
+    img.closest('.photo-card').click();
+    for (let i = 0; i < 30 && currentScreen() !== 'detalle-foto'; i++) await new Promise((ok) => setTimeout(ok, 50));
+    return currentScreen() === 'detalle-foto';
+  }
+
   function ayudaHablar(btn) {
     if (window.NidoAgente && navigator.onLine) {
       if (window.NidoAgente.activa) { agenteTerminar(); ayudaReset(); return; }
+      nidiHaDicho = false;
+      pistasDadas.clear();
       ayudaEstadoBoton('conectando');
       window.NidoAgente.start({
         contexto: () => window.NidoAgenteContexto('Al empezar,'),
         // La herramienta del agente: reutiliza el mismo entendimiento de órdenes que el modo sin conexión.
-        abrir: (pedido) => { ultimoResultadoAlbum = null; const ok = ayudaEntender(pedido); return ultimoResultadoAlbum || (ok ? 'Hecho: he abierto lo que pedía.' : 'No he encontrado eso en la app.'); },
-        gestionar: (p) => gestionarAlbumes(p),
+        abrir: async (pedido) => {
+          ultimaAccionNidi = Date.now();
+          const t = normV(pedido);
+          if (/\bmis documentos\b/.test(t)) { ayudaCerrar(); showScreen('mis-documentos'); return 'Hecho: he abierto Mis documentos. Tiene: ' + documentosEnPantalla().map((i) => i.alt).join(', ') + '.'; }
+          const doc = documentoDe(t);
+          if (doc) {
+            const ok = await abrirDocumento(doc);
+            return ok ? 'Hecho: he abierto «' + doc.alt + '» de Mis documentos, en grande. Si quiere saber algo de él (por ejemplo a qué hora pasa), léelo con ver_foto pasando su pregunta.'
+              : 'He ido a Mis documentos pero no he podido abrir «' + doc.alt + '». Dile que lo toque ella.';
+          }
+          ultimoResultadoAlbum = null;
+          const ok = ayudaEntender(pedido);
+          return ultimoResultadoAlbum || (ok ? 'Hecho: he abierto lo que pedía.' : 'No he encontrado eso en la app.');
+        },
+        gestionar: (p) => { ultimaAccionNidi = Date.now(); return gestionarAlbumes(p); },
         // personas, ver fotos, señalar botones…: js/agente-acciones.js
-        herramientas: window.NidoAgenteAcciones && window.NidoAgenteAcciones.crear({
+        herramientas: conMarca(window.NidoAgenteAcciones && window.NidoAgenteAcciones.crear({
           avisar: (m, ms) => nidoToast(currentScreen(), m, null, null, ms || 3000),
           cerrarAyuda: ayudaCerrar,
-        }),
-        mensaje: (t) => ayudaTexto(t.replace(/\[[^\]]*\]\s*/g, '')),
+        })),
+        mensaje: (t) => { nidiHaDicho = true; ayudaTexto(t.replace(/\[[^\]]*\]\s*/g, '')); },
         // Los avisos que manda la propia app (NidoAgente.decir, «[Aviso de la app…]») pueden volver como si los hubiera dicho la persona:
         // no se enseñan en su bocadillo.
-        usuario: (t) => { if (t && !/^\s*\[Aviso de la app/.test(t)) { ayudaUsuario(t); ayudaTexto('…'); } },
+        usuario: (t) => { if (t && !/^\s*\[Aviso de la app/.test(t)) { ultimoHablaPersona = Date.now(); ayudaUsuario(t); ayudaTexto('…'); } },
         estado: (e) => {
           ayudaEstadoBoton(e);
           if (e === 'cerrado') {
@@ -1557,15 +1794,22 @@
 
   document.addEventListener('click', (event) => {
     if (event.target.closest('[data-help]')) {
-      ayudaReset();
+      // Con Nidi hablando, el pollito abre su panel TAL CUAL está (lo último que ha dicho, el turno y las sugerencias): antes lo
+      // reiniciaba como si no hubiera conversación, con el micrófono parado aunque Nidi seguía escuchando.
+      if (!(window.NidoAgente && window.NidoAgente.activa)) ayudaReset();
+      ayudaModoNidi();
       ayudaBuild().classList.add('is-visible');
+      agentePastilla();
       return;
     }
+    const sug = event.target.closest('[data-sugerencia]');
+    if (sug) { agenteSugerencia(sug.textContent.trim()); return; }
     if (event.target.closest('[data-agente="terminar"]')) { agenteTerminar(); return; }
     const opt = event.target.closest('[data-ayuda]');
     if (!opt) return;
     const a = opt.dataset.ayuda;
     if (a === 'cerrar') { agenteTerminar(); ayudaCerrar(); }
+    else if (a === 'ver') ayudaCerrar(); // «Ver pantalla»: se cierra el panel y la conversación sigue (queda la pastilla de arriba)
     else if (a === 'hablar') ayudaHablar(opt);
   });
 

@@ -329,6 +329,32 @@
 }
 .photo-card.is-selectable.is-selected .select-overlay__check {
   display: block;
+  animation: seleccion-pop 0.24s cubic-bezier(0.34, 1.56, 0.64, 1); /* crece un poco de más y se asienta: «hecho» */
+}
+.photo-card.is-selectable:not(.is-selected) .select-overlay__vacio {
+  animation: seleccion-vuelve 0.16s ease-out;
+}
+@keyframes seleccion-pop {
+  from { transform: scale(0.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@keyframes seleccion-vuelve {
+  from { transform: scale(0.8); opacity: 0.4; }
+  to { transform: scale(1); opacity: 1; }
+}
+/* «Añadir 3»: el número da un saltito cuando cambia (app.js, contarSeleccion). */
+[data-select-add-label] {
+  display: inline-block;
+}
+[data-select-add-label].is-salto {
+  animation: contador-salto 0.26s ease-out;
+}
+@keyframes contador-salto {
+  40% { transform: scale(1.14); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .photo-card.is-selectable .select-overlay img,
+  [data-select-add-label].is-salto { animation: none; }
 }
 
 /* El footer de 2 botones (Volver + Añadir) reutiliza .bottom-fade +
