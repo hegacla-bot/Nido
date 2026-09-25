@@ -302,10 +302,12 @@
   transform: rotate(-3deg);
 }
 .persona-create-result__caption--cumpleanos {
-  background: linear-gradient(90deg, #ff5f6d, #ffc371, #6ee7b7, #38bdf8, #a78bfa, #f472b6);
+  /* background-image, no «background»: el atajo devolvía background-clip a la caja entera y el arcoíris salía como un recuadro
+     detrás del texto en vez de dentro de las letras (visto el 25-sep). */
+  background-image: linear-gradient(90deg, #ff5f6d, #ffc371, #6ee7b7, #38bdf8, #a78bfa, #f472b6);
 }
 .persona-create-result__caption--amistad {
-  background: linear-gradient(90deg, #ff6b9d, #ff9770, #ffd670, #ff6b9d);
+  background-image: linear-gradient(90deg, #ff6b9d, #ff9770, #ffd670, #ff6b9d);
   /* Contorno más grueso que cumpleaños (3px, no 1.5px): la IA a veces
      dibuja su propia cinta/banda decorativa detrás (probado — salió un
      fondo rosa/naranja casi igual que este degradado y el texto se

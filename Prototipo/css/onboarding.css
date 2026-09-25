@@ -103,7 +103,7 @@
   box-shadow: 2px 4px 16px 0 rgba(123, 123, 135, 0.3), 2px 4px 4px 0 #868693;
 }
 .ob-step-1 .onboarding-tooltip {
-  left: 5.25rem; top: 28.875rem; width: 12rem; height: auto; /* 84, 461, 192×70 */
+  left: 5.25rem; top: 28.1rem; width: 12rem; height: auto; /* 84, 449.6, 192×70 — 25-sep: subida 12px para dejar 18–19px hasta la cabeza del pollito, como en los pasos 3–5 */
   padding: var(--bubble-pad-y) 1.5rem; /* texto de 144px */
   border-radius: var(--radius-bubble) var(--radius-bubble) 0 var(--radius-bubble);
 }
@@ -112,7 +112,9 @@
      flotaba con un hueco por encima del CTA -- object-fit:contain lo encogia porque
      la caja no tenia las proporciones de la imagen actual). Ancho y pies-sobre-el-CTA
      (top+height) se mantienen igual que en el diseno de Figma. */
-  left: 9.125rem; top: 31.3911rem; width: 16.125rem; height: 16.0464rem;
+  /* 25-sep: con 258px la cabeza se comía la burbuja (28 %). Mismo alto que los pasos 3–5 (217px, pies a 754px sobre el botón),
+     misma proporción de la imagen, y debajo de la burbuja (que acaba a 531px) sin tocarla. */
+  left: 10.625rem; top: 33.5625rem; width: 13.625rem; height: 13.5625rem; /* 170, 537, 218×217 */
 }
 
 /* ---- Paso 2 · destaca "Personas" (759:4520) ---- */
@@ -134,12 +136,14 @@
   box-shadow: 2px 4px 16px 0 rgba(123, 123, 135, 0.3), 2px 4px 4px 0 #868693;
 }
 .ob-step-2 .onboarding-tooltip {
-  left: 8.34375rem; top: 27.1875rem; width: 13.5rem; height: auto; /* 133.5, 436.5, 216×90 */
+  left: 8.34375rem; top: 26.625rem; width: 13.5rem; height: auto; /* 133.5, 426, 216×90 — 25-sep: subida 9px, mismo hueco hasta la cabeza del pollito que en los pasos 3–5 */
   padding: var(--bubble-pad-y) 1.71875rem; /* texto de 161px */
   border-radius: var(--radius-bubble) var(--radius-bubble) var(--radius-bubble) 0;
 }
 .ob-step-2 .onboarding-pollito {
-  left: -1.875rem; top: 30.9807rem; width: 15.625rem; height: 16.5818rem;
+  /* 25-sep: antes 250×265 y 30px fuera por la izquierda; la cabeza tapaba la burbuja. Mismo alto que los pasos 3–5 (217px, pies a
+     754px), misma proporción (0,943) y dentro de la pantalla. */
+  left: 1.25rem; top: 33.5625rem; width: 12.8rem; height: 13.5625rem; /* 20, 537, 205×217 */
 }
 
 /* ---- Paso 3 · destaca "Yo" (759:4608) ---- */

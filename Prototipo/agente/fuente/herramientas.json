@@ -79,7 +79,7 @@
   {
     "type": "client",
     "name": "abrir_persona",
-    "description": "Abre la ficha de una persona, con sus fotos y vídeos. Úsala cuando la persona quiera ver o buscar fotos de alguien («enséñame a Clara», «fotos de mi hijo Carlos»). Con sin_nombre=true abre la ficha sin nombre que tiene más fotos, para preguntarle quién es. Si no conoce a quien se nombra, te devuelve la lista de personas que Nido conoce: ofrécele dos o tres, no inventes.",
+    "description": "Abre las fotos de una persona. Cuando quiera VER o BUSCAR fotos de alguien («enséñame las fotos de Clara», «quiero ver a mi nieta», «todas las de Carlos»), usa todas=true: se abre la cuadrícula con TODAS sus fotos, que es lo que espera ver. No abras la primera foto en su lugar. Sin todas, abre su ficha (un resumen con una fila de fotos y otra de vídeos). Con sin_nombre=true abre la ficha sin nombre que tiene más fotos, para preguntarle quién es. Si no conoce a quien se nombra, te devuelve la lista de personas que Nido conoce: ofrécele dos o tres, no inventes.",
     "parameters": {
       "type": "object",
       "properties": {
@@ -90,6 +90,10 @@
         "sin_nombre": {
           "type": "boolean",
           "description": "true para abrir una ficha de alguien que Nido aún no sabe quién es (y luego preguntárselo). Si es true, no hace falta nombre."
+        },
+        "todas": {
+          "type": "boolean",
+          "description": "true cuando quiera ver sus fotos: abre la cuadrícula con todas las fotos de esa persona."
         }
       },
       "required": []
@@ -125,18 +129,24 @@
   {
     "type": "client",
     "name": "abrir_foto",
-    "description": "Abre en grande la foto número N de la pantalla que tiene delante, contando en el orden en que aparecen (la primera es la 1). Úsala cuando la persona diga «abre la primera», «la tercera», o antes de ver_foto si no hay ninguna foto abierta. Si el número es mayor que las fotos que hay, abre la última.",
+    "description": "Abre fotos en grande y pasa de una a otra. En una pantalla con fotos (cuadrícula, álbum, ficha), abre en grande la número N (posicion; la primera es la 1). Con una foto ya abierta en grande, pasa a la siguiente o a la anterior (direccion) o salta a la número N (posicion). Úsala cuando diga «abre la primera», «la tercera», «pasa a la siguiente», «la de antes». Para volver a la cuadrícula usa abrir_en_la_app «atrás».",
     "parameters": {
       "type": "object",
       "properties": {
         "posicion": {
           "type": "integer",
-          "description": "Número de la foto en la pantalla, empezando en 1."
+          "description": "Número de la foto, empezando en 1 (en la pantalla que tiene delante, o dentro de las fotos en grande)."
+        },
+        "direccion": {
+          "type": "string",
+          "enum": [
+            "siguiente",
+            "anterior"
+          ],
+          "description": "Con una foto abierta en grande: siguiente o anterior."
         }
       },
-      "required": [
-        "posicion"
-      ]
+      "required": []
     },
     "expects_response": true,
     "response_timeout_secs": 10
@@ -180,7 +190,7 @@
   {
     "type": "client",
     "name": "crear_felicitacion",
-    "description": "Crea una felicitación de principio a fin sin que la persona toque nada: elige la foto, la pinta y la deja en pantalla con su título. Úsala cuando pida una felicitación. Hay cuatro tipos listos (cumpleanos, aniversario, navidad, anonuevo) y cualquier otra ocasión que quiera (santo, jubilación, bautizo, graduación, ánimo, gracias…) con estilo=otra: entonces tú le propones el título que irá encima y ella lo confirma, y pasas en decoracion cómo decorarla, solo con cosas que se ven. Si no sabes la ocasión, pregúntala; si no sabes con qué foto o de quién, pregúntalo también. De qué foto sale: si dices una persona, una buena foto suya; si no, la foto que tiene abierta en grande; si no hay ninguna, la de la ficha de persona que tenga abierta. Si nombra a alguien pero quiere usar la foto que está viendo, pasa usar_foto_abierta=true. Tarda unos 10 segundos: avísale de que espere. Al terminar, el botón «Compartir» brilla y tiene que pulsarlo ella (tú no puedes enviarla). Si tarda más de la cuenta te dirá «se está creando» y la app te avisará cuando esté. Si luego se sale sin querer, vuelve a enseñársela con abrir_en_la_app «vuelve a la felicitación», no la hagas otra vez.",
+    "description": "Crea una felicitación de principio a fin sin que la persona toque nada: elige la foto, la pinta y la deja en pantalla con su título. Úsala cuando pida una felicitación. Hay cuatro tipos listos (cumpleanos, aniversario, navidad, anonuevo) y cualquier otra ocasión que quiera (santo, jubilación, bautizo, graduación, ánimo, gracias…) con estilo=otra: entonces tú le propones el título que irá encima y ella lo confirma, y pasas en decoracion cómo decorarla, solo con cosas que se ven. Si pide algo concreto para el título, como una edad o un nombre («un 37», «para Carmen»), pásalo en titulo («¡Feliz 37 cumpleaños!»), también en los cuatro tipos. Si no sabes la ocasión, pregúntala; si no sabes con qué foto o de quién, pregúntalo también. De qué foto sale: si dices una persona, una buena foto suya; si no, la foto que tiene abierta en grande; si no hay ninguna, la de la ficha de persona que tenga abierta. Si nombra a alguien pero quiere usar la foto que está viendo, pasa usar_foto_abierta=true. Tarda unos 10 segundos: avísale de que espere. Al terminar, el botón «Compartir» brilla y tiene que pulsarlo ella (tú no puedes enviarla). Si tarda más de la cuenta te dirá «se está creando» y la app te avisará cuando esté. Si luego se sale sin querer, vuelve a enseñársela con abrir_en_la_app «vuelve a la felicitación», no la hagas otra vez.",
     "parameters": {
       "type": "object",
       "properties": {
@@ -197,11 +207,11 @@
         },
         "titulo": {
           "type": "string",
-          "description": "Solo con estilo=otra: el texto que irá encima de la imagen, corto (máximo 40 letras) y con sus palabras, confirmado con ella. Por ejemplo «¡Feliz santo, Carmen!» o «¡Felicidades por tu jubilación!»."
+          "description": "El texto que irá encima de la imagen, corto (máximo 40 letras) y confirmado con ella. Obligatorio con estilo=otra. En los otros cuatro tipos es opcional: úsalo para personalizarlo con lo que pida, como una edad o un nombre («¡Feliz 37 cumpleaños!», «¡Feliz cumpleaños, Carmen!»); sin él, sale el título de siempre. Números y nombres van SIEMPRE aquí, nunca en decoracion."
         },
         "decoracion": {
           "type": "string",
-          "description": "Solo con estilo=otra: cómo decorarla, descrito solo con cosas que se ven y sin nombrar la ocasión ni poner palabras (la IA las escribe mal). Por ejemplo «flores de primavera, mariposas y colores suaves» o «confeti dorado y globos azules»."
+          "description": "Cómo decorarla, solo con cosas que se ven y sin palabras ni números (la IA los escribe mal). Obligatoria con estilo=otra («flores de primavera, mariposas y colores suaves»). En los otros tipos, opcional: un detalle extra que pida («globos dorados»)."
         },
         "persona": {
           "type": "string",

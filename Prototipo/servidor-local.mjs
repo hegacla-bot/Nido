@@ -19,7 +19,10 @@ if (fs.existsSync(ENV_PATH)) {
   console.log('⚠️  No encuentro .env — el agente de voz y crear-imagen no podrán conectar.');
 }
 // Una función que falla (p. ej. un cuerpo malformado) responde 500 en vez de tumbar el servidor entero.
+// Y se lee SIEMPRE la versión actual de las funciones (25-sep): require() las guardaba en memoria y, tras cambiar crear-imagen.js,
+// el servidor seguía usando la vieja hasta reiniciarlo («"style" no es uno de…» con la felicitación libre).
 async function conFuncion(res, llamar) {
+  Object.keys(require.cache).filter((k) => k.includes('/netlify/functions/')).forEach((k) => { delete require.cache[k]; });
   try {
     const out = await llamar();
     res.writeHead(out.statusCode, { 'content-type': 'application/json', ...(out.headers || {}) });

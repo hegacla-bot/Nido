@@ -85,12 +85,15 @@ exports.handler = async (event) => {
   // Felicitación libre (25-sep, «otra»): la persona elige la ocasión (santo, jubilación, bautizo…) y el asistente manda una
   // DECORACIÓN descrita solo con cosas que se ven. Se limpia y se acota, y se mete en la misma plantilla que los estilos fijos
   // (sin rótulos, franja de arriba despejada para el título, caras reconocibles). El título lo pone la app encima, nunca la IA.
+  const decoracion = String(payload.decoracion || '').replace(/[\r\n"«»<>{}]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 160);
   if (style === 'otra') {
-    const decoracion = String(payload.decoracion || '').replace(/[\r\n"«»<>{}]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 160);
     if (decoracion) {
       prompt = 'Convierte esta foto en una ilustración alegre y festiva, decorada con ' + decoracion + '. ' +
         SOLO_DECORACION + ' ' + ESPACIO_TITULAR + ' ' + RECONOCIBLE;
     }
+  } else if (prompt && decoracion) {
+    // En los estilos fijos, un detalle visual extra que pida la persona (p. ej. «globos dorados»), sin cambiar el resto.
+    prompt = prompt + ' Añade también: ' + decoracion + '.';
   }
   if (!imageBase64 || !prompt) {
     return {

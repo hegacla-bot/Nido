@@ -470,6 +470,7 @@ window.PersonaSelect = (function () {
     document.querySelectorAll('[data-persona-carousel]').forEach((row) => {
       row.innerHTML = '';
       if (persona.dynamic && row.dataset.personaCarousel === 'videos') { vacio(row, 'Todavía no hay vídeos de esta persona.'); return; }
+      if (!persona.photos.length) { vacio(row, 'Todavía no hay fotos de esta persona.'); return; } // igual que la de vídeos (25-sep)
       persona.photos.forEach((file) => {
         const card = document.createElement('div');
         card.className = 'persona-group';
@@ -710,16 +711,28 @@ window.PersonaSelect = (function () {
   }
 
   // Círculo de la persona en la pantalla Personas (recorta la cara con CSS: nada de <canvas>, Safari lo bloquea).
+  const avataresRotos = new Set();
+  function avatarVivo(av) {
+    if (!av || !av.src) return false;
+    if (!/^blob:/.test(av.src)) return true;
+    const items = (window.NidoGaleria && window.NidoGaleria.items) || [];
+    return items.some((it) => it.src === av.src);
+  }
   function addPersonaCircle(person) {
     const grid = document.querySelector('[data-screen="personas"] .personas-grid--lg');
     if (!grid) return;
     const previo = grid.querySelector('[data-persona-open="' + person.id + '"]');
     if (previo) previo.remove(); // se repinta (nombre o avatar nuevos)
+    // Sin nombre y sin cara que se pueda ver solo sería un círculo gris con «Sin nombre»: no hay nada que reconocer (25-sep). No se pinta.
+    // «Que se pueda ver»: la cara guardada apunta a una foto, y las fotos elegidas del móvil (blob:) solo viven mientras la página está
+    // abierta; la de una sesión anterior ya no existe (hasta que organize vuelve a encontrar a la persona y le pone otra).
+    const vivo = avatarVivo(person.avatar);
+    if (!person.name && !vivo) return;
     const btn = document.createElement('button');
     btn.className = 'persona-item';
     btn.dataset.nav = 'persona-fotos';
     btn.dataset.personaOpen = person.id;
-    const av = person.avatar;
+    const av = vivo ? person.avatar : null;
     let style = 'background:#d9d9d9';
     if (av) {
       const cs = Math.min(av.nw, av.nh, Math.max(av.w, av.h) * 2.2);
@@ -732,6 +745,8 @@ window.PersonaSelect = (function () {
     btn.innerHTML = '<div class="persona-item__photo" style="' + style + '"></div><p class="persona-item__name"></p>';
     btn.querySelector('.persona-item__name').textContent = nombreDe(person);
     grid.prepend(btn);
+    // Por si la foto de la cara no carga por otro motivo: sin nombre, el círculo se quita.
+    if (av && !person.name) { const prueba = new Image(); prueba.onerror = () => { avataresRotos.add(person.id); btn.remove(); }; prueba.src = av.src; }
   }
 
   // Personas guardadas de sesiones anteriores.
@@ -897,8 +912,10 @@ window.PersonaSelect = (function () {
     lastStyle = style;
     // Felicitación libre (25-sep): «otra» no es un estilo fijo; la persona dice qué quiere (santo, jubilación, bautizo…) y Nidi pasa
     // el TÍTULO que va encima (texto real, nunca pintado por la IA) y una DECORACIÓN descrita solo con cosas que se ven.
-    const titulo = style === 'otra' ? String(opciones.titulo || '').trim().slice(0, 40) : (CAPTIONS[style] || '');
-    const decoracion = style === 'otra' ? String(opciones.decoracion || '').trim().slice(0, 160) : '';
+    // El título también se puede personalizar en los cuatro tipos fijos («¡Feliz 37 cumpleaños!», «¡Feliz cumpleaños, Carmen!»):
+    // lo escribe la app, así que una edad o un nombre salen bien (25-sep: pidió «un 37» y salió el título de serie).
+    const titulo = String(opciones.titulo || '').trim().slice(0, 40) || (CAPTIONS[style] || '');
+    const decoracion = String(opciones.decoracion || '').trim().slice(0, 160);
     lastExtra = { titulo, decoracion };
     // Pantalla completa "Creando imagen" (759:5110) mientras trabaja la IA; el resultado (o el error)
     // se enseña después en el detalle. Mínimo 1,2s para que no parpadee si falla al instante.
@@ -922,7 +939,7 @@ window.PersonaSelect = (function () {
       const res = await fetch(CREATE_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(style === 'otra' ? { imageBase64, style, decoracion } : { imageBase64, style }),
+        body: JSON.stringify(decoracion ? { imageBase64, style, decoracion } : { imageBase64, style }),
         signal: window.AbortSignal && AbortSignal.timeout ? AbortSignal.timeout(CREAR_TOPE_MS) : undefined,
       });
       const data = await res.json().catch(() => ({ error: 'respuesta no válida del servidor (' + res.status + ')' }));
@@ -1373,6 +1390,11 @@ window.PersonaSelect = (function () {
   function personasParaAgente() {
     return Object.keys(PERSONAS)
       .filter((id) => id !== 'sinnombre' && (!hayReales() || PERSONAS[id].dynamic))
+      .filter((id) => { // ni Nidi ofrece fichas sin nombre ni cara, ni las de personas que ya no existen
+        if (!PERSONAS[id].dynamic) return true;
+        const r = window.Reconocimiento && Reconocimiento.byId(id);
+        return !!r && !!(r.name || (avatarVivo(r.avatar) && !avataresRotos.has(id)));
+      })
       .map((id) => ({ id, nombre: nombreReal(id), nFotos: (PERSONAS[id].photos || []).length, real: !!PERSONAS[id].dynamic }));
   }
   function fichaAbierta() {
@@ -1389,7 +1411,11 @@ window.PersonaSelect = (function () {
   function fotoAbiertaInfo() {
     if (window.NidoNav.current() !== 'detalle-foto') return null;
     const el = currentPhotoEl();
-    return el ? { tipo: el.tagName === 'VIDEO' ? 'vídeo' : 'foto', fecha: fechaDeFoto(el) } : null;
+    if (!el) return null;
+    const media = document.getElementById('detalle-foto-media');
+    const items = media ? media.querySelectorAll('.detail-media__item') : [];
+    const i = media && media.clientWidth ? Math.round(media.scrollLeft / media.clientWidth) : 0;
+    return { tipo: el.tagName === 'VIDEO' ? 'vídeo' : 'foto', fecha: fechaDeFoto(el), posicion: Math.min(items.length, i + 1), total: items.length };
   }
 
   // Deletreado tal cual lo oye Nidi («J-O-S-É», «j o s é», «J. O. S. É.»): si todas las partes son letras sueltas, se juntan.
@@ -1607,7 +1633,7 @@ window.PersonaSelect = (function () {
     felicitacionEnCurso = createWithPerson(p.estilo, { source, volverA, titulo: p.titulo, decoracion: p.decoracion });
     try {
       const r = await felicitacionEnCurso;
-      return Object.assign(r, { estilo: p.estilo, titulo: libre ? String(p.titulo).trim().slice(0, 40) : CAPTIONS[p.estilo], persona: personaId ? nombreReal(personaId) : null, conFotoAbierta: origen === 'detalle' });
+      return Object.assign(r, { estilo: p.estilo, titulo: String(p.titulo || '').trim().slice(0, 40) || CAPTIONS[p.estilo], persona: personaId ? nombreReal(personaId) : null, conFotoAbierta: origen === 'detalle' });
     } finally { felicitacionEnCurso = null; }
   }
 
@@ -1657,5 +1683,11 @@ window.PersonaSelect = (function () {
     creandoFelicitacion: () => !!felicitacionEnCurso,
   };
 
-  return { buildHotspots, closeSelection, composeFelicitacionBlob, personIdByName, nombres, fotosDePersona, crearAlbum: createAlbum, openPerson, openFelicitacionDesdeYo: () => openFelicitacion(true), agente };
+  // Felicitación desde Yo (25-sep): la foto la elige la persona en «Elige una foto» (app.js); antes se usaba la primera de la biblioteca.
+  function felicitacionConFoto(el) {
+    openFelicitacion(true); // estado limpio de la pantalla de estilos y origen «yo» (Volver y errores vuelven a Yo)
+    if (el) createSource = el;
+  }
+
+  return { buildHotspots, closeSelection, composeFelicitacionBlob, personIdByName, nombres, fotosDePersona, crearAlbum: createAlbum, openPerson, openFelicitacionDesdeYo: () => openFelicitacion(true), openFelicitacionDesdeFoto: () => openFelicitacion(false), felicitacionConFoto, agente };
 })();

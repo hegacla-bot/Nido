@@ -63,6 +63,7 @@
   }
 
   function showScreen(name) {
+    requestAnimationFrame(() => document.querySelectorAll('.persona-fila__next').forEach(flechaFila)); // ya visible: se puede medir
     if (name !== currentScreen()) idlePantalla = null; // pantalla nueva: puede volver a ofrecerse ayuda si se queda quieta
     idleArmar(); // cambiar de pantalla (también por voz) cuenta como actividad
     if (window.NidoAgente && window.NidoAgente.activa && window.NidoAgenteContexto) setTimeout(() => { window.NidoAgente.contexto(window.NidoAgenteContexto('Ahora')); agenteAvisoFicha(); agentePista(); }, 400);
@@ -470,6 +471,25 @@
     }
   });
 
+  // Flechas dentro de su fila (ficha de persona, 25-sep): se ocultan si no hay nada más que ver (sin vídeos, o todo cabe) y, al llegar
+  // al final, giran hacia atrás, porque tocarlas entonces vuelve al principio.
+  function flechaFila(btn) {
+    const screen = btn.closest('.screen');
+    const carousel = screen && screen.querySelector('[data-carousel="' + btn.dataset.carouselTarget + '"]');
+    if (!carousel) return;
+    btn.hidden = !carousel.querySelector('.photo-card') || carousel.scrollWidth <= carousel.clientWidth + 4;
+    btn.classList.toggle('is-al-final', carousel.scrollLeft + carousel.clientWidth >= carousel.scrollWidth - 4);
+  }
+  document.querySelectorAll('.persona-fila__next').forEach((btn) => {
+    const carousel = btn.closest('.screen').querySelector('[data-carousel="' + btn.dataset.carouselTarget + '"]');
+    if (!carousel) return;
+    const pintar = () => flechaFila(btn);
+    carousel.addEventListener('scroll', pintar, { passive: true });
+    new MutationObserver(() => requestAnimationFrame(pintar)).observe(carousel, { childList: true, subtree: true }); // se rellena al abrir cada ficha
+    window.addEventListener('resize', pintar);
+    carousel.addEventListener('load', pintar, true); // las fotos llegan después y cambian el ancho
+  });
+
   // Mostrar/ocultar el botón "atrás" según la posición de scroll del carrusel.
   document.querySelectorAll('[data-carousel]').forEach((carousel) => {
     const screen = carousel.closest('.screen');
@@ -526,13 +546,16 @@
   // El botón dice cuántas hay marcadas («Añadir 3», 25-sep): así se sabe lo que va a pasar antes de pulsarlo.
   function contarSeleccion() {
     const n = document.querySelectorAll('[data-select-grid] .is-selected').length;
+    const felic = selectTarget === 'felicitacion';
+    // Eligiendo la foto de una felicitación: «Continuar», y solo cuando ya hay una elegida (como en la pantalla de estilos).
+    document.querySelectorAll('[data-select-add]').forEach((b) => { b.hidden = felic && !n; });
     document.querySelectorAll('[data-select-add-label]').forEach((el) => {
-      const texto = n ? 'Añadir ' + n : 'Añadir';
+      const texto = felic ? 'Continuar' : n ? 'Añadir ' + n : 'Añadir';
       if (el.textContent === texto) return;
       el.textContent = texto;
       el.classList.remove('is-salto');
       void el.offsetWidth; // reinicia la animación aunque el número cambie muy seguido
-      if (n) el.classList.add('is-salto');
+      if (n && !felic) el.classList.add('is-salto');
     });
   }
   document.querySelectorAll('[data-select-grid]').forEach((grid) => {
@@ -541,6 +564,7 @@
       if (!cell) return;
       event.stopImmediatePropagation();
       event.preventDefault();
+      if (selectTarget === 'felicitacion') grid.querySelectorAll('.is-selected').forEach((c) => { if (c !== cell) c.classList.remove('is-selected'); }); // una sola
       cell.classList.toggle('is-selected');
       contarSeleccion();
     }, true);
@@ -658,12 +682,28 @@
   // cada uno; "Volver" y "Añadir" de la selección vuelven al que corresponda y, en un álbum creado, copian
   // las elegidas a ese álbum (sin duplicar las que ya tiene).
   let selectTarget = 'todas';
+  // «Elige las fotos a añadir» sirve también para elegir LA foto de una felicitación desde Yo (selectTarget «felicitacion»).
+  function modoSeleccion() {
+    const t = document.querySelector('[data-screen="album-seleccionar"] .page-title');
+    if (t) t.textContent = selectTarget === 'felicitacion' ? 'Elige una foto' : 'Elige las fotos a añadir';
+    contarSeleccion();
+  }
+  function abrirElegirFotoFelicitacion() {
+    selectTarget = 'felicitacion';
+    document.querySelectorAll('[data-select-grid] .is-selected').forEach((c) => c.classList.remove('is-selected'));
+    modoSeleccion();
+    showScreen('album-seleccionar');
+  }
   document.addEventListener('click', (event) => {
     const src = event.target.closest('[data-select-target]');
     if (src) {
       selectTarget = src.dataset.selectTarget;
       document.querySelectorAll('[data-select-grid] .is-selected').forEach((c) => c.classList.remove('is-selected'));
-      contarSeleccion();
+      modoSeleccion();
+    }
+    if (event.target.closest('[data-select-add]') && selectTarget === 'felicitacion') {
+      const el = document.querySelector('[data-select-grid] .is-selected img, [data-select-grid] .is-selected video');
+      if (el) window.PersonaSelect.felicitacionConFoto(el);
     }
     if (event.target.closest('[data-select-add]') && selectTarget === 'nuevo' && NidoAlbums.current) {
       const album = NidoAlbums.current;
@@ -1043,7 +1083,14 @@
     ayudaTexto(AYUDA_SALUDO);
   }
 
-  function ayudaTexto(t) { ayudaBuild().querySelector('[data-ayuda-texto]').textContent = t; }
+  function ayudaTexto(t) {
+    const el = ayudaBuild().querySelector('[data-ayuda-texto]');
+    // El texto va en un interior propio: es el que se desplaza y se difumina arriba, sin tocar el fondo ni las esquinas del bocadillo.
+    let inn = el.querySelector('.ayuda-texto__in');
+    if (!inn) { el.textContent = ''; inn = document.createElement('span'); inn.className = 'ayuda-texto__in'; el.appendChild(inn); }
+    inn.textContent = t;
+    requestAnimationFrame(colocarPanel);
+  }
 
   // ---- «Llevas un rato aquí» (Figma 847:2539): si la persona no toca nada durante IDLE_MS, Nidi se asoma con la misma capa que el
   // avatar pero con un solo bocadillo y otra pose. Una vez por visita a cada pantalla; nunca durante el alta, el tour, una foto abierta
@@ -1125,7 +1172,8 @@
     'album-detalle': ['Quiero subir fotos', 'Enséñame las de Navidad', 'Haz un álbum con estas fotos'],
     'album-nuevo': ['Añade fotos a este álbum', 'Cámbiale el nombre', 'Vuelve a mis álbumes'],
     'album-seleccionar': ['¿Cómo elijo las fotos?', 'Elige tú las de este año', 'Vuelve atrás'],
-    'detalle-foto': ['¿Qué ves en esta foto?', 'Haz una felicitación con esta foto', 'Pásala a un álbum'],
+    'detalle-foto': ['Pasa a la siguiente', '¿Qué ves en esta foto?', 'Haz una felicitación con esta foto'],
+    'persona-imagenes': ['Abre la primera foto', 'Hazle una felicitación', 'Vuelve atrás'],
     personas: ['¿Quiénes son?', 'Enséñame fotos de alguien', '¿Qué puedo hacer aquí?'],
     'persona-fotos': ['Hazle una felicitación', 'Haz un álbum con sus fotos', 'Vuelve a Personas'],
     yo: ['Enséñame la última felicitación', 'Hazme una felicitación', 'Ve al inicio'],
@@ -1140,6 +1188,41 @@
     if (/^persona-/.test(pantalla) && ficha && ficha.real && !ficha.nombre) return ['Te digo quién es', '¿Qué fotos tiene?', 'Vuelve a Personas'];
     return SUGERENCIAS[pantalla] || SUGERENCIAS_OTRAS;
   }
+  // Coloca los bocadillos del panel de Nidi según lo que ocupan: el de Nidi, 12px bajo el tuyo (o arriba, donde el saludo, si aún no
+  // has dicho nada), y con alto libre hasta 12px antes de las sugerencias. Si no cabe, se ve el final del mensaje (difuminado arriba).
+  function colocarPanel() {
+    const layer = ayudaBuild();
+    const ni = layer.querySelector('[data-ayuda-texto]');
+    const inn = ni.querySelector('.ayuda-texto__in');
+    if (!layer.classList.contains('ayuda-layer--nidi')) { ni.style.top = ''; ni.style.width = ''; layer.querySelector('[data-ayuda-tu]').style.width = ''; if (inn) { inn.style.maxHeight = ''; inn.classList.remove('es-largo'); } return; }
+    const tu = layer.querySelector('[data-ayuda-tu]');
+    const sug = layer.querySelector('[data-sugerencias]');
+    // Ancho ajustado a la línea más larga (25-sep): con varias líneas, «fit-content» se queda en el ancho máximo y dejaba un hueco
+    // a la derecha. Se mide cada línea y el bocadillo abraza la más larga, con el mismo aire a los dos lados.
+    const abrazar = (burbuja, texto) => {
+      if (!burbuja || !texto || burbuja.hidden) return;
+      burbuja.style.width = '';
+      const rg = document.createRange(); rg.selectNodeContents(texto);
+      const lineas = Array.from(rg.getClientRects()).filter((r) => r.width > 0);
+      if (!lineas.length) return;
+      const k = burbuja.getBoundingClientRect().width / burbuja.offsetWidth || 1; // la pantalla puede verse escalada
+      const ancho = (Math.max(...lineas.map((r) => r.right)) - Math.min(...lineas.map((r) => r.left))) / k;
+      const cs = getComputedStyle(burbuja);
+      const extra = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth);
+      burbuja.style.width = Math.ceil(ancho + extra + 1) + 'px';
+    };
+    abrazar(tu, tu);
+    abrazar(ni, inn || ni);
+    const pad = parseFloat(getComputedStyle(ni).paddingTop) + parseFloat(getComputedStyle(ni).paddingBottom);
+    const top = !tu.hidden && layer.classList.contains('ayuda-layer--respuesta') ? tu.offsetTop + tu.offsetHeight + 12 : 111;
+    ni.style.top = top + 'px';
+    if (!inn) return;
+    const limite = (sug && sug.offsetHeight ? sug.offsetTop : 536) - 12; // donde empiezan las sugerencias
+    inn.style.maxHeight = Math.max(3 * 22.5, limite - top - pad) + 'px';
+    const largo = inn.scrollHeight > inn.clientHeight + 1;
+    inn.classList.toggle('es-largo', largo);
+    if (largo) inn.scrollTop = inn.scrollHeight;
+  }
   function ayudaModoNidi() {
     const layer = ayudaBuild();
     const nidi = !!(window.NidoAgente && window.NidoAgente.activa);
@@ -1148,6 +1231,7 @@
     if (!nidi) return;
     const cont = layer.querySelector('[data-sugerencias]');
     const lista = sugerenciasDe(currentScreen());
+    requestAnimationFrame(colocarPanel);
     if (cont.dataset.pantalla === currentScreen() + '|' + lista.join('|')) return;
     cont.dataset.pantalla = currentScreen() + '|' + lista.join('|');
     cont.innerHTML = '';
@@ -1260,7 +1344,8 @@
     let ficha = '';
     if (est.ficha) ficha = est.ficha.nombre ? ' Tiene abierta la ficha de «' + est.ficha.nombre + '» (' + est.ficha.nFotos + ' fotos).'
       : est.ficha.real ? ' Tiene abierta una ficha SIN NOMBRE (' + est.ficha.nFotos + ' fotos): si no lo has hecho ya, pregúntale quién es.' : '';
-    const foto = est.foto ? ' Tiene abierta ' + (est.foto.tipo === 'vídeo' ? 'un vídeo' : 'una foto') + (est.foto.fecha ? ' del ' + est.foto.fecha : '') + ': puedes mirarla con ver_foto.' : '';
+    // Sin «puedes mirarla con ver_foto» (25-sep): Nidi la miraba por su cuenta; solo se mira si la persona lo pide (privacidad).
+    const foto = est.foto ? ' Tiene abierta en grande ' + (est.foto.tipo === 'vídeo' ? 'un vídeo' : 'una foto') + (est.foto.total > 1 ? ' (la ' + est.foto.posicion + ' de ' + est.foto.total + '; para pasar a otra, abrir_foto con direccion)' : '') + (est.foto.fecha ? ', del ' + est.foto.fecha : '') + '.' : '';
     // El álbum que tiene delante (o del que viene la foto abierta): gestionar_albumes lo usa como origen si no se dice otro.
     const alVista = albumALaVista();
     const album = alVista ? ' Está dentro del álbum «' + alVista.name + '» (' + alVista.photos.length + ')' + (alVista.auto ? ', que lo pone Nido solo y no se cambia a mano' : '') + '.' : '';
@@ -1586,10 +1671,9 @@
     const nav = (pantalla) => { ayudaCerrar(); showScreen(pantalla); return true; };
 
     // «vuelve atrás» / «la pantalla de antes»: pulsa el «Volver» que se ve, el mismo que tocaría la persona.
-    if (/\b(atras|anterior|pantalla de antes)\b|^(vuelve|volver|regresa)$/.test(t)) {
-      const volver = Array.from(document.querySelectorAll('.screen.is-active button, .screen.is-active [data-nav]'))
-        .find((b) => b.offsetParent && /^volver$/i.test((b.innerText || '').trim()));
+    if (/\b(atras|pantalla de antes)\b|^(vuelve|volver|regresa)$/.test(t)) {
       ayudaCerrar();
+      const volver = botonVolverVisible();
       if (!volver) { ultimoResultadoAlbum = 'En esta pantalla no hay botón de volver. Pregúntale adónde quiere ir (el inicio, Álbumes, Personas, Yo).'; return true; }
       volver.click();
       return true;
@@ -1626,7 +1710,13 @@
 
     // "enséñame las fotos de Clara" / "fotos de mi nieta Ainhoa" / "busca a Clara"
     const persona = window.PersonaSelect && window.PersonaSelect.personIdByName(t);
-    if (persona) { ayudaCerrar(); NidoNav.returnTo(currentScreen()); window.PersonaSelect.openPerson(persona); return true; }
+    if (persona) {
+      ayudaCerrar(); NidoNav.returnTo(currentScreen()); window.PersonaSelect.openPerson(persona);
+      // «las fotos de Clara», «todas las fotos de Clara»: su cuadrícula completa (pantalla Imágenes); «sus vídeos»: la de vídeos.
+      if (/\bvideos?\b/.test(t)) setTimeout(() => showScreen('persona-videos'), 350);
+      else if (/\b(tod[oa]s|fotos?|imagenes)\b/.test(t)) setTimeout(() => showScreen('persona-imagenes'), 350);
+      return true;
+    }
 
     // "abre el álbum Vacaciones en Venecia" (álbumes creados) / "todas mis fotos"
     const creado = NidoAlbums.list.find((al) => t.includes(normV(al.name)));
@@ -1661,13 +1751,36 @@
         : 'Todavía no se ha hecho ninguna felicitación. Pregúntale si quiere que hagáis una.';
       return true;
     }
-    if (/felicitacion|felicitar/.test(t)) { ayudaCerrar(); window.PersonaSelect.openFelicitacionDesdeYo(); showScreen('felicitacion-estilo'); return true; }
+    // «hazme una felicitación»: con una foto abierta, con esa; si no, que elija la foto (antes cogía la primera de la biblioteca).
+    if (/felicitacion|felicitar/.test(t)) {
+      ayudaCerrar();
+      if (currentScreen() === 'detalle-foto') { window.PersonaSelect.openFelicitacionDesdeFoto(); showScreen('felicitacion-estilo'); }
+      else abrirElegirFotoFelicitacion();
+      return true;
+    }
 
     const hit = PANTALLAS_VOZ.find(([re]) => re.test(t));
     return hit ? nav(hit[1]) : false;
   }
 
   window.NidoAyuda = { entender: (t) => ayudaEntender(t) }; // para pruebas y para otros módulos
+
+  // El «Volver» que de verdad ve la persona en la pantalla activa. En la foto en grande hay tres: el de abajo y dos dentro de capas
+  // ocultas (crear felicitación, eliminar foto) que siguen en el DOM con opacidad 0; antes se pulsaba el primero, que no hacía nada.
+  function botonVolverVisible() {
+    const scr = document.querySelector('.screen.is-active');
+    if (!scr) return null;
+    const seVe = (el) => {
+      for (let n = el; n && n !== scr.parentElement; n = n.parentElement) {
+        const cs = getComputedStyle(n);
+        if (cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity < 0.05 || (n !== el && cs.pointerEvents === 'none' && +cs.opacity < 1)) return false;
+        if (n.hidden) return false;
+      }
+      return true;
+    };
+    const todos = Array.from(scr.querySelectorAll('button, [data-nav]')).filter((b) => /^volver$/i.test((b.innerText || b.textContent || '').trim()) && seVe(b));
+    return todos.find((b) => b.closest('.bottom-action-row') || b.classList.contains('bottom-action')) || todos[0] || null;
+  }
 
   // ---- Mis documentos (Yo): fotos de papeles útiles (25-sep) ----
   // Nidi decía «la app no sirve para eso» cuando le preguntaban el horario del autobús, que está aquí. Ahora sabe qué papeles hay
@@ -1725,8 +1838,14 @@
               : 'He ido a Mis documentos pero no he podido abrir «' + doc.alt + '». Dile que lo toque ella.';
           }
           ultimoResultadoAlbum = null;
+          const antes = currentScreen();
           const ok = ayudaEntender(pedido);
-          return ultimoResultadoAlbum || (ok ? 'Hecho: he abierto lo que pedía.' : 'No he encontrado eso en la app.');
+          if (ultimoResultadoAlbum) return ultimoResultadoAlbum;
+          if (!ok) return 'No he encontrado eso en la app.';
+          // Se comprueba que la pantalla ha cambiado de verdad (25-sep: «atrás» decía «Hecho» y seguía en la misma).
+          for (let i = 0; i < 24 && currentScreen() === antes; i++) await new Promise((r) => setTimeout(r, 50));
+          return currentScreen() !== antes ? 'Hecho: ahora está en la pantalla «' + currentScreen() + '».'
+            : 'Hecho: ya está en esa pantalla («' + antes + '»). Si esperaba otra cosa, pregúntale adónde quiere ir.';
         },
         gestionar: (p) => { ultimaAccionNidi = Date.now(); return gestionarAlbumes(p); },
         // personas, ver fotos, señalar botones…: js/agente-acciones.js
@@ -1875,7 +1994,10 @@
       }
       if (destination === 'persona-back') destination = personaReturn;
       if (destination === 'felicitacion-back') destination = window.felicitacionOrigin === 'yo' ? 'yo' : 'detalle-foto';
-      if (destination === 'select-back') destination = selectTarget === 'nuevo' ? 'album-nuevo' : 'album-detalle';
+      if (destination === 'select-back') {
+        if (selectTarget === 'felicitacion') destination = pressable.hasAttribute('data-select-add') ? 'felicitacion-estilo' : 'yo';
+        else destination = selectTarget === 'nuevo' ? 'album-nuevo' : 'album-detalle';
+      }
       // Volver desde las cuadrículas de Imágenes/Vídeos a la ficha de la persona, sin tocar a dónde vuelve ésta.
       if (destination === 'persona-fotos-keep') destination = 'persona-fotos';
     }

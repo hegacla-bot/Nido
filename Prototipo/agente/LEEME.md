@@ -31,7 +31,7 @@ Esta carpeta tiene todo lo necesario para crear **a mano**, en el panel de Eleve
    La app no usa variables dinámicas ni *overrides* (`js/agente.js` solo pasa `signedUrl`, `connectionType: 'websocket'` y `clientTools`). Por eso el primer mensaje es fijo y no puede llevar `{{…}}`. Lo que Nidi sabe de la pantalla le llega justo después, en silencio, por `sendContextualUpdate`.
 6. **Prompt de sistema** (*System prompt*): pega todo lo que va debajo de la línea en `PROMPT.md`.
 7. **Herramientas** (*Tools* → *Add tool* → **Client**): da de alta las 10 de `HERRAMIENTAS.md`. En todas, **Wait for response activado**. Timeout de **30 s** en `ver_foto` y `crear_felicitacion`, y de **10 s** en las demás. Los nombres tienen que ser exactamente los del archivo.
-   - Herramientas de sistema: no hacen falta. «End conversation» es opcional. Si la activas, Nidi puede colgar cuando la persona se despida, y la app ya sabe mostrar «Hemos dejado de hablar».
+   - Herramienta de sistema **end_call** («End conversation»): **activada** (25-sep). Nidi cuelga cuando la persona se despide (sección «Terminar la conversación» del prompt) y la app cierra el micrófono y la pastilla.
    - En la prueba del propio panel (*Test AI agent*), las herramientas cliente **fallan**, porque viven en la app y no en el panel. Esa prueba solo sirve para el tono y las preguntas.
 8. **Turnos y duración** (*Advanced*, si aparecen estos ajustes):
    - La app ya cierra el micrófono mientras Nidi habla (`setMicMuted`), así que las interrupciones no importan.

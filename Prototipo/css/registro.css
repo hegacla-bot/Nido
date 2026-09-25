@@ -132,7 +132,10 @@
   transform: scale(0.96);
 }
 
-/* ---- registro-nidi · saludo de Nidi (765:5974) ---- */
+/* ---- registro-nidi · saludo de Nidi (765:5974) ----
+   25-sep, «se ve descompensada»: los huecos eran 164px (logo→título), 115px (texto→pollito) y ~50px (pollito→barra), todo cargado
+   abajo, y el pollito parecía ir a la derecha. Ahora texto + pollito son UN bloque (40px entre ellos) centrado entre el logo (acaba a
+   100px) y la barra de abajo (839px): 155px por arriba y por abajo. Tamaños sin cambiar. */
 .registro-nidi {
   background: var(--color-white);
   cursor: pointer;
@@ -147,13 +150,13 @@
   color: var(--color-primary-blue);
 }
 .registro-nidi-title {
-  top: 16.5rem; /* 264px */
+  top: 15.9375rem; /* 255px */
   width: 17.1875rem; /* 275px */
   font-size: 2rem; /* 32px */
   font-weight: var(--font-weight-bold);
 }
 .registro-nidi-subtitle {
-  top: 19.6875rem; /* 315px */
+  top: 19.125rem; /* 306px: 51px bajo el título, como antes */
   width: 14.375rem; /* 230px */
   font-size: var(--font-size-label-large); /* 20px */
   font-weight: var(--font-weight-regular);
@@ -161,8 +164,10 @@
 .registro-nidi-pollito {
   /* nidi-saludando-v3.webp: contorno visible de la pose de Figma (765:5997), no la caja de 346×424. */
   position: absolute;
-  left: 2.09375rem; /* 33.5px */
-  top: 30.03125rem; /* 480.5px */
+  /* Centrado por su peso visual, no por su caja: las rayitas del saludo están a la izquierda y el centro de masa de la imagen cae al
+     54 % de su ancho; así el cuerpo queda en el centro de la pantalla (antes parecía ir a la derecha). */
+  left: 1.425rem; /* 22.8px */
+  top: 24.75rem; /* 396px: 40px bajo el subtítulo */
   width: 20.0625rem; /* 321px */
   height: 18.03125rem; /* 288.5px */
   max-width: none;

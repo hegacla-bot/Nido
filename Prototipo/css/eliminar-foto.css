@@ -49,11 +49,15 @@
   /* Pose "quita el interrogante" ya rotada (−50,99°) — la misma que la pregunta por voz; en la captura
      de Figma (687:8416) el pollito asoma por la derecha con el pulgar hacia abajo-izquierda. La anterior
      (rotada −63,91°) se veía boca abajo. Misma caja que en la pregunta, subida 168px. */
+  /* 25-sep: la imagen ya no es la pose recortada con mucho margen transparente sino el pollito de cuerpo entero
+     (pollito-pregunta-nombre.webp, 650×745); con la caja antigua (429×416) salía gigante y cortado. Entero, a la derecha, bajo la
+     burbuja (acaba a 212px) y por encima de los botones (558px). Misma proporción que la imagen. */
   position: absolute;
-  left: 9.1875rem; /* 147px */
-  top: 8.9375rem; /* 143px */
-  width: 26.8rem; /* ×1,12 respecto a la pregunta por voz: en 687:8416 el pollito es algo mayor */
-  height: 26.0rem;
+  left: 7.875rem; /* 126px */
+  top: 16.25rem; /* 260px: se apoya justo encima de «Eliminar foto» (558px), como en los onboardings */
+  width: 15.8125rem; /* 253px */
+  height: 18.125rem; /* 290px */
+  object-fit: contain;
   max-width: none;
   pointer-events: none;
 }

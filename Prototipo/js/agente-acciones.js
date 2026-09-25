@@ -72,6 +72,27 @@ window.NidoAgenteAcciones = (function () {
 
   // ---- abrir_foto ----
   async function abrirFoto(p, ctx) {
+    // Dentro de una foto en grande: pasar a la siguiente/anterior o a la número N del mismo carrusel (25-sep: «pasa a la siguiente»
+    // contestaba «no hay fotos que abrir» porque solo sabía abrir desde una cuadrícula).
+    const dir = norm(p && p.direccion);
+    if (pantalla() === 'detalle-foto') {
+      const media = document.getElementById('detalle-foto-media');
+      const items = media ? media.querySelectorAll('.detail-media__item') : [];
+      if (!items.length) return 'No veo la foto abierta.';
+      const cur = Math.round(media.scrollLeft / media.clientWidth);
+      let dest = cur;
+      if (/sig|adelante|proxima|otra/.test(dir)) dest = cur + 1;
+      else if (/ant|atras|previa/.test(dir)) dest = cur - 1;
+      else if (p && (p.posicion || p.numero)) dest = Math.round(Number(p.posicion || p.numero)) - 1;
+      else return 'Ya tiene abierta la foto ' + (cur + 1) + ' de ' + items.length + '. Para cambiar, di direccion=siguiente, direccion=anterior o una posicion.';
+      if (dest >= items.length) return 'Esta es la última foto (' + items.length + ' de ' + items.length + '). Puedes volver a la primera con posicion=1 o volver atrás.';
+      if (dest < 0) return 'Esta es la primera foto (1 de ' + items.length + ').';
+      if (ctx.cerrarAyuda) ctx.cerrarAyuda();
+      media.scrollTo({ left: dest * media.clientWidth, behavior: 'smooth' });
+      await new Promise((ok) => setTimeout(ok, 450));
+      return 'He pasado a la foto ' + (dest + 1) + ' de ' + items.length + '.';
+    }
+    if (dir) return 'No hay ninguna foto abierta en grande. Abre una con abrir_foto y una posicion.';
     const pant = document.querySelector('.screen.is-active');
     if (!pant) return 'No veo ninguna pantalla con fotos.';
     // Las tarjetas se cuentan antes de cerrar la ayuda: con la capa encima siguen ahí (solo tapadas), y así un «no hay fotos» no la cierra.
@@ -133,7 +154,7 @@ window.NidoAgenteAcciones = (function () {
   // agenteAvisoFicha). Si la abre Nidi, la respuesta de esta herramienta ya se lo dice: se marca como preguntada para que no
   // llegue un segundo turno 400 ms después (Nidi preguntaría dos veces o se cortaría a sí mismo).
   const yaPreguntada = (id) => { if (id && window.NidoAgenteFichaPreguntada) window.NidoAgenteFichaPreguntada(id); };
-  function abrirPersona(p, ctx) {
+  async function abrirPersona(p, ctx) {
     const api = ps();
     if (!api) return 'No puedo abrir personas ahora mismo.';
     if (p && bool(p.sin_nombre)) {
@@ -151,7 +172,13 @@ window.NidoAgenteAcciones = (function () {
     if (ctx.cerrarAyuda) ctx.cerrarAyuda();
     window.PersonaSelect.openPerson(id);
     const info = api.estado().personas.find((x) => x.id === id);
-    return 'He abierto la ficha de ' + (info && info.nombre ? info.nombre : nombre) + (info ? ' (' + plural(info.nFotos, 'foto', 'fotos') + ')' : '') + '.';
+    const quien = info && info.nombre ? info.nombre : nombre;
+    if (bool(p.todas)) { // «enséñame todas las fotos de Clara»: su cuadrícula completa (pantalla «Imágenes»), no la primera foto
+      await new Promise((ok) => setTimeout(ok, 350));
+      window.NidoNav.show('persona-imagenes');
+      return 'He abierto todas las fotos de ' + quien + (info ? ' (' + plural(info.nFotos, 'foto', 'fotos') + ')' : '') + ', en cuadrícula. Si quiere ver una en grande, abrir_foto con su posicion.';
+    }
+    return 'He abierto la ficha de ' + quien + (info ? ' (' + plural(info.nFotos, 'foto', 'fotos') + ')' : '') + '.';
   }
 
   function nombrarPersona(p, ctx) {

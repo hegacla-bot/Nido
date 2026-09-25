@@ -181,10 +181,20 @@
   width: 1.1875rem;
   height: 1.1875rem;
 }
-/* Segunda flecha (Vídeos): x=309, y=695, medio tapada por el footer, como Figma. */
-.personas-next--2 {
-  top: 43.4375rem; /* 695px */
+/* Ficha de persona (25-sep): la flecha va dentro de su fila, centrada en las fotos (188px de alto) y al borde derecho, encima de la
+   foto que asoma. Así se ve de qué fila es y nunca queda debajo de «Volver». Sombra más marcada para que destaque sobre la foto. */
+.persona-fila {
+  position: relative;
 }
+.persona-fila__next {
+  top: 3.875rem; /* (188 − 64) / 2 = 62px */
+  left: auto;
+  right: -0.5rem;
+  box-shadow: 0 4px 14px rgba(26, 29, 44, 0.28);
+  transition: transform 0.25s ease;
+}
+.persona-fila__next[hidden] { display: none; }
+.persona-fila__next.is-al-final img { transform: rotate(180deg); } /* al final vuelve al principio: la flecha lo dice */
 /* Cuadrículas de Imágenes / Vídeos: el título va a 131px (sin chevron) y la
    cuadrícula a 168px. */
 [data-screen="persona-imagenes"] .screen-content,
@@ -393,8 +403,10 @@
 }
 .felicitacion-cargando__pollito {
   position: absolute;
-  left: 3.6875rem; /* 59px — centrado en el lienzo de 393px con el ancho de abajo */
-  top: 11.875rem; /* 190px */
+  /* 25-sep, centrado por lo que se ve: la imagen trae mucho blanco (el dibujo ocupa y 114–473 de 552). Dibujo + texto forman un
+     bloque de 256px centrado en la pantalla (852px): el dibujo empieza a 298px; a lo ancho, su centro de masa en el centro. */
+  left: 3.8125rem; /* 61px */
+  top: 15.0625rem; /* 241px */
   width: 17.25rem; /* 276px */
   height: 17.25rem; /* cuadrado (24-sep): el pollito nuevo viene en formato 1:1, no 276×369 */
   max-width: none;
@@ -407,7 +419,7 @@
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  top: 29.875rem; /* 478px */
+  top: 33.0625rem; /* 529px: la misma distancia al dibujo que antes */
   width: 17.1875rem; /* 275px */
   margin: 0;
   text-align: center;
@@ -834,11 +846,20 @@
   cursor: pointer;
 }
 .ayuda-layer__sugerencia:active { transform: scale(0.97); }
-/* El bocadillo de Nidi no puede bajar hasta las sugerencias: tope de alto y, si dice mucho, se desplaza dentro. */
-.ayuda-layer--nidi .ayuda-layer__bubble--nidi {
-  max-height: 9rem;
+/* Bocadillos del panel de Nidi (25-sep, «como siempre»): la misma forma que el resto de bocadillos de Nido, ajustados a su texto
+   (ancho según lo que dicen, hasta 272px como el más ancho de los onboardings) y el de Nidi con su sangría de 51px bajo el tuyo.
+   Dónde empieza el de Nidi y cuánto puede crecer lo calcula app.js (colocarPanel) según lo que ocupe el tuyo y dónde empiezan las
+   sugerencias; si un mensaje muy largo no cabe, se ve su final y el principio se difumina. */
+.ayuda-layer--nidi .ayuda-layer__bubble--nidi,
+.ayuda-layer--nidi .ayuda-layer__bubble--tu {
+  display: block;
+  width: fit-content;
+  max-width: 17rem; /* 272px */
+}
+.ayuda-layer--nidi .ayuda-layer__bubble--nidi .ayuda-texto__in {
+  display: block;
   overflow-y: auto;
-  align-items: flex-start;
+  scrollbar-width: none;
 }
 .ayuda-layer--nidi .ayuda-layer__ver,
 .ayuda-layer--nidi .ayuda-layer__close {
@@ -860,3 +881,26 @@
    que sube al sitio del saludo. */
 .ayuda-layer--nidi .ayuda-layer__bubble--hola { display: none; }
 .ayuda-layer--nidi:not(.ayuda-layer--respuesta) .ayuda-layer__bubble--nidi { top: 6.9375rem; }
+
+/* 25-sep: nombres centrados bajo su círculo (antes a la izquierda: con largos distintos la cuadrícula se veía torcida). */
+.persona-item__name {
+  text-align: center;
+}
+
+/* Lo que ha dicho la persona, en el panel de Nidi: como mucho 3 líneas (acaba antes de 230px, donde empieza el de Nidi). Antes, una
+   frase larga se metía debajo del bocadillo de Nidi (25-sep). */
+.ayuda-layer--nidi .ayuda-layer__bubble--tu {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  /* El recorte llega hasta el borde del relleno: con relleno abajo asomaba media 4.ª línea. El aire de abajo va como borde transparente
+     (sobre el mismo fondo lila), que queda fuera del recorte. */
+  padding-bottom: 0;
+  border-bottom: var(--bubble-pad-y) solid transparent;
+}
+/* Mensaje largo de Nidi: se enseña el FINAL (donde suele ir la pregunta) y arriba un difuminado dice que hay más (app.js, ayudaTexto). */
+.ayuda-layer--nidi .ayuda-texto__in.es-largo {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 2rem);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 2rem);
+}

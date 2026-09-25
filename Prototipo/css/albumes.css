@@ -360,3 +360,15 @@
 /* El footer de 2 botones (Volver + Añadir) reutiliza .bottom-fade +
    .bottom-action-row, que ya existían para este mismo patrón en la
    pantalla de detalle de foto — no hizo falta CSS nuevo para eso. */
+
+/* Pantallas con la flecha flotante de bajar/subir (.albumes-more, 640–712px): al llegar al final, lo último de la lista tiene que
+   poder quedar ENCIMA de la flecha, no debajo (25-sep: tapaba «Sin nombre» en Personas, «Navidad 2024» en Álbumes y la última foto
+   en Todas tus fotos). Con 140px (lo que reserva el pie) no llegaba: 852 − 632 (flecha menos 8px de aire) = 220px. */
+.screen[data-screen="personas"] .screen-content,
+.screen[data-screen="albumes"] .screen-content,
+.screen[data-screen="album-detalle"] .screen-content,
+.screen[data-screen="album-seleccionar"] .screen-content,
+.screen[data-screen="persona-imagenes"] .screen-content,
+.screen[data-screen="persona-videos"] .screen-content {
+  padding-bottom: 13.75rem; /* 220px */
+}
