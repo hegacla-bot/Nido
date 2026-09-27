@@ -1,77 +1,56 @@
-# Nido · v3 — contenido real de Figma
+# Nido · prototipo (v3)
 
-Implementación de la sección **"UI PROTOTIPADO (NO TOCAR)"** de la página *UI* en Figma
-(`node-id=425-7405`) — las 8 pantallas con fotos reales, el pollito y el componente
-Button real, no el flujo de wireframes numerados de `prototipo/` y `prototipo-v2/`.
+App de fotos familiares para que la persona mayor la use ella misma, tocando o hablando con **Nidi**, su asistente de voz.
+
+**Web publicada:** https://nido-tfm.netlify.app
+
+## Qué hay en esta carpeta
+
+| Carpeta / archivo | Qué es |
+|---|---|
+| `index.html` | Todas las pantallas de la app |
+| `css/` | Estilos (colores, tipografía, cada pantalla) |
+| `js/` | Lo que hace funcionar la app: navegación, álbumes, personas, felicitaciones, Nidi |
+| `assets/` | Imágenes, iconos, vídeos, el pollito y la biblioteca de fotos de ejemplo (con consentimiento de quienes salen) |
+| `netlify/functions/` | Las 3 piezas que corren en el servidor: `agente-voz` (conecta con Nidi), `ver-foto` (Nidi mira una foto o detecta si es un documento) y `crear-imagen` (felicitaciones con IA) |
+| `agente/` | Todo sobre Nidi: su prompt (`PROMPT.md`), sus herramientas (`HERRAMIENTAS.md`) y cómo montarlo (`LEEME.md`) |
+| `SESSION-NOTES.md` | Diario técnico: cada cambio, por qué se hizo y qué falta |
+| `servidor-local.mjs` | Para probar la app en el ordenador con las funciones del servidor |
+| `tools/preparar-publicacion.sh` | Prepara la carpeta que se sube a Netlify (sin claves ni notas) |
+
+## Qué usa por dentro
+
+- **Nidi (voz):** ElevenLabs Agents. Nidi puede moverse por la app, abrir fotos de alguien, poner nombres, subir fotos, mover fotos de álbum y crear felicitaciones.
+- **Ver fotos y documentos:** Gemini (modelo Gemma). Solo se manda la foto abierta, reducida y sin ubicación, y solo cuando hace falta.
+- **Felicitaciones:** Cloudflare Workers AI. El título lo escribe la app, nunca la IA.
+- **Reconocer caras:** en el propio dispositivo (face-api). Las caras nunca salen del móvil.
+
+## Probarla en el ordenador
+
+Hace falta [Node.js](https://nodejs.org) y un archivo `.env` con las claves (no está en el repositorio, pídelo al equipo):
 
 ```
-cd "TFM/prototipo-v3"
-python3 -m http.server 8934
+ELEVENLABS_API_KEY=…
+ELEVENLABS_AGENT_ID=…
+GEMINI_API_KEY=…
+CLOUDFLARE_API_TOKEN=…
+CLOUDFLARE_ACCOUNT_ID=…
 ```
 
-## Las 8 pantallas
+Después, desde esta carpeta:
 
-**Home** — fila Álbumes/Personas/Yo + "Mis recuerdos" (3 fotos)
-**Onboarding 1-4** — tour de bienvenida sobre Home, con el pollito señalando cada botón
-**Álbumes** · **Personas** · **Yo** — cada una con su botón "Volver"
+```
+node servidor-local.mjs
+```
 
-Navegación: tocar Álbumes/Personas/Yo desde Home, tocar el avatar (lleva a Yo), o usar
-el **panel de la demo** (arriba a la derecha, fuera del marco del móvil — no es parte
-del diseño de Figma) para saltar directamente a cualquier pantalla o relanzar el tour.
+y abre http://localhost:8990 en el navegador (mejor Chrome, y acepta el micrófono para hablar con Nidi).
 
-## De dónde sale cada cosa
+## Publicarla en Netlify
 
-- **Botón (Assets, `315:4751`)** — fuente de verdad, 11 variantes (Type 1/2/3/Create ×
-  Big × Horizontal/Vertical), verificado contra su uso real en las 8 pantallas, no
-  contra instancias sueltas.
-- **Iconos** — de la página *Icons* (17 categorías, ~1.120 en total): solo se extrajeron
-  los que realmente aparecen en estas 8 pantallas (`image-01`, `users-01`,
-  `face-smile`, `arrow-left`, `search-md`, `plus`, `settings-01`, `arrow-narrow-right`).
-- **Fotos** — reales, no placeholder. Las 3 de "Mis recuerdos" (boda, bebés, disfraces)
-  son fotos de archivo familiar; las de Personas/Álbumes/Yo son fotos de ejemplo
-  reutilizadas por Figma como contenido de demostración (también reales, no bloques
-  grises). Todas descargadas y comprimidas para web.
-- **Tokens** (`css/tokens.css`) — auditados con `get_variable_defs` contra Assets y las
-  8 pantallas: 7 colores, escala tipográfica Atkinson Hyperlegible, sombras de tarjeta
-  y de botón. El espaciado (margen 20px, gap 16/20px, radio 12px) no está tokenizado
-  como variable en Figma — se tomó de la geometría real, muy consistente entre pantallas.
+1. `sh tools/preparar-publicacion.sh` → crea `nido-publicar` con solo lo necesario.
+2. Las 5 claves van como variables de entorno en Netlify (nunca en el código).
+3. `npx netlify-cli deploy --prod --dir . --functions netlify/functions` desde `nido-publicar`.
 
-## Componente Photo — no se usó
+## Equipo
 
-Existe un COMPONENT_SET "Photo" en la página *UI* (sección "Recursos editables",
-`298:10300`, 2 variantes) que aún no está en Assets. **Las 8 pantallas reales no lo
-instancian** — usan rectángulos redondeados con imagen de fondo directamente. Por eso
-el prototipo hace lo mismo (`.photo-card` + `<img>`) en vez de esperar ese componente.
-
-## Excepciones de diseño que NO se han "corregido"
-
-Verificadas contra el código real de Figma, no asumidas:
-
-1. **Dos negros distintos.** `#1a1d2c` (texto de la app) y `#1d1d1b` (reloj de la status
-   bar, iOS). Se mantienen como dos tokens separados (`--color-black` /
-   `--color-ios-black`) por si es intencional.
-2. **Título de página sin variable.** "Álbumes" / "Personas" / "Yo" usan 22px en azul,
-   un tamaño que no aparece en ninguna variable de Figma (las demás cabeceras usan 20px
-   con `Nido normal/Title/Large`). Se mantiene tal cual, marcado en `tokens.css`.
-3. **Margen de página: 20px aquí, no 24px.** (El flujo de wireframes de `prototipo-v2/`
-   usa 24px — son proyectos distintos, no hay inconsistencia real.)
-
-## Responsive
-
-Base 1rem = 16px a 393px de viewport (`html { font-size: clamp(15px, 4.07vw, 17px) }`),
-todo el layout en rem. El marco `.phone` tiene `max-width: 393px` con `aspect-ratio`,
-así que escala hacia abajo en móviles pequeños y no crece más allá del ancho de
-referencia en pantallas más anchas — la prioridad pedida era que 393×852 se viera
-perfecto, por encima de la extrapolación.
-
-## Pendiente de revisar en el navegador
-
-No se ha podido verificar visualmente con Chrome automatizado en esta sesión (la
-extensión no estaba conectada). Antes de darlo por bueno, comprobar especialmente:
-
-- Las 4 direcciones del pollito en el onboarding (pasos 1 y 2 llevan espejado
-  horizontal aplicado según la transformación real de Figma; 3 y 4 no).
-- Las burbujas de diálogo del onboarding (radio asimétrico formando la "cola" hacia
-  el pollito) en los 4 pasos.
-- El grid de "Personas": Figma reutiliza las mismas 2 fotos de grupo para las 4
-  tarjetas individuales (salvo una) — se ha respetado esa reutilización tal cual.
+Ainhoa · Clara · Josep — TFM de diseño, 2026.
