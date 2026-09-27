@@ -1,0 +1,151 @@
+/*
+  Nido · v3 — Yo, rediseño (687:8356). Los dos botones de arriba pasan al
+  estilo "suave" (mismo lenguaje que Generar/Eliminar de Detalle foto:
+  fondo blue-lighter + borde + sombra propia), y "Mis creaciones" gana una
+  tarjeta "Generar" como primera celda de la cuadrícula — antes solo
+  mostraba las 3 creaciones ya hechas, sin forma de crear una nueva desde
+  aquí. "Ajustes" no lleva CSS nueva: es exactamente `.albumes-search-btn`
+  reutilizado tal cual (mismo ancho fijo, misma sombra, mismo patrón).
+*/
+
+/* "Mis documentos": variante que crece, de una sola capa (sin botón
+   discontinuo dentro, a diferencia de "Álbum nuevo") — sombra distinta a
+   la de "Ajustes" (más difusa, la misma que el wrap de "Generar" en
+   Detalle foto), confirmada contra get_design_context, no a ojo. */
+.yo-docs-btn {
+  flex: 1 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem; /* 10px */
+  padding: 0.75rem 1.25rem; /* 12px 20px */
+  background: var(--color-primary-blue-lighter);
+  border: 1px solid var(--color-primary-blue-light);
+  border-radius: 1.25rem; /* 20px */
+  box-shadow: 2px 4px 16px 0px rgba(43, 53, 102, 0.1), 2px 4px 8px 0px rgba(50, 63, 132, 0.15);
+  font-family: inherit;
+  font-weight: var(--font-weight-bold);
+  font-size: 1.125rem; /* 18px */
+  color: var(--color-primary-blue-dark);
+  cursor: pointer;
+}
+.yo-docs-btn img {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+/* "Generar" — primera celda de "Mis creaciones": mismo patrón de doble
+   capa + borde discontinuo que "Álbum nuevo" (albumes-new-wrap/-btn),
+   pero cuadrado y con icono+texto en vertical en vez de fila. Medidas
+   (padding 13px del wrap, 16px/32px del botón interior) sacadas de
+   get_metadata contra el nodo real, no repetidas a ojo desde Álbumes. */
+.yo-generar-wrap {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  background: var(--color-primary-blue-lighter);
+  border: 1px solid var(--color-primary-blue-light);
+  border-radius: 1.25rem; /* 20px */
+  box-shadow: 2px 4px 16px 0px rgba(43, 53, 102, 0.1), 2px 4px 8px 0px rgba(50, 63, 132, 0.15);
+  padding: 0.8125rem; /* 13px */
+}
+.yo-generar-btn {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem; /* 10px */
+  padding: 1rem 2rem; /* 16px 32px */
+  background: var(--color-primary-blue-lighter);
+  border: 2px dashed var(--color-primary-blue);
+  border-radius: 0.75rem 0.75rem 0.75rem 1rem; /* misma esquina asimétrica que albumes-new-btn */
+  font-family: inherit;
+  font-weight: var(--font-weight-bold);
+  font-size: 1.25rem; /* 20px */
+  color: var(--color-primary-blue-dark);
+  cursor: pointer;
+}
+.yo-generar-btn img {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+/* "Mis creaciones" empieza 14px más arriba que el offset genérico de
+   .screen-content (241px en vez de 255px) — confirmado con get_metadata
+   contra 687:8356, no es un ajuste a ojo. */
+[data-screen="yo"] .screen-content {
+  /* top ya es 0 desde la regla base (css/components.css) — solo cambia
+     el padding-top. */
+  padding-top: 15.0625rem; /* 241px */
+}
+
+/* "Felicitación" es más largo que "Generar": sin esto su texto (no envuelve) ensanchaba la primera columna
+   y descuadraba la cuadrícula. Columnas iguales de verdad y menos aire lateral en el botón (Figma: texto de 110px). */
+[data-screen="yo"] .grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.yo-generar-btn {
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+  white-space: nowrap;
+}
+
+/* ---- Ajustes (692:2425) ---- */
+.ajustes-lista {
+  position: absolute;
+  left: var(--space-page-margin);
+  top: 9.4375rem; /* 151px */
+  width: calc(100% - 2 * var(--space-page-margin));
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem; /* 12px */
+}
+.ajustes-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.625rem;
+  height: 4.25rem; /* 68px */
+  padding: 0.75rem 1.25rem 0.75rem 2rem; /* 12 20 12 32 */
+  background: var(--color-primary-blue-lighter);
+  border: 0.5px solid var(--color-primary-blue-light);
+  border-radius: 1.25rem;
+  box-shadow: var(--shadow-button-light);
+  font-family: inherit;
+  font-size: var(--font-size-label-large);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary-blue-dark);
+  text-align: left;
+  cursor: pointer;
+}
+.ajustes-row img {
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+}
+/* 25-sep: textos centrados en la fila (pedido). El icono se queda a la derecha, fuera del flujo, para que no descentre el texto;
+   el relleno lateral (48px) es igual a los dos lados y deja sitio al icono. «Eliminar cuenta» centra icono + texto juntos. */
+.ajustes-row {
+  position: relative;
+  justify-content: center;
+  padding-left: 3rem;  /* 48px a cada lado: cabe «Ver términos y condiciones» (256px) en una línea */
+  padding-right: 3rem;
+  text-align: center;
+  white-space: nowrap;
+}
+.ajustes-row:not(.ajustes-row--danger) img {
+  position: absolute;
+  right: 1rem; /* 16px: deja ~4px entre el texto más largo y el icono */
+  top: 50%;
+  transform: translateY(-50%);
+}
+.ajustes-row--danger {
+  justify-content: center;
+  color: var(--color-error);
+}
+
+/* Aviso "Teléfono guardado": bajo las filas, sin taparlas (el genérico va a 128px). */
+[data-screen="ajustes"] .share-toast {
+  top: 29rem;
+}

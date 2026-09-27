@@ -1,0 +1,710 @@
+/*
+  Nido · v3 — Componentes
+  Fuente de verdad: componente maestro "Button" (Assets, 11 variantes) verificado con
+  get_design_context contra su uso real en las 8 pantallas — no contra instancias sueltas.
+*/
+
+/* ================================================================ */
+/* Button — Type 1 / 2 / 3 / Create × Big × Horizontal/Vertical       */
+/* ================================================================ */
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem; /* 10px */
+  border-radius: var(--radius-button-lg); /* 20px — estaba en --radius-button
+    (12px), el token de las cajas pequeñas de input, no el de los botones */
+  box-shadow: var(--shadow-button);
+  font-weight: var(--font-weight-bold);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.btn__icon {
+  width: 1.75rem; /* 28px */
+  height: 1.75rem;
+  flex-shrink: 0;
+}
+
+.btn__icon img {
+  width: 100%;
+  height: 100%;
+}
+
+/* Color/type */
+/* No tenía ningún uso real en el HTML (comprobado con grep) y encima la
+   definición no coincidía con nada del sistema de diseño: el "Type=1" real
+   del componente maestro "Button" (Assets, node 315:4751 — fila 2 de la
+   captura) es blue-lighter + borde + shadow-button-light, exactamente
+   `.btn--soft` de aquí abajo. Esto tenía blue-dark sólido, que no es
+   ninguno de los 3 tipos reales — quedaba como una trampa si algún día se
+   usara. Corregido para que coincida con Type=1 de verdad; no se ha hecho
+   la migración de renombrar los usos de `.btn--soft` a `.btn--type1` en
+   todo el proyecto (sería un cambio grande sin beneficio visual, mismo
+   criterio de no arriesgar regresión que ya se sigue con `.btn--soft`). */
+.btn--type1 {
+  background: var(--color-primary-blue-lighter);
+  border: 1px solid var(--color-primary-blue-light);
+  color: var(--color-primary-blue-dark);
+  box-shadow: var(--shadow-button-light);
+}
+.btn--type2 {
+  background: var(--color-primary-blue);
+  color: var(--color-white);
+}
+.btn--type3 {
+  background: var(--color-primary-blue-light);
+  color: var(--color-primary-blue-dark);
+}
+.btn--create {
+  background: var(--color-primary-blue-light);
+  color: var(--color-primary-blue-dark);
+  border: 2px dashed var(--color-primary-blue);
+}
+/* Estilo "suave" del rediseño (fondo blue-lighter + borde + sombra propia) —
+   nace aquí (footer de 685:8075, botón "Añadir") como modificador
+   reutilizable, pero Home/Álbumes montaron el mismo estilo antes con CSS
+   propio de cada pantalla (.nav-row .btn--vertical, .albumes-search-btn) sin
+   pasar por esta clase — no se ha vuelto atrás a unificarlas por no arriesgar
+   una regresión en pantallas ya verificadas. Usar esta clase de aquí en
+   adelante en vez de repetir las propiedades a mano otra vez. */
+.btn--soft {
+  background: var(--color-primary-blue-lighter);
+  border: 1px solid var(--color-primary-blue-light);
+  color: var(--color-primary-blue-dark);
+  box-shadow: var(--shadow-button-light);
+}
+/* Los botones suaves llevan menos padding vertical que los sólidos aun en
+   --lg: 12px, no 20px — confirmado en cada instancia con Figma propio esta
+   sesión (Compartir, Añadir, "Quiero saber más" del modal Ayúdanos).
+   .btn--horizontal.btn--lg da 20px pensando en los botones sólidos; esto
+   lo corrige solo para la variante suave. */
+.btn--soft.btn--horizontal.btn--lg {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+/* Distribution */
+.btn--horizontal {
+  flex-direction: row;
+  padding: 1rem 1.25rem; /* 16px 20px */
+  font-size: var(--font-size-label-medium);
+}
+.btn--horizontal.btn--lg {
+  padding: 1.25rem 2rem; /* 20px 32px */
+  font-size: var(--font-size-label-large);
+}
+.btn--horizontal.btn--icon-trailing {
+  flex-direction: row;
+  padding-left: 2.5rem;
+  padding-right: 2rem;
+}
+.btn--horizontal.btn--icon-wide {
+  /* Icono a la izquierda pero con más aire a la derecha — así está en
+     Figma para Volver/Compartir de la pantalla de detalle (pl-32 pr-40). */
+  padding-left: 2rem;
+  padding-right: 2.5rem;
+}
+.btn--vertical {
+  flex-direction: column;
+  padding: 1rem 1.25rem;
+  font-size: var(--font-size-label-medium);
+  width: 6.6875rem; /* 107px */
+}
+
+.btn--full {
+  width: 100%;
+}
+
+/* Wrapper for the "Crear" button: light pill containing a dashed Type=Create button */
+.btn-wrap--create {
+  background: var(--color-primary-blue-light);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-button);
+  padding: 0.75rem; /* 12px */
+  display: flex;
+}
+.btn-wrap--create .btn {
+  box-shadow: none;
+  width: 100%;
+}
+
+/* ================================================================ */
+/* Nav row — Álbumes / Personas / Yo (Home)                           */
+/* ================================================================ */
+
+.nav-row {
+  position: absolute;
+  left: var(--space-page-margin);
+  top: 8.4375rem; /* 135px — rediseño (antes 139px) */
+  display: flex;
+  gap: 1rem;
+  z-index: 10;
+}
+
+/* Rediseño: fondo suave + borde en vez del azul sólido de btn--type2.
+   Estilo propio de esta fila (no un btn--typeN nuevo) porque solo se ha
+   verificado para estos 3 botones — si el resto de la app adopta el mismo
+   estilo "suave" más adelante, esto se puede promover a un tipo con nombre. */
+.nav-row .btn--vertical {
+  background: var(--color-primary-blue-lighter);
+  border: 1px solid var(--color-primary-blue-light);
+  box-shadow: var(--shadow-button-light);
+  color: var(--color-primary-blue-dark);
+  font-size: 1.125rem; /* 18px, antes heredaba font-size-label-medium */
+  padding: 0.75rem 1.25rem; /* 12px 20px */
+  flex: 1 0 0;
+  min-width: 0;
+}
+
+/* ================================================================ */
+/* Tarjetas de foto — grid y lista                                    */
+/* ================================================================ */
+
+.photo-card {
+  position: relative;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  background: var(--color-gray-3);
+  cursor: pointer;
+}
+
+.photo-card img,
+.photo-card video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Variante con borde en vez de sombra — "Mis documentos" rediseño
+   (687:8372): "Documentos identificativos" y el primer "Horarios" pasan a
+   esto, pero "Otros documentos" y el segundo "Horarios" (duplicado a
+   propósito, ver README) se quedan con el `.photo-card` de sombra de
+   siempre — así está en Figma, un rediseño a medias, no una
+   inconsistencia al copiarlo. */
+.photo-card--bordered {
+  border: 1px solid var(--color-primary-blue-light);
+  border-radius: 1.25rem; /* 20px */
+  box-shadow: none;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-stack-gap);
+}
+
+/* ================================================================ */
+/* Carrusel horizontal de "Mis recuerdos" (594:7786, rediseño Home)   */
+/* Antes era .stack vertical (foto a foto, ancho completo) — el       */
+/* rediseño lo convierte en tarjetas de 300px en fila, con scroll     */
+/* lateral y un botón flotante para avanzar.                         */
+/* ================================================================ */
+
+.carousel {
+  display: flex;
+  gap: 1.125rem; /* 18px */
+  /* .screen-content tiene padding-left/right: 20px (el margen de página) —
+     sin compensarlo aquí, el asomo (peek) de la tarjeta anterior/siguiente
+     se recortaba justo en ese borde interior, dejando una franja blanca
+     antes del borde real de la pantalla. El margen negativo a los dos
+     lados cancela ese padding solo para esta fila, así el ancho real de
+     .carousel pasa a ser la pantalla entera (393px). */
+  margin-left: -1.25rem; /* -20px */
+  margin-right: -1.25rem; /* -20px */
+  /* Con .carousel ya a los 393px de la pantalla entera, este padding dejar
+     hueco a cada lado — (393-300)/2 = 46.5px — para que la tarjeta activa
+     pueda quedar centrada de verdad (con scroll-snap-align:center más
+     abajo) y asome el trozo correspondiente de la tarjeta vecina a cada
+     lado, no solo a la derecha. */
+  padding-left: 2.90625rem; /* 46.5px */
+  padding-right: 2.90625rem; /* 46.5px */
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  /* Igual que .detail-media: deja que un dedo deslice horizontal sin que
+     el navegador dude qué gesto es (por defecto, "auto" a veces titubea
+     si hay otros gestos táctiles en la misma pantalla). */
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch; /* scroll con inercia en iOS Safari */
+}
+.carousel::-webkit-scrollbar {
+  display: none;
+}
+.carousel .photo-card--tall {
+  flex: 0 0 18.75rem; /* 300px, no se encoge */
+  aspect-ratio: 300 / 408;
+  /* "start" alineaba la tarjeta activa contra el borde del contenedor
+     (por eso solo asomaba la siguiente, nunca la anterior) — "center"
+     hace que la tarjeta activa quede centrada de verdad, con el padding
+     de arriba dejando asomar tarjeta vecina a los dos lados. */
+  scroll-snap-align: center;
+}
+/* Figma (594:7786) no lleva sombra en estas tarjetas — a diferencia del resto
+   de usos de .photo-card (álbumes, fotos de personas), que sí la llevan. */
+.carousel .photo-card {
+  box-shadow: none;
+}
+
+.photo-card__gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(164deg, rgba(16, 28, 43, 0.26) 16%, rgba(255, 255, 255, 0) 92%);
+  pointer-events: none;
+}
+.photo-card__caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.125rem; /* 2px */
+  padding: 1rem 1rem 0.75rem; /* 16px 16px 12px */
+  color: var(--color-white);
+  font-size: 1.25rem; /* 20px */
+  font-weight: var(--font-weight-bold);
+}
+.photo-card__caption img {
+  width: 1.5rem; /* 24px */
+  height: 1.5rem;
+}
+
+.carousel-next,
+.carousel-prev {
+  position: absolute;
+  top: 45.5rem; /* 728px */
+  width: 4.5rem; /* 72px */
+  height: 4.5rem;
+  border-radius: 50%;
+  background: var(--color-primary-blue-lighter);
+  border: 1px solid var(--color-primary-blue-light);
+  /* Sombra propia de este botón (668:9171) — más gris/neutra que
+     --shadow-button-light, no es el mismo valor aunque se parezcan.
+     Igual que .albumes-more, cada botón flotante circular lleva su propia
+     sombra en Figma, no una compartida. */
+  box-shadow: 2px 4px 16px 0px rgba(221, 221, 225, 0.3), 2px 4px 4px 0px #e9e9ee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.carousel-next img,
+.carousel-prev img {
+  width: 1.75rem; /* 28px */
+  height: 1.75rem;
+}
+.carousel-next {
+  left: 18.8125rem; /* 301px */
+}
+.carousel-prev {
+  left: var(--space-page-margin); /* 20px, igual que Figma (594:7813) */
+}
+.carousel-prev[hidden] {
+  display: none;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-grid-gap);
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-grid-gap);
+}
+
+.photo-card--tall {
+  aspect-ratio: 353 / 240;
+}
+.photo-card--square-2col {
+  aspect-ratio: 1 / 1;
+}
+.photo-card--square-3col {
+  aspect-ratio: 107 / 120;
+}
+
+/* ================================================================ */
+/* Tarjeta de álbum (lista horizontal)                                */
+/* ================================================================ */
+
+.album-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem;
+  border-radius: var(--radius-card);
+  background: var(--bg-card-album);
+  width: 100%;
+  text-align: left;
+}
+
+.album-card__thumb {
+  width: 6.25rem; /* 100px */
+  height: 6.1875rem; /* 99px */
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.album-card__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.album-card__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: var(--color-black);
+}
+.album-card__title {
+  font-size: var(--font-size-label-small);
+  font-weight: var(--font-weight-bold);
+}
+.album-card__meta {
+  font-size: var(--font-size-label-small);
+  font-weight: var(--font-weight-regular);
+}
+
+/* ================================================================ */
+/* Secciones genéricas de pantalla                                    */
+/* ================================================================ */
+
+.screen-content {
+  position: absolute;
+  /* left:0 + width:100% + padding lateral (en vez de left/width recortados
+     al margen de página) — overflow-y:auto obliga a Chrome a tratar
+     overflow-x como recorte también, y con el contenido tocando justo el
+     borde de esta caja, la sombra de cualquier tarjeta/botón de la primera
+     o última columna (hasta 16px de blur en "Generar") se cortaba en seco
+     contra ese borde, en vez de difuminarse. El padding le da margen a la
+     sombra para desvanecerse antes de llegar al límite real de recorte. */
+  left: 0;
+  /* Rehecho de cero con los nodos reales de Figma confirmados (Footer
+     738:1768, Header 619:1806) en vez de ir parcheando el valor de antes.
+     top:0/bottom:0 en vez de recortar el contenido antes de las franjas
+     de .top-fade/.bottom-fade — son ESAS capas (con su degradado tope al
+     75% + blur real) las que se encargan de apagar el contenido que
+     pase por debajo, no un límite de scroll a medias. padding-top
+     compensa para que el título siga exactamente en su sitio (255px de
+     siempre); sin el padding, top:0 lo subiría de golpe. */
+  top: 0;
+  padding-top: 15.9375rem; /* 255px */
+  width: 100%;
+  padding-left: var(--space-page-margin);
+  padding-right: var(--space-page-margin);
+  bottom: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.screen-content::-webkit-scrollbar {
+  display: none;
+}
+
+/* En las pantallas con footer ("Volver" + .bottom-fade), .screen-content
+   llegaba hasta bottom:0 sin reservar sitio para el botón — al hacer
+   scroll hasta el final de verdad, la última fila quedaba tapada detrás
+   del propio botón "Volver" en vez de poder subir por encima de él. Este
+   padding-bottom reserva el mismo alto que .bottom-fade (140px = 32px de
+   aire + 68px del botón + 40px de margen inferior), así que el final real
+   del scroll deja la última fila justo por encima del footer, no debajo. */
+[data-screen="albumes"] .screen-content,
+[data-screen="album-detalle"] .screen-content,
+[data-screen="album-seleccionar"] .screen-content,
+[data-screen="yo"] .screen-content,
+[data-screen="personas"] .screen-content,
+[data-screen="persona-fotos"] .screen-content,
+[data-screen="persona-imagenes"] .screen-content,
+[data-screen="persona-videos"] .screen-content,
+[data-screen="mis-documentos"] .screen-content {
+  padding-bottom: 8.75rem; /* 140px */
+}
+
+.bottom-action {
+  position: absolute;
+  left: var(--space-page-margin);
+  bottom: 2.375rem; /* bajado un pelín a petición del usuario (antes 2.875rem) */
+  width: calc(100% - 2 * var(--space-page-margin));
+  z-index: 10;
+}
+/* Footer maestro de Figma (node 668:9389, "Volver" de Álbumes/Yo/Mis
+   documentos/dentro de un álbum): el texto usa el mismo tono que el icono
+   (icon-arrow-left-lighter.svg ya va en #F4F5FC), no blanco puro — .btn--type2
+   traía var(--color-white) para el resto de sus usos (Entrar, estilos de
+   Crear...), sin verificar contra este nodo en concreto, así que se
+   sobrescribe aquí en vez de tocar la regla global. */
+.bottom-action.btn--type2 {
+  color: var(--color-primary-blue-lighter);
+}
+
+.screen-content--flush {
+  /* top ya es 0 desde la regla base — solo cambia el padding-top (139px,
+     sin fila de acciones superior). */
+  padding-top: 8.6875rem; /* 139px */
+}
+
+.btn--grow {
+  flex: 1 0 0;
+  min-width: 0;
+}
+.btn--fixed-107 {
+  width: 6.6875rem;
+  flex-shrink: 0;
+}
+
+/* Botón "···" (dots-vertical) — pantalla de detalle */
+.btn--dots {
+  width: 3.8125rem; /* 61px */
+  height: 5.75rem; /* 92px */
+  flex-shrink: 0;
+}
+.btn--dots .btn__icon {
+  width: 2.25rem; /* 36px */
+  height: 2.25rem;
+}
+
+/* Imagen/vídeo a pantalla completa — pantalla de detalle.
+   Galería deslizable: una imagen por cada foto de la pantalla de origen,
+   con scroll-snap para que se quede encajada en cada una (js/app.js la
+   rellena y la arranca en la foto que se tocó). */
+.detail-media {
+  position: absolute;
+  left: 0;
+  top: 17rem; /* 272px */
+  width: 100%;
+  height: 24.375rem; /* 390px */
+  box-shadow: var(--shadow-card);
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.detail-media::-webkit-scrollbar {
+  display: none;
+}
+.detail-media__item {
+  position: relative; /* ancla los .persona-hotspot (persona.css) a esta foto, no a .detail-media entero */
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+.detail-media__item img,
+.detail-media__item video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform-origin: center center;
+  transition: transform 0.25s ease;
+}
+
+/* pan-x deja que un dedo deslice entre fotos; el pinch (2 dedos) lo
+   gestiona js/app.js aparte, sin que el navegador interfiera. */
+.detail-media {
+  touch-action: pan-x;
+}
+
+.action-row {
+  position: absolute;
+  left: var(--space-page-margin);
+  top: 8.6875rem; /* 139px */
+  width: calc(100% - 2 * var(--space-page-margin));
+  display: flex;
+  gap: 1rem;
+  z-index: 10;
+}
+/* Rediseño de Detalle foto (677:2380) pide 135px, no los 139px de arriba —
+   mismo desfase de 4px que ya vimos en el nav-row de Home. Escrito aparte
+   en vez de tocar .action-row porque esta clase la comparte otra pantalla
+   (Yo) sin revisar todavía contra el rediseño. */
+.detalle-actions {
+  top: 8.4375rem; /* 135px */
+}
+
+.bottom-action-row {
+  position: absolute;
+  left: var(--space-page-margin);
+  bottom: 2.375rem; /* bajado un pelín a petición del usuario (antes 2.875rem) */
+  width: calc(100% - 2 * var(--space-page-margin));
+  display: flex;
+  gap: 1rem;
+  z-index: 10;
+}
+
+/* Footer — CSS real copiado tal cual del inspector de Figma (node
+   738:1768, dev mode), no una interpretación de un panel de fill a ojo
+   (ese intento anterior tenía la dirección invertida, ver histórico en
+   SESSION-NOTES). `linear-gradient(0deg, ...)` en CSS real equivale a
+   `to top`: 74.75% (bastante abajo, junto al botón) = 75% de opacidad,
+   subiendo hacia la foto hasta 97.47% donde ya es transparente del todo —
+   nunca llega a blanco 100% sólido en ningún punto. Con blur(7px) de
+   verdad esta vez (se había quitado en el intento anterior). */
+.bottom-fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 8.75rem; /* 140px = 32px + 68px (botón) + 40px, el padding real del Footer */
+  background: linear-gradient(
+    to top,
+    rgba(255, 255, 255, 0.75) 74.75%,
+    rgba(255, 255, 255, 0.38) 88.29%,
+    rgba(255, 255, 255, 0) 97.47%
+  );
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  /* El degradado de arriba ya lleva el color a 0 hacia el borde superior,
+     pero backdrop-filter no sigue esa opacidad — el blur en sí se corta en
+     seco justo en el límite rectangular de la caja (un "acantilado" de
+     blur), aunque el color ya esté transparente ahí. La máscara aplica el
+     mismo desvanecido a la capa entera (color + blur juntos), para que el
+     propio efecto de desenfoque se apague gradualmente en vez de existir/
+     no existir de golpe en ese borde. */
+  mask-image: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 1) 74.75%,
+    rgba(0, 0, 0, 0.5) 88.29%,
+    rgba(0, 0, 0, 0) 97.47%
+  );
+  -webkit-mask-image: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 1) 74.75%,
+    rgba(0, 0, 0, 0.5) 88.29%,
+    rgba(0, 0, 0, 0) 97.47%
+  );
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Header (Figma 668:9121, "Header" tipo=Label): mismo recurso que
+   .bottom-fade pero al revés (arriba). El CSS real de Figma lleva
+   backdrop-blur:0px (confirmado varias veces contra el archivo), pero el
+   usuario pidió a propósito que lleve el mismo blur que el footer aunque
+   el dato literal diga 0 — sin esto, la cuadrícula de fotos de
+   .screen-content se cortaba en seco justo debajo del título/avatar en
+   vez de desvanecerse (el título/avatar nunca tuvieron ningún fondo
+   detrás, solo flotaban sueltos sobre el contenido). Misma máscara que
+   .bottom-fade para que el blur se apague junto con el color, no de golpe
+   en el borde de la caja. */
+.top-fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  /* HALLAZGO IMPORTANTE, cambia el planteamiento de toda esta capa: el
+     usuario mandó el frame de Figma "02.1.1b_Álbum" (SIN "(scroll)", el
+     estado de reposo) — ahí la fila 0 sale totalmente nítida, sin blur ni
+     velo blanco. El frame "02.1.1b_Álbum (scroll)" (con blur fuerte) es
+     un estado APARTE, no el mismo componente visto de otra forma: el
+     header solo se difumina una vez que el usuario ha hecho scroll, igual
+     que la barra de navegación de iOS con "large title". No es una capa
+     siempre visible — toda la sesión anterior (altura, curva, blur) se
+     ajustó asumiendo que estaba siempre encendida, y por eso cada ajuste
+     de altura se veía "mal" en algún estado: en reposo no debería verse
+     NADA de esto. Arreglado con opacity 0→1 controlada por scroll (ver
+     js/app.js, mismo patrón/umbral de 4px que ya usa el botón flotante
+     "bajar/volver arriba" de esta misma pantalla, data-scroll-toggle). */
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  height: 14rem; /* 224px — vuelta a la altura anterior; con la capa oculta
+    en reposo, ya no hace falta que sus 312px eviten un corte a mitad de la
+    fila 0 en reposo (ese estado ya no se ve). Si al comprobar la capa YA
+    VISIBLE durante el scroll se ve algún corte, esta es la próxima cifra a
+    revisar — pero ahora sí con el contexto correcto (visible ↔ en scroll,
+    no visible ↔ en reposo). */
+  /* Las "rayas" que se veían sobre la cara difuminada eran bandas de Mach
+     (contorno perceptible entre paradas), no un fallo de posición — con
+     solo 6 paradas en el tramo de caída (70→100%, cada una a 6 puntos de
+     distancia), el ojo percibe el cambio de pendiente en cada parada como
+     un anillo, aunque matemáticamente el degradado sea continuo. Bajado a
+     paradas cada 2 puntos (16 en vez de 6) para que la curva se perciba
+     lisa de verdad. */
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.75) 0%,
+    rgba(255, 255, 255, 0.75) 70%,
+    rgba(255, 255, 255, 0.742) 72%,
+    rgba(255, 255, 255, 0.718) 74%,
+    rgba(255, 255, 255, 0.678) 76%,
+    rgba(255, 255, 255, 0.626) 78%,
+    rgba(255, 255, 255, 0.563) 80%,
+    rgba(255, 255, 255, 0.491) 82%,
+    rgba(255, 255, 255, 0.414) 84%,
+    rgba(255, 255, 255, 0.336) 86%,
+    rgba(255, 255, 255, 0.259) 88%,
+    rgba(255, 255, 255, 0.188) 90%,
+    rgba(255, 255, 255, 0.124) 92%,
+    rgba(255, 255, 255, 0.072) 94%,
+    rgba(255, 255, 255, 0.032) 96%,
+    rgba(255, 255, 255, 0.008) 98%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  /* blur(7px), no 40px — el mismo fallo que ya se corrigió en .bottom-fade:
+     ahí también se probó un blur más alto antes de comprobar que el dato
+     real de Figma era 7px, y subirlo se veía "demasiado fuerte" (mismo
+     defecto exacto que ha señalado el usuario aquí). El blur de 40/60px
+     salió de INTERPRETAR una captura del lienzo de Figma a ojo, no del
+     valor real del componente — el mismo error que ya está anotado en esta
+     sesión ("preferir el CSS literal de Figma sobre interpretar una
+     captura"). Con la máscara manteniendo el pico más tiempo (0-70%, igual
+     que el footer) ya hay suficiente presencia sin necesidad de inflar el
+     blur por encima del valor real. */
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) 70%,
+    rgba(0, 0, 0, 0.989) 72%,
+    rgba(0, 0, 0, 0.957) 74%,
+    rgba(0, 0, 0, 0.905) 76%,
+    rgba(0, 0, 0, 0.835) 78%,
+    rgba(0, 0, 0, 0.75) 80%,
+    rgba(0, 0, 0, 0.655) 82%,
+    rgba(0, 0, 0, 0.553) 84%,
+    rgba(0, 0, 0, 0.448) 86%,
+    rgba(0, 0, 0, 0.346) 88%,
+    rgba(0, 0, 0, 0.25) 90%,
+    rgba(0, 0, 0, 0.166) 92%,
+    rgba(0, 0, 0, 0.096) 94%,
+    rgba(0, 0, 0, 0.043) 96%,
+    rgba(0, 0, 0, 0.011) 98%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) 70%,
+    rgba(0, 0, 0, 0.989) 72%,
+    rgba(0, 0, 0, 0.957) 74%,
+    rgba(0, 0, 0, 0.905) 76%,
+    rgba(0, 0, 0, 0.835) 78%,
+    rgba(0, 0, 0, 0.75) 80%,
+    rgba(0, 0, 0, 0.655) 82%,
+    rgba(0, 0, 0, 0.553) 84%,
+    rgba(0, 0, 0, 0.448) 86%,
+    rgba(0, 0, 0, 0.346) 88%,
+    rgba(0, 0, 0, 0.25) 90%,
+    rgba(0, 0, 0, 0.166) 92%,
+    rgba(0, 0, 0, 0.096) 94%,
+    rgba(0, 0, 0, 0.043) 96%,
+    rgba(0, 0, 0, 0.011) 98%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  pointer-events: none;
+  z-index: 6;
+}
+/* Clase que añade js/app.js cuando .screen-content ha hecho scroll (mismo
+   umbral de 4px que el botón flotante "bajar/volver arriba"). En reposo
+   .top-fade se queda invisible (opacity:0) — ver nota de arriba. */
+.top-fade.is-visible {
+  opacity: 1;
+}

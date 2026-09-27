@@ -1,0 +1,8 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="check-circle">
+<g id="Icon">
+<path d="M22 40.3333C32.1252 40.3333 40.3333 32.1252 40.3333 22C40.3333 11.8748 32.1252 3.66667 22 3.66667C11.8748 3.66667 3.66667 11.8748 3.66667 22C3.66667 32.1252 11.8748 40.3333 22 40.3333Z" fill="#516DFF"/>
+<path d="M13.75 22L19.25 27.5L30.25 16.5M40.3333 22C40.3333 32.1252 32.1252 40.3333 22 40.3333C11.8748 40.3333 3.66667 32.1252 3.66667 22C3.66667 11.8748 11.8748 3.66667 22 3.66667C32.1252 3.66667 40.3333 11.8748 40.3333 22Z" stroke="#DDE2FB" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</g>
+</svg>

@@ -1,0 +1,244 @@
+[
+  {
+    "type": "client",
+    "name": "ver_contexto",
+    "description": "Te dice dónde está la persona ahora mismo: en qué pantalla, qué ficha de persona o qué foto tiene abierta, en qué álbum está, a quién conoce Nido por su nombre (con cuántas fotos), cuántas fichas hay sin nombre y qué álbumes hay (los suyos y los que pone Nido solo). Úsala cuando dudes de dónde está o de qué tiene delante, antes de guiarla paso a paso y antes de guardar un nombre con nombrar_persona si no estás segura de que la ficha sigue abierta. No cambia nada.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    },
+    "expects_response": true,
+    "response_timeout_secs": 10
+  },
+  {
+    "type": "client",
+    "name": "abrir_en_la_app",
+    "description": "Mueve la app a donde la persona quiere ir. Sirve para: el inicio, Álbumes, Personas, Yo, Mis documentos, Ajustes, «todas mis fotos» («Todas tus fotos»: todas las fotos que hay en Nido), un álbum por su nombre («el álbum Viaje»), «felicitación» (abre la pantalla para que la haga ella misma), «vuelve a la felicitación» (vuelve a enseñar la última que habéis hecho, sin repetirla), «mis felicitaciones» (Yo, donde se guardan), «mis documentos» o un papel de Mis documentos por su nombre o por lo que es («el horario del autobús», «mi tarjeta sanitaria»; se abre en grande para que lo leas con ver_foto) y «atrás» (pulsa el botón Volver de la pantalla). Para ver a una persona usa abrir_persona; para crear o cambiar álbumes usa gestionar_albumes (si le pides «crear un álbum» sin nombre, te dirá que preguntes el nombre); para que tú hagas la felicitación usa crear_felicitacion. Devuelve «Hecho: …» si lo ha abierto o «No he encontrado eso en la app.».",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "pedido": {
+          "type": "string",
+          "description": "Adónde quiere ir, en pocas palabras y en español, como lo diría la persona: «el inicio», «álbumes», «personas», «yo», «mis documentos», «ajustes», «todas mis fotos», «el álbum Navidad 2024», «felicitación», «vuelve a la felicitación», «mis felicitaciones», «el horario del autobús», «atrás»."
+        }
+      },
+      "required": [
+        "pedido"
+      ]
+    },
+    "expects_response": true,
+    "response_timeout_secs": 10
+  },
+  {
+    "type": "client",
+    "name": "gestionar_albumes",
+    "description": "Crea álbumes, les añade fotos, pasa fotos de un álbum a otro, quita fotos de un álbum o le cambia el nombre, para que la persona no tenga que hacerlo a mano. Úsala solo cuando la persona lo pida. Antes de quitar TODAS las fotos de un álbum, confírmalo con ella. «Quitar» no borra la foto del teléfono: sigue en «Todas tus fotos». Los álbumes que pone Nido solo (por año, Navidad o verano) no se pueden cambiar; sí se pueden copiar sus fotos a un álbum de la persona. Si la herramienta dice que el álbum de destino no existe, pregúntale si quiere crearlo y, si dice que sí, repite la llamada con crear_si_no_existe=true. Usa el nombre del álbum tal como es (el contexto te da la lista): un nombre parecido no vale y te devolverá la lista para que preguntes. Cuenta con tus palabras la frase que devuelve: si empieza por «Hecho:» se ha hecho; si no, dice qué falta o qué preguntar.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "accion": {
+          "type": "string",
+          "enum": [
+            "crear",
+            "anadir",
+            "mover",
+            "quitar",
+            "renombrar"
+          ],
+          "description": "Qué hacer: crear un álbum (con fotos o vacío), anadir fotos a uno que ya existe, mover fotos de un álbum a otro, quitar fotos de un álbum (no se borran) o renombrar un álbum."
+        },
+        "nombre": {
+          "type": "string",
+          "description": "Álbum afectado. En crear es el nombre del álbum nuevo; en anadir y renombrar, el álbum que ya existe; en mover, el álbum de DESTINO; en quitar, el álbum del que se quitan (si no se da, el que la persona tiene abierto). Obligatorio en crear, anadir, mover y renombrar."
+        },
+        "origen": {
+          "type": "string",
+          "description": "Solo en mover: álbum del que salen las fotos. Si no se da, el que la persona tiene abierto o del que viene la foto abierta. «Todas tus fotos» vale como origen (entonces se copian, no se quitan de allí)."
+        },
+        "criterio": {
+          "type": "string",
+          "description": "Qué fotos, en palabras: «esta foto» o «la foto abierta» (la que se ve ahora), el nombre de una persona («las de Clara»; con dos nombres, las fotos en que salen juntas), un año («2025»), «Navidad», «verano», «vídeos», «fotos» (solo imágenes), «todas» o «estas fotos» (todo lo del álbum o la persona que se está viendo). Se pueden combinar («las de Clara de 2025»). Obligatorio en anadir, mover y quitar; opcional en crear (sin criterio, el álbum se crea vacío). Si no se entiende qué fotos son, no se crea ni se cambia nada y te dice qué preguntar."
+        },
+        "nuevo_nombre": {
+          "type": "string",
+          "description": "Solo en renombrar (y ahí obligatorio): el nombre nuevo del álbum."
+        },
+        "crear_si_no_existe": {
+          "type": "boolean",
+          "description": "Solo en mover: true únicamente después de que la persona haya dicho que sí a crear el álbum de destino que no existía."
+        }
+      },
+      "required": [
+        "accion"
+      ]
+    },
+    "expects_response": true,
+    "response_timeout_secs": 10
+  },
+  {
+    "type": "client",
+    "name": "abrir_persona",
+    "description": "Abre las fotos de una persona. Cuando quiera VER o BUSCAR fotos de alguien («enséñame las fotos de Clara», «quiero ver a mi nieta», «todas las de Carlos»), usa todas=true: se abre la cuadrícula con TODAS sus fotos, que es lo que espera ver. No abras la primera foto en su lugar. Sin todas, abre su ficha (un resumen con una fila de fotos y otra de vídeos). Con sin_nombre=true abre la ficha sin nombre que tiene más fotos, para preguntarle quién es. Si no conoce a quien se nombra, te devuelve la lista de personas que Nido conoce: ofrécele dos o tres, no inventes.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "nombre": {
+          "type": "string",
+          "description": "Nombre de la persona tal como lo conoce Nido o como lo dice ella («Clara», «Clara nieta», «Carlos»). Obligatorio salvo con sin_nombre=true."
+        },
+        "sin_nombre": {
+          "type": "boolean",
+          "description": "true para abrir una ficha de alguien que Nido aún no sabe quién es (y luego preguntárselo). Si es true, no hace falta nombre."
+        },
+        "todas": {
+          "type": "boolean",
+          "description": "true cuando quiera ver sus fotos: abre la cuadrícula con todas las fotos de esa persona."
+        }
+      },
+      "required": []
+    },
+    "expects_response": true,
+    "response_timeout_secs": 10
+  },
+  {
+    "type": "client",
+    "name": "nombrar_persona",
+    "description": "Guarda al momento el nombre de la persona de la ficha abierta. Úsala solo con la ficha de esa persona abierta (el contexto dice «Tiene abierta la ficha…» o «Tiene abierta una ficha SIN NOMBRE»). En cuanto te diga el nombre (deletreado antes si era dudoso), llámala: se guarda y en pantalla sale «Guardado: … · Deshacer». Después díselo y compruébalo: «Ya lo he guardado como José. ¿Está bien?». Si te corrige, vuelve a llamarla con el nombre bueno: se cambia solo. Si no quería guardarlo, llama con deshacer=true. Si el nombre ya lo tiene otra ficha, o si uno de los dos es solo un nombre de pila que coincide con el otro («Ana» cuando ya existe «Ana nieta»), no lo guarda y te pide que preguntes cómo distinguirlas. Si la ficha ya tenía otro nombre de antes, no lo cambia salvo con sobrescribir=true, que solo se usa si ella lo confirma.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "nombre": {
+          "type": "string",
+          "description": "El nombre que ha dicho, con el parentesco detrás si lo dijo («Maite cuñada», «Clara nieta»). Si lo ha deletreado, puedes pasar las letras tal cual («J-O-S-É»): se juntan solas. Sin comas ni símbolos; máximo 40 letras. No hace falta con deshacer=true."
+        },
+        "sobrescribir": {
+          "type": "boolean",
+          "description": "true solo si la ficha ya tenía otro nombre y la persona ha confirmado que quiere cambiarlo."
+        },
+        "deshacer": {
+          "type": "boolean",
+          "description": "true solo si no quería guardar el nombre que acabas de poner y no te da otro: lo quita y la ficha vuelve a como estaba."
+        }
+      },
+      "required": []
+    },
+    "expects_response": true,
+    "response_timeout_secs": 10
+  },
+  {
+    "type": "client",
+    "name": "abrir_foto",
+    "description": "Abre fotos en grande y pasa de una a otra. En una pantalla con fotos (cuadrícula, álbum, ficha), abre en grande la número N (posicion; la primera es la 1). Con una foto ya abierta en grande, pasa a la siguiente o a la anterior (direccion) o salta a la número N (posicion). Úsala cuando diga «abre la primera», «la tercera», «pasa a la siguiente», «la de antes». Para volver a la cuadrícula usa abrir_en_la_app «atrás».",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "posicion": {
+          "type": "integer",
+          "description": "Número de la foto, empezando en 1 (en la pantalla que tiene delante, o dentro de las fotos en grande)."
+        },
+        "direccion": {
+          "type": "string",
+          "enum": [
+            "siguiente",
+            "anterior"
+          ],
+          "description": "Con una foto abierta en grande: siguiente o anterior."
+        }
+      },
+      "required": []
+    },
+    "expects_response": true,
+    "response_timeout_secs": 10
+  },
+  {
+    "type": "client",
+    "name": "ver_foto",
+    "description": "Mira la foto (o el vídeo) que la persona tiene abierta en grande y te cuenta lo que se ve, junto con los nombres de quienes reconoce Nido en el propio móvil. Solo funciona con una foto abierta: si no la hay, ábrela antes con abrir_foto. Úsala solo cuando te pida que la mires, cuando pregunte algo que solo se sabe viéndola (qué hay, qué pone, dónde es) o para leerle un papel de Mis documentos (pasa su pregunta: «¿a qué hora pasa el autobús a la playa?»). Para empezar a charlar de una foto no la uses: la foto saldría del móvil; empieza con lo que te cuenta la app (quién sale y la fecha). Antes, di «Déjame que la mire» (tarda unos segundos). No leas la descripción: coméntala y haz una pregunta. Nunca digas quién es alguien por su cara: los nombres solo los da la app.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "pregunta": {
+          "type": "string",
+          "description": "Opcional: lo que la persona quiere saber de la foto, con sus palabras («¿qué pone en el cartel?», «¿es de noche?»). Si no pregunta nada concreto, déjalo vacío."
+        }
+      },
+      "required": []
+    },
+    "expects_response": true,
+    "response_timeout_secs": 30
+  },
+  {
+    "type": "client",
+    "name": "senalar",
+    "description": "Hace brillar en la pantalla un botón para que la persona sepa cuál pulsar (brilla unos segundos o hasta que toque algo). Úsala cuando prefiera hacerlo ella misma y la estás guiando paso a paso, o cuando algo solo lo puede pulsar ella, como «Compartir» o «Elegir fotos». Si no encuentra el botón, te dice cuáles hay en la pantalla.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "texto": {
+          "type": "string",
+          "description": "Lo que pone el botón, tal cual o su principio (al menos 3 letras): «Añadir», «Volver», «Compartir», «Felicitación», «Eliminar», «Continuar»… «ayuda» marca el pollito de arriba."
+        }
+      },
+      "required": [
+        "texto"
+      ]
+    },
+    "expects_response": true,
+    "response_timeout_secs": 10
+  },
+  {
+    "type": "client",
+    "name": "crear_felicitacion",
+    "description": "Crea una felicitación de principio a fin sin que la persona toque nada: elige la foto, la pinta y la deja en pantalla con su título. Úsala cuando pida una felicitación. Hay cuatro tipos listos (cumpleanos, aniversario, navidad, anonuevo) y cualquier otra ocasión que quiera (santo, jubilación, bautizo, graduación, ánimo, gracias…) con estilo=otra: entonces tú le propones el título que irá encima y ella lo confirma, y pasas en decoracion cómo decorarla, solo con cosas que se ven. Si pide algo concreto para el título, como una edad o un nombre («un 37», «para Carmen»), pásalo en titulo («¡Feliz 37 cumpleaños!»), también en los cuatro tipos. Si no sabes la ocasión, pregúntala; si no sabes con qué foto o de quién, pregúntalo también. De qué foto sale: si dices una persona, una buena foto suya; si no, la foto que tiene abierta en grande; si no hay ninguna, la de la ficha de persona que tenga abierta. Si nombra a alguien pero quiere usar la foto que está viendo, pasa usar_foto_abierta=true. Tarda unos 10 segundos: avísale de que espere. Al terminar, el botón «Compartir» brilla y tiene que pulsarlo ella (tú no puedes enviarla). Si tarda más de la cuenta te dirá «se está creando» y la app te avisará cuando esté. Si luego se sale sin querer, vuelve a enseñársela con abrir_en_la_app «vuelve a la felicitación», no la hagas otra vez.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "estilo": {
+          "type": "string",
+          "enum": [
+            "cumpleanos",
+            "aniversario",
+            "navidad",
+            "anonuevo",
+            "otra"
+          ],
+          "description": "Tipo de felicitación. cumpleanos (también «cumple»), aniversario (también boda, bodas de oro), navidad (también Nochebuena, Reyes), anonuevo (también Nochevieja, fin de año) u otra (cualquier otra ocasión: entonces titulo y decoracion son obligatorios)."
+        },
+        "titulo": {
+          "type": "string",
+          "description": "El texto que irá encima de la imagen, corto (máximo 40 letras) y confirmado con ella. Obligatorio con estilo=otra. En los otros cuatro tipos es opcional: úsalo para personalizarlo con lo que pida, como una edad o un nombre («¡Feliz 37 cumpleaños!», «¡Feliz cumpleaños, Carmen!»); sin él, sale el título de siempre. Números y nombres van SIEMPRE aquí, nunca en decoracion."
+        },
+        "decoracion": {
+          "type": "string",
+          "description": "Cómo decorarla, solo con cosas que se ven y sin palabras ni números (la IA los escribe mal). Obligatoria con estilo=otra («flores de primavera, mariposas y colores suaves»). En los otros tipos, opcional: un detalle extra que pida («globos dorados»)."
+        },
+        "persona": {
+          "type": "string",
+          "description": "Opcional: nombre de la persona cuya foto usar, tal como lo conoce Nido («Clara», «Carlos hijo»); se usa una buena foto suya. «esta» = la de la ficha abierta."
+        },
+        "usar_foto_abierta": {
+          "type": "boolean",
+          "description": "Opcional: true para usar exactamente la foto que tiene abierta en grande, aunque hayas dicho una persona."
+        }
+      },
+      "required": [
+        "estilo"
+      ]
+    },
+    "expects_response": true,
+    "response_timeout_secs": 30
+  },
+  {
+    "type": "client",
+    "name": "subir_fotos",
+    "description": "Ayuda a subir fotos del móvil a Nido. Lleva a «Todas tus fotos», pone un botón «Elegir fotos» que brilla y te devuelve los pasos para guiar a la persona de uno en uno. Tú no puedes abrir sus fotos: el móvil exige que la persona pulse el botón. Cuando termine de elegir (o si cierra sin elegir), la app te avisará sola.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    },
+    "expects_response": true,
+    "response_timeout_secs": 10
+  }
+]
