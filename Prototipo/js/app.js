@@ -1006,17 +1006,32 @@
   // Biblioteca de ejemplo (assets/biblioteca.json): fotos y vídeos reales con su fecha, para que la app enseñe algo de verdad
   // sin pedir nada. Entra por el mismo camino que la galería del teléfono (fechas, álbumes automáticos, reconocimiento).
   // Se carga al llegar a Home y solo si la persona no ha elegido las suyas.
+  // Descarga de la biblioteca: empieza al abrir la app, no al llegar a Home (27-sep). Con datos móviles tardaba unos segundos y Home
+  // enseñaba mientras tanto las 3 fotos de ejemplo del HTML; si la persona se iba enseguida (p. ej. a hacer una felicitación), al
+  // volver los recuerdos «habían cambiado». Solo se DESCARGA: se enseña al llegar a Home y solo si no ha elegido sus propias fotos.
+  let bibliotecaDescarga = null;
+  function descargarBiblioteca() {
+    if (!bibliotecaDescarga) {
+      bibliotecaDescarga = (async () => {
+        const lista = await (await fetch('assets/biblioteca.json')).json();
+        return Promise.all(lista.map(async (m) => {
+          const b = await (await fetch(m.src)).blob();
+          const f = new File([b], m.src.split('/').pop(), { type: b.type || (m.tipo === 'video' ? 'video/mp4' : 'image/jpeg'), lastModified: new Date(m.fecha).getTime() });
+          if (m.poster) f.nidoPoster = m.poster;
+          return f;
+        }));
+      })();
+      bibliotecaDescarga.catch(() => { bibliotecaDescarga = null; }); // sin conexión: se reintenta al llegar a Home
+    }
+    return bibliotecaDescarga;
+  }
+  setTimeout(() => { if (!galeriaPropia) descargarBiblioteca().catch(() => {}); }, 800); // después de pintar la bienvenida
+
   async function cargarBiblioteca() {
     if (bibliotecaCargada || galeriaPropia) return;
     bibliotecaCargada = true;
     try {
-      const lista = await (await fetch('assets/biblioteca.json')).json();
-      const files = await Promise.all(lista.map(async (m) => {
-        const b = await (await fetch(m.src)).blob();
-        const f = new File([b], m.src.split('/').pop(), { type: b.type || (m.tipo === 'video' ? 'video/mp4' : 'image/jpeg'), lastModified: new Date(m.fecha).getTime() });
-        if (m.poster) f.nidoPoster = m.poster;
-        return f;
-      }));
+      const files = await descargarBiblioteca();
       // Personas de la biblioteca (nombre + huellas de cara): así "Clara nieta", "Carlos hijo"... salen con nombre desde el principio.
       try { if (window.Reconocimiento) window.Reconocimiento.sembrar(await (await fetch('assets/biblioteca-personas.json')).json()); } catch (e) { /* sin nombres: salen "Sin nombre" */ }
       // Y sus caras ya calculadas: así el móvil no pone en marcha el reconocimiento solo para la biblioteca (ver Reconocimiento.precargar).
