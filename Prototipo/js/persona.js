@@ -616,7 +616,8 @@ window.PersonaSelect = (function () {
   function libraryImages() {
     const seen = new Set();
     return Array.from(document.querySelectorAll(
-      '[data-screen="album-detalle"] .album-grid .photo-card img, [data-screen="home"] .carousel .photo-card img, [data-screen="personas"] .persona-group__photo img'
+      // «> img»: la foto de cada tarjeta, no la flechita de su rótulo (27-sep: el icono se analizaba como una foto más)
+      '[data-screen="album-detalle"] .album-grid .photo-card > img, [data-screen="home"] .carousel .photo-card > img, [data-screen="personas"] .persona-group__photo > img'
     )).filter((img) => {
       const k = img.currentSrc || img.src;
       if (!k || seen.has(k)) return false;
@@ -668,9 +669,25 @@ window.PersonaSelect = (function () {
     if (!vacio && p) p.remove();
   }
 
+  // Recuerdos de Home con quién sale (27-sep): «Con Clara», «Con Clara y Ana». Si no sale nadie con nombre, se queda su fecha (app.js).
+  // Solo el primer nombre: «Clara nieta» → «Clara».
+  function titularRecuerdos(personas) {
+    document.querySelectorAll('[data-screen="home"] .carousel .photo-card').forEach((card) => {
+      const img = card.querySelector(':scope > img');
+      const span = card.querySelector('.photo-card__caption span');
+      if (!img || !span) return;
+      const src = img.currentSrc || img.src;
+      const nombres = [...new Set(personas.filter((o) => o.person.name && o.imgs.some((i) => (i.currentSrc || i.src) === src))
+        .map((o) => o.person.name.trim().split(/\s+/)[0]))];
+      if (!nombres.length) return;
+      span.textContent = 'Con ' + (nombres.length === 1 ? nombres[0] : nombres.length === 2 ? nombres[0] + ' y ' + nombres[1] : nombres[0] + ', ' + nombres[1] + ' y más');
+    });
+  }
+
   let organizando = false;
+  let organizarOtraVez = false; // la galería ha cambiado mientras se buscaba (p. ej. un papel pasado a Mis documentos): se repite al acabar
   async function organizarBiblioteca() {
-    if (organizando) return;
+    if (organizando) { organizarOtraVez = true; return; }
     const imgs = libraryImages();
     if (!imgs.length) return;
     organizando = true;
@@ -686,9 +703,13 @@ window.PersonaSelect = (function () {
       });
       pintarGrupos(res.grupos);
       pintarVacio(res.personas.length === 0);
+      titularRecuerdos(res.personas);
     } catch (err) {
       console.error('organizar biblioteca falló:', err);
-    } finally { organizando = false; }
+    } finally {
+      organizando = false;
+      if (organizarOtraVez) { organizarOtraVez = false; organizarBiblioteca(); }
+    }
   }
 
   window.addEventListener('nido:gallery', () => { limpiarEjemplosPersonas(); organizarBiblioteca(); });
@@ -811,7 +832,9 @@ window.PersonaSelect = (function () {
     c.width = video.videoWidth || 720;
     c.height = video.videoHeight || 1280;
     c.getContext('2d').drawImage(video, 0, 0, c.width, c.height);
-    return c.toDataURL('image/jpeg', 0.9).split(',')[1];
+    const b64 = c.toDataURL('image/jpeg', 0.9).split(',')[1];
+    c.width = c.height = 0; // suelta la memoria del lienzo ya (Safari en iPhone tiene un tope para lienzos)
+    return b64;
   }
 
   async function imageElementToBase64(imgEl) {
@@ -828,6 +851,7 @@ window.PersonaSelect = (function () {
         c.height = Math.round(bmp.height * k);
         c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
         blob = await new Promise((r) => c.toBlob(r, 'image/jpeg', 0.9));
+        c.width = c.height = 0; if (bmp.close) bmp.close(); // suelta la memoria ya (iPhone)
       } catch (e) { /* si falla, se manda el original */ }
     }
     return new Promise((resolve, reject) => {
@@ -1059,7 +1083,7 @@ window.PersonaSelect = (function () {
       });
       ctx.restore();
     }
-    return new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('canvas vacío'))), 'image/png'));
+    return new Promise((resolve, reject) => canvas.toBlob((b) => { canvas.width = canvas.height = 0; b ? resolve(b) : reject(new Error('canvas vacío')); }, 'image/png'));
   }
 
   function toast(msg) { toastOn('felicitacion-generada', msg); }
@@ -1554,7 +1578,9 @@ window.PersonaSelect = (function () {
       c.height = Math.round(bmp.height * k2);
       c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
       url = c.toDataURL('image/jpeg', 0.82);
+      if (bmp.close) bmp.close();
     }
+    c.width = c.height = 0; // suelta la memoria del lienzo ya (iPhone)
     return url.split(',')[1];
   }
   // Quién sale, según el reconocimiento DEL DISPOSITIVO (de izquierda a derecha). El modelo de visión nunca identifica a nadie por la cara.

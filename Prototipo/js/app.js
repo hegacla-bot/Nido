@@ -634,7 +634,14 @@
       front.removeAttribute('data-nav');
       front.dataset.albumOpen = album.id;
       front.querySelector('.album-stack__caption').firstChild.textContent = '\n                ' + name + '\n                ';
-      if (album.auto && base.matches(':not([data-album-id])')) base.after(stack); else list.prepend(stack);
+      // «Todas tus fotos» siempre arriba (27-sep: bajaba un puesto con cada álbum nuevo). Debajo, los que crea la persona (el más
+      // nuevo primero) y después los que hace Nido solo (años, Navidad, verano).
+      stack.toggleAttribute('data-album-auto', album.auto);
+      const todas = list.querySelector('.album-stack:not([data-album-id])');
+      const propios = list.querySelectorAll('.album-stack[data-album-id]:not([data-album-auto])');
+      if (!todas) list.prepend(stack);
+      else if (!album.auto) todas.after(stack);
+      else (propios.length ? propios[propios.length - 1] : todas).after(stack);
     });
     albumSync(album);
     return album;
@@ -822,6 +829,21 @@
     Object.keys(porAnio).forEach((y) => porAnio[y].length >= MIN && NidoAlbums.upsert('anio:' + y, String(y), ph(porAnio[y])));
   }
 
+  // Título de un recuerdo de Home a partir de su fecha: «Hoy», «Ayer», «Navidad de 2024», «Año Nuevo 2025» o «12 de marzo de 2025».
+  const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  function tituloRecuerdo(d) {
+    if (!(d instanceof Date) || isNaN(d)) return 'Un día especial';
+    const dia = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+    const hoy = dia(new Date());
+    if (dia(d) === hoy) return 'Hoy';
+    if (dia(d) === hoy - 864e5) return 'Ayer';
+    const m = d.getMonth() + 1, n = d.getDate(), y = d.getFullYear();
+    if (m === 12 && (n === 24 || n === 25)) return 'Navidad de ' + y;
+    if (m === 12 && n === 31) return 'Año Nuevo ' + (y + 1);
+    if (m === 1 && n === 1) return 'Año Nuevo ' + y;
+    return n + ' de ' + MESES[m - 1] + ' de ' + y;
+  }
+
   async function cargarGaleria(files) {
     files = files.filter((f) => /^(image|video)\//.test(f.type)).slice(0, MAX_GALLERY);
     if (!files.length) return;
@@ -830,9 +852,9 @@
     const orden = files.map((f, i) => ({ f, d: fechas[i] })).sort((x, y) => y.d - x.d);
     files = orden.map((o) => o.f);
 
-    // Home: el carrusel conserva sus títulos, cambia la foto de cada tarjeta.
+    // Home: cada recuerdo lleva por título su fecha de verdad (27-sep: antes se repetían «Personas especiales» y «Un día especial»).
     const homeCards = document.querySelectorAll('[data-screen="home"] .carousel .photo-card');
-    const captions = Array.from(homeCards).map((c) => c.querySelector('.photo-card__caption span').textContent);
+    const fechaDe = new Map();
     const carousel = document.querySelector('[data-screen="home"] [data-carousel]');
     const template = homeCards[0];
     // El recuerdo de ejemplo en vídeo ("Un día especial") que ya traía Home se conserva: es de los que se ven moverse.
@@ -841,6 +863,7 @@
     carousel.innerHTML = '';
     // "Mis recuerdos": hasta 4 vídeos y las fotos más recientes, alternados (vídeo, foto, vídeo, foto…).
     const todos = galleryMedia(files);
+    todos.forEach((m, i) => fechaDe.set(m, orden[i].d));
     const vids = todos.filter((m) => m.tagName === 'VIDEO').slice(0, 4);
     const fots = todos.filter((m) => m.tagName === 'IMG');
     const recuerdos = [];
@@ -853,7 +876,7 @@
       card.className = 'photo-card photo-card--tall';
       card.appendChild(media);
       card.insertAdjacentHTML('beforeend', '<div class="photo-card__gradient"></div><div class="photo-card__caption"><span>' +
-        captions[i % captions.length] + '</span><img src="assets/icons/icon-chevron-right.svg" alt="" /></div>');
+        tituloRecuerdo(fechaDe.get(media)) + '</span><img src="assets/icons/icon-chevron-right.svg" alt="" /></div>');
       carousel.appendChild(card);
     });
     if (ejemplo) { // vuelve en 2.ª posición y es el único que se reproduce solo (varios vídeos a la vez son demasiado para un iPhone)
@@ -914,7 +937,71 @@
     if (files.length) galeriaPropia = true;
     await cargarGaleria(files.length ? files.concat(yaHay) : files);
     galleryInput.value = '';
+    if (files.length) buscarDocumentos(files); // en segundo plano: la persona sigue viendo sus fotos mientras tanto
   });
+
+  // ---- Papeles a «Mis documentos» solos (27-sep, pedido: «que la app detecte documentos y horarios sin que tengan que hacer nada») ----
+  // Solo con las fotos que la persona SUBE (nunca la biblioteca entera): cada una va reducida a 512 px y recomprimida (sin EXIF ni GPS)
+  // a ver-foto.js en modo «clasificar», que contesta solo el tipo (identificativo, horario, documento o foto) y un nombre corto.
+  // Los papeles salen de los recuerdos y de «Todas tus fotos» y pasan a su apartado de Mis documentos; un aviso dice dónde han ido.
+  // Si no hay conexión o el servidor no contesta, se quedan como fotos normales (nada se pierde).
+  const DOC_SECCION = { identificativo: 'Documentos identificativos', horario: 'Horarios', documento: 'Otros documentos' };
+  const archivosDocumento = new WeakSet();
+  async function reducirArchivo(file, lado) {
+    const bmp = await createImageBitmap(file);
+    const k = Math.min(1, lado / Math.max(bmp.width, bmp.height));
+    const c = document.createElement('canvas');
+    c.width = Math.round(bmp.width * k);
+    c.height = Math.round(bmp.height * k);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    const url = c.toDataURL('image/jpeg', 0.8);
+    c.width = c.height = 0; // suelta la memoria ya (iPhone)
+    if (bmp.close) bmp.close();
+    return url.split(',')[1];
+  }
+  async function clasificarArchivo(file) {
+    try {
+      const imageBase64 = await reducirArchivo(file, 512);
+      const res = await fetch('/.netlify/functions/ver-foto', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64, modo: 'clasificar' }),
+        signal: window.AbortSignal && AbortSignal.timeout ? AbortSignal.timeout(20000) : undefined,
+      });
+      if (!res.ok) return null;
+      const j = await res.json();
+      return j && DOC_SECCION[j.tipo] ? j : null;
+    } catch (e) { return null; }
+  }
+  function ponerEnDocumentos(file, clase) {
+    const scr = document.querySelector('[data-screen="mis-documentos"]');
+    const titulo = Array.from(scr.querySelectorAll('.section-title')).find((h) => h.textContent.trim() === DOC_SECCION[clase.tipo]);
+    const grid = titulo && titulo.parentElement.querySelector('.grid-2');
+    if (!grid) return;
+    let url = urlDeArchivo.get(file);
+    if (!url) { url = URL.createObjectURL(file); urlDeArchivo.set(file, url); }
+    const card = document.createElement('div');
+    card.className = 'photo-card photo-card--square-2col photo-card--bordered';
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = clase.nombre || 'Documento';
+    card.appendChild(img);
+    grid.prepend(card); // el más nuevo primero: «mi DNI» encuentra antes el que acaba de subir que el de ejemplo
+  }
+  async function buscarDocumentos(nuevos) {
+    const imgs = nuevos.filter((f) => f.type.startsWith('image/')).slice(0, 12);
+    const docs = [];
+    for (let i = 0; i < imgs.length; i += 3) { // de 3 en 3: rápido sin pasarse del límite por minuto del modelo gratuito
+      const r = await Promise.all(imgs.slice(i, i + 3).map(clasificarArchivo));
+      r.forEach((clase, j) => { if (clase) docs.push({ file: imgs[i + j], clase }); });
+    }
+    if (!docs.length) return;
+    docs.forEach((d) => { archivosDocumento.add(d.file); ponerEnDocumentos(d.file, d.clase); });
+    const resto = (window.NidoGaleria ? window.NidoGaleria.items.map((it) => it.file) : []).filter((f) => f && !archivosDocumento.has(f));
+    if (resto.length) await cargarGaleria(resto); // se rehace la galería sin los papeles (las caras ya analizadas no se repiten)
+    const msg = docs.length === 1 ? (docs[0].clase.nombre ? 'He guardado «' + docs[0].clase.nombre + '» en Mis documentos.' : 'He guardado un papel en Mis documentos.') : 'He guardado ' + docs.length + ' papeles en Mis documentos.';
+    nidoToast(currentScreen(), msg, 'Ver', () => showScreen('mis-documentos'), 7000);
+  }
 
   // Biblioteca de ejemplo (assets/biblioteca.json): fotos y vídeos reales con su fecha, para que la app enseñe algo de verdad
   // sin pedir nada. Entra por el mismo camino que la galería del teléfono (fechas, álbumes automáticos, reconocimiento).
@@ -932,6 +1019,16 @@
       }));
       // Personas de la biblioteca (nombre + huellas de cara): así "Clara nieta", "Carlos hijo"... salen con nombre desde el principio.
       try { if (window.Reconocimiento) window.Reconocimiento.sembrar(await (await fetch('assets/biblioteca-personas.json')).json()); } catch (e) { /* sin nombres: salen "Sin nombre" */ }
+      // Y sus caras ya calculadas: así el móvil no pone en marcha el reconocimiento solo para la biblioteca (ver Reconocimiento.precargar).
+      try {
+        const caras = await (await fetch('assets/biblioteca-caras.json')).json();
+        files.forEach((f) => {
+          if (!caras[f.name] || !window.Reconocimiento) return;
+          let url = urlDeArchivo.get(f);
+          if (!url) { url = URL.createObjectURL(f); urlDeArchivo.set(f, url); }
+          window.Reconocimiento.precargar(url, caras[f.name]);
+        });
+      } catch (e) { /* sin el archivo: se analizan en el móvil, como antes */ }
       if (!galeriaPropia) await cargarGaleria(files);
     } catch (e) { bibliotecaCargada = false; /* sin biblioteca (o sin conexión): se quedan las fotos de ejemplo del HTML */ }
   }

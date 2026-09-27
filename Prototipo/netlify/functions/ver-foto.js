@@ -43,6 +43,25 @@ const SISTEMA =
   '- Si es un documento (un horario, un cartel, una entrada) y te preguntan un dato, léelo EXACTO tal como está escrito (horas, fechas, líneas, lugares) y, si hay varios, di los que respondan a la pregunta. Si el dato no aparece, dilo; no lo deduzcas. Si la imagen es pequeña o borrosa y no lees un número con total seguridad, di que no se lee bien y que conviene mirarlo en el papel, en vez de dar un número que podría estar mal.\n' +
   '- Tono amable y natural. No empieces con «En la imagen»; empieza directamente por lo que ves.';
 
+// Modo «clasificar» (27-sep): al SUBIR fotos, la app pregunta solo si cada una es un papel (DNI, horario…) para guardarla en
+// Mis documentos sin que la persona haga nada. Foto pequeña (512 px, sin EXIF), respuesta de una línea, nada se guarda.
+const CLASIFICAR =
+  'Clasifica la imagen. Responde SOLO una línea con el formato TIPO|NOMBRE, sin nada más.\n' +
+  'TIPO es uno de estos:\n' +
+  '- identificativo: DNI, pasaporte, carné de conducir, tarjeta sanitaria, tarjeta de la seguridad social, tarjeta del banco.\n' +
+  '- horario: horario de autobús, tren, metro, farmacia, centro de salud, misa, tienda; calendario de citas o de recogida.\n' +
+  '- documento: cualquier otro papel o pantalla con texto que interese guardar: receta médica, cita del médico, carta, factura, recibo, entrada, cartel, instrucciones.\n' +
+  '- foto: una foto normal (personas, paisajes, comida, animales, objetos, celebraciones), aunque salga algo de texto de fondo.\n' +
+  'NOMBRE: 1 a 4 palabras en español que digan qué es, como «DNI», «Tarjeta sanitaria», «Horario de autobús», «Receta médica». Vacío si es foto.\n' +
+  'Si dudas, responde foto|';
+const TIPOS_DOC = ['identificativo', 'horario', 'documento', 'foto'];
+function leerClase(t) {
+  const linea = String(t || '').split('\n').map((l) => l.trim()).find((l) => l.includes('|')) || '';
+  const [tipo, nombre] = linea.replace(/[*`«»"]/g, '').split('|').map((x) => (x || '').trim());
+  const tp = TIPOS_DOC.includes((tipo || '').toLowerCase()) ? tipo.toLowerCase() : 'foto';
+  return { tipo: tp, nombre: tp === 'foto' ? '' : (nombre || '').slice(0, 40) };
+}
+
 function textoUsuario({ pregunta, personas, fecha, tipo }) {
   const partes = [];
   partes.push(tipo === 'video' ? 'Este es un fotograma de un vídeo.' : 'Esta es la foto que tiene abierta.');
@@ -91,10 +110,10 @@ async function conClaude(base64, datos, fin) {
     body: JSON.stringify({
       model: CLAUDE_MODELO,
       max_tokens: 300,
-      system: SISTEMA,
+      system: datos._sistema || SISTEMA,
       messages: [{ role: 'user', content: [
         { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
-        { type: 'text', text: textoUsuario(datos) },
+        { type: 'text', text: datos._texto || textoUsuario(datos) },
       ] }],
     }),
     signal: tope(fin),
@@ -116,8 +135,8 @@ async function conGemini(base64, datos, fin) {
           method: 'POST',
           headers: { 'x-goog-api-key': process.env.GEMINI_API_KEY, 'content-type': 'application/json' },
           body: JSON.stringify({
-            systemInstruction: { parts: [{ text: SISTEMA }] },
-            contents: [{ parts: [{ text: textoUsuario(datos) }, { inline_data: { mime_type: 'image/jpeg', data: base64 } }] }],
+            systemInstruction: { parts: [{ text: datos._sistema || SISTEMA }] },
+            contents: [{ parts: [{ text: datos._texto || textoUsuario(datos) }, { inline_data: { mime_type: 'image/jpeg', data: base64 } }] }],
             generationConfig: { maxOutputTokens: 300 },
           }),
           signal: tope(fin),
@@ -149,6 +168,9 @@ exports.handler = async (event) => {
   if (typeof base64 !== 'string' || !base64.startsWith('/9j/')) return resp(400, { error: 'Falta la foto (JPEG en base64)' });
   if (base64.length > MAX_BASE64) return resp(413, { error: 'La foto es demasiado grande' });
   datos.pregunta = typeof datos.pregunta === 'string' ? datos.pregunta.slice(0, 300) : '';
+  const clasificar = datos.modo === 'clasificar';
+  datos._sistema = clasificar ? CLASIFICAR : undefined; // nunca lo que mande el navegador
+  datos._texto = clasificar ? '¿Qué es esta imagen?' : undefined;
 
   const fin = Date.now() + PLAZO_MS;
   const proveedores = [];
@@ -159,6 +181,7 @@ exports.handler = async (event) => {
   for (const [nombre, llamar] of proveedores) {
     try {
       const descripcion = await llamar();
+      if (clasificar) return resp(200, { ...leerClase(descripcion), proveedor: nombre });
       return resp(200, { descripcion, proveedor: nombre });
     } catch (e) { /* se prueba el siguiente; no se registra nada de la foto */ }
   }

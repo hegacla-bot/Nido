@@ -43,15 +43,19 @@ window.Reconocimiento = (function () {
       await faceapi.nets.ssdMobilenetv1.loadFromUri(MODELS);
       await faceapi.nets.faceLandmark68Net.loadFromUri(MODELS);
       await faceapi.nets.faceRecognitionNet.loadFromUri(MODELS);
+      // Que la tarjeta gráfica suelte la memoria de cada análisis al acabarlo, en vez de guardarla para el siguiente (iPhone, 27-sep).
+      try { faceapi.tf.env().set('WEBGL_DELETE_TEXTURE_THRESHOLD', 0); } catch (e) { /* otra versión de la librería: sin más */ }
     })();
     ready.catch(() => { ready = null; });
     return ready;
   }
 
+  // Un solo lienzo para todas las fotos: Safari en iPhone tiene un tope de memoria para lienzos y, con uno nuevo por foto, se llenaba.
+  let lienzo = null;
   function toCanvas(img) {
     const w = img.naturalWidth || img.videoWidth, h = img.naturalHeight || img.videoHeight;
     const k = Math.min(1, MAX_SIDE / Math.max(w, h));
-    const c = document.createElement('canvas');
+    const c = lienzo || (lienzo = document.createElement('canvas'));
     c.width = Math.round(w * k);
     c.height = Math.round(h * k);
     c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
@@ -79,6 +83,12 @@ window.Reconocimiento = (function () {
     cache.set(key, p);
     p.catch(() => cache.delete(key));
     return p;
+  }
+
+  // Caras ya calculadas de antemano (fotos de la biblioteca de ejemplo, assets/biblioteca-caras.json): el móvil no tiene que analizarlas.
+  // En iPhone, analizar las 38 fotos al abrir la app llenaba la memoria y Safari recargaba la página a mitad de un flujo (27-sep).
+  function precargar(src, caras) {
+    cache.set(src, Promise.resolve(caras.map((c) => ({ box: c.box, natural: c.natural, descriptor: Float32Array.from(c.d) }))));
   }
 
   // ---- Personas guardadas ----
@@ -271,7 +281,7 @@ window.Reconocimiento = (function () {
   }
 
   return {
-    load, detect, match, addPerson, reinforce, byId, photosOf, faceAt, bustPolygon, faceBox, rename, setAvatar, organize, sembrar,
+    load, detect, precargar, match, addPerson, reinforce, byId, photosOf, faceAt, bustPolygon, faceBox, rename, setAvatar, organize, sembrar,
     get people() { return people; },
   };
 })();
