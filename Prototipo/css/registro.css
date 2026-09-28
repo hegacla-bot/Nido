@@ -258,7 +258,10 @@
   flex-direction: column;
   gap: 0.75rem;
   width: 19rem;
+  margin-top: 0.5rem; /* 16 + 8 = 24px sobre los botones: el mensaje se separa de las acciones (28-sep) */
 }
+/* Título y texto juntos: 16 − 4 = 12px, como en el resto de la app (28-sep). Vale para todas las ventanas (registro y Ajustes). */
+.registro-modal-title + .registro-modal-body { margin-top: -0.25rem; }
 .registro-modal-actions .btn {
   width: 100%;
 }
@@ -274,7 +277,7 @@
 
 /* «Quiero saber más» (919:2723): sin foto, padding 20px; el título parte en dos líneas (236px) y el texto va a 290px. */
 .registro-modal--saber-mas {
-  padding: 1.25rem;
+  padding: 1.5rem 1.25rem; /* 24 arriba y abajo, igual que «Ayúdanos» (es la misma ventana) */
   animation: registro-modal-entra 0.25s ease;
 }
 .registro-modal[hidden] { display: none; } /* .registro-modal es flex: sin esto, «hidden» no la ocultaría */
