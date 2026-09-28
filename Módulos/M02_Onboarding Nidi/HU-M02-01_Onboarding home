@@ -1,1 +1,19 @@
+# HU-M02-01 · Onboarding home
 
+**Historia de usuario**
+Como persona mayor, quiero que me enseñen qué es "Mis recuerdos" en Home la primera vez que lo veo, para saber qué estoy mirando.
+
+**Criterios de aceptación**
+- El tour se activa la primera vez que se entra en Home, nunca de forma repetida sin que se pida.
+- Explica con una sola frase que ahí aparecen las fotos y vídeos de la familia, mezclados.
+- Se puede saltar en cualquier momento tocando un botón claro; nunca es un callejón sin salida.
+
+**Decisiones de diseño**
+- El tour de bienvenida sobre Home ya existe en el prototipo v3; esta HU documenta el criterio de contenido, no la mecánica (que ya está construida).
+- Reforzado por el hallazgo de testing: como la repetición no fija el aprendizaje en estos usuarios, el tour tiene que ser breve y no asumir que una única explicación ya "se aprendió".
+
+**Wireframes**
+Pendientes.
+
+**Preguntas abiertas**
+- ¿El tour se puede volver a ver más adelante (por ejemplo, pidiéndoselo a Nidi), o es solo la primera vez?
