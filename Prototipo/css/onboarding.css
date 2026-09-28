@@ -27,11 +27,11 @@
   background: var(--color-white);
   display: flex;
   align-items: center;
-  padding: var(--bubble-pad-y) 1.71875rem;
+  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
   color: var(--color-primary-blue-dark);
   font-size: var(--font-size-label-medium);
   font-weight: var(--font-weight-regular);
-  line-height: 1.25;
+  line-height: 1.296; /* 23,3px por línea, el de Figma con esta fuente (3 líneas = 70px) */
 }
 
 .onboarding-tooltip--tail-br {
@@ -104,7 +104,7 @@
 }
 .ob-step-1 .onboarding-tooltip {
   left: 5.25rem; top: 28.1rem; width: 12rem; height: auto; /* 84, 449.6, 192×70 — 25-sep: subida 12px para dejar 18–19px hasta la cabeza del pollito, como en los pasos 3–5 */
-  padding: var(--bubble-pad-y) 1.5rem; /* texto de 144px */
+  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
   border-radius: var(--radius-bubble) var(--radius-bubble) 0 var(--radius-bubble);
 }
 .ob-step-1 .onboarding-pollito {
@@ -137,7 +137,7 @@
 }
 .ob-step-2 .onboarding-tooltip {
   left: 8.34375rem; top: 26.625rem; width: 13.5rem; height: auto; /* 133.5, 426, 216×90 — 25-sep: subida 9px, mismo hueco hasta la cabeza del pollito que en los pasos 3–5 */
-  padding: var(--bubble-pad-y) 1.71875rem; /* texto de 161px */
+  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
   border-radius: var(--radius-bubble) var(--radius-bubble) var(--radius-bubble) 0;
 }
 .ob-step-2 .onboarding-pollito {
@@ -166,7 +166,7 @@
 }
 .ob-step-3 .onboarding-tooltip {
   left: 7.8125rem; top: 25.875rem; width: 15.5rem; height: auto; /* 125, 414, 248×90 (Figma 759:4680, 28-sep: sube 12px con el pollito nuevo) */
-  padding: var(--bubble-pad-y) 1.25rem; /* texto de 208px */
+  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
   border-radius: var(--radius-bubble) var(--radius-bubble) var(--radius-bubble) 0;
 }
 .ob-step-3 .onboarding-pollito {
@@ -190,7 +190,7 @@
 }
 .ob-step-4 .onboarding-tooltip {
   left: 2.125rem; top: 26.5312rem; width: 13.5rem; height: auto; /* 34, 426, 216×90 */
-  padding: var(--bubble-pad-y) 1.21875rem; /* texto de 177px */
+  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
   border-radius: var(--radius-bubble) var(--radius-bubble) 0 var(--radius-bubble);
 }
 /* Cada paso lleva una imagen distinta (4b: pensativo · 5: pollito-2) con su propio aspect
@@ -216,7 +216,7 @@
 }
 .ob-albumes .onboarding-tooltip {
   left: 9.1875rem; top: 28.5938rem; width: 12.9375rem; height: auto; /* 147, 391, 207×70 */
-  padding: var(--bubble-pad-y) 1.25rem; /* texto de 167px */
+  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
   border-radius: var(--radius-bubble) var(--radius-bubble) var(--radius-bubble) 0;
 }
 .ob-albumes .onboarding-pollito {
@@ -226,7 +226,7 @@
 /* ---- Onboarding de Álbumes · paso 2 (765:5243) ---- */
 .ob-albumes-2 .onboarding-tooltip {
   left: 9.75rem; top: 19.375rem; width: 12.9375rem; height: auto; /* 156, 309, 207×70: Figma 765:5243; encima de «Todas tus fotos», no pegada al pollito */
-  padding: var(--bubble-pad-y) 1.25rem;
+  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
   border-radius: var(--radius-bubble) var(--radius-bubble) var(--radius-bubble) 0;
 }
 .ob-albumes-2 .onboarding-pollito {
@@ -278,7 +278,7 @@
 }
 .ob-detalle [data-detalle-step="1"] .onboarding-tooltip {
   left: 1.625rem; top: 28.25rem; width: 14.9375rem; height: auto; /* 26, 368, 239×83 */
-  padding: var(--bubble-pad-y) 1.625rem; /* texto de 187px */
+  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
   border-radius: var(--radius-bubble) var(--radius-bubble) 0 var(--radius-bubble);
 }
 .ob-detalle [data-detalle-step="1"] .onboarding-pollito {
@@ -299,7 +299,7 @@
 }
 .ob-detalle [data-detalle-step="2"] .onboarding-tooltip {
   left: 8.1875rem; top: 29.1562rem; width: 14.9375rem; height: auto; /* 131, 361, 239×71 */
-  padding: var(--bubble-pad-y) 1.1875rem; /* texto de 201px */
+  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
   border-radius: var(--radius-bubble) var(--radius-bubble) var(--radius-bubble) 0;
 }
 .ob-detalle [data-detalle-step="2"] .onboarding-pollito {
@@ -330,7 +330,7 @@
 }
 .ob-yo .onboarding-tooltip {
   left: 6.3125rem; top: 27.1875rem; width: 17rem; height: auto; /* 101, 353, 272×91 */
-  padding: var(--bubble-pad-y) 1.25rem; /* texto de 232px */
+  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
   border-radius: var(--radius-bubble);
   border-bottom-left-radius: 0;
 }
@@ -354,7 +354,7 @@
 }
 .ob-yo [data-layer-step="2"] .onboarding-tooltip {
   left: 8.5rem; top: 29.1562rem; width: 13.5625rem; height: auto; /* 136, 373, 217×69 */
-  padding: var(--bubble-pad-y) 1.625rem; /* texto de 165px */
+  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
   border-radius: var(--radius-bubble);
   border-bottom-left-radius: 0;
 }
@@ -372,7 +372,7 @@
    bocadillo sobre él con la esquina inferior izquierda recta. */
 .ob-step-5 .onboarding-tooltip {
   left: 6.3108rem; top: 27.9688rem; width: 17rem; height: auto; /* 101, 425,5, 272×91: 20px sobre la cabeza del pollito, como los pasos 1-4 */
-  padding: var(--bubble-pad-y) 1.25rem;
+  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
 }
 
 /* =====================================================================
@@ -467,7 +467,7 @@
 }
 .ob-personas .onboarding-tooltip {
   left: 0.9375rem; top: 27rem; width: 15.3125rem; height: auto; /* 15, 320, 245×90 */
-  padding: var(--bubble-pad-y) 1.125rem; /* texto de 209px */
+  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
   border-radius: var(--radius-bubble) var(--radius-bubble) 0 var(--radius-bubble);
 }
 .ob-personas .onboarding-pollito {

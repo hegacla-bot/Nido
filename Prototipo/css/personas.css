@@ -230,14 +230,14 @@
   width: 13.0625rem; /* 209px */
   box-sizing: border-box;
   margin: 0;
-  padding: var(--bubble-pad-y) 1.3125rem; /* alto = texto + 24px, igual que el resto de burbujas de Nidi */
+  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
   display: flex;
   align-items: center;
   background: var(--color-white);
   color: var(--color-primary-blue-dark);
   font-size: var(--font-size-label-medium);
   font-weight: var(--font-weight-regular);
-  line-height: 1.25;
+  line-height: 1.296; /* como Figma: 23,3px por línea */
   z-index: 1;
 }
 .persona-ask__bubble--1 {
@@ -476,7 +476,7 @@
   width: 13.0625rem; /* 209px */
   box-sizing: border-box;
   margin: 0;
-  padding: var(--bubble-pad-y) 1.4375rem; /* texto de 167px; alto = texto + 24px como las demás */
+  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
   display: flex;
   align-items: center;
   background: var(--color-primary-blue-light);
@@ -497,7 +497,7 @@
 }
 [data-album-ask].is-confirming .persona-ask__reply {
   height: auto;
-  padding: var(--bubble-pad-y) 1.9375rem var(--bubble-pad-y) 1.3125rem; /* texto a x=21 */
+  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
   font-size: var(--font-size-label-medium);
   white-space: nowrap;
   overflow: hidden;
@@ -537,7 +537,7 @@
 }
 .ob-album-nuevo .onboarding-tooltip {
   left: 2.0625rem; top: 29.0312rem; width: 13.5rem; height: auto; /* 33, 391, 216×70 */
-  padding: var(--bubble-pad-y) 1.15625rem; /* texto de 179px */
+  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
   border-radius: var(--radius-bubble) var(--radius-bubble) 0 var(--radius-bubble);
 }
 .ob-album-nuevo .onboarding-pollito {
@@ -566,13 +566,13 @@
   width: 13.0625rem; /* 209px */
   box-sizing: border-box;
   margin: 0;
-  padding: var(--bubble-pad-y) 1.3125rem; /* texto de 167px; alto = texto + 24px */
+  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
   display: flex;
   align-items: center;
   color: var(--color-primary-blue-dark);
   font-size: var(--font-size-label-medium);
   font-weight: var(--font-weight-regular);
-  line-height: 1.25;
+  line-height: 1.296; /* como Figma: 23,3px por línea */
   z-index: 1;
 }
 .ayuda-layer__bubble[hidden] { display: none; }
@@ -581,7 +581,7 @@
 .ayuda-layer__bubble--hola {
   left: 1.25rem;
   top: 6.9375rem; /* 111px: con alto = texto (2 líneas = 69px) el par sigue anclado al pollito como en Figma */
-  padding: var(--bubble-pad-y) 1.09375rem; /* 17.5px */
+  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
   background: var(--color-white);
   border-radius: 2rem;
 }
@@ -602,7 +602,7 @@
 .ayuda-layer__bubble--nidi {
   left: 1.25rem;
   top: 12rem; /* 192px: su borde inferior sigue en 261px (Figma 814:13883), 12px bajo el saludo */
-  padding: var(--bubble-pad-y) 0.8125rem; /* 13px: texto de 183px */
+  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
   background: var(--color-white);
   border-radius: 2rem 2rem 0 2rem;
 }

@@ -33,11 +33,11 @@
   /* tl/tr/bl 32px, br 0 — la esquina sin redondear apunta hacia el
      pollito, como el pico de una burbuja de diálogo. */
   border-radius: 2rem 2rem 0 2rem;
-  padding: var(--bubble-pad-y) 1.3125rem; /* alto = texto + 24px, igual que el resto de burbujas de Nidi */
+  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
   display: flex;
   align-items: center;
   font-size: 1.125rem; /* 18px */
-  line-height: 1.25;
+  line-height: 1.296; /* como Figma: 23,3px por línea */
   color: var(--color-primary-blue-dark);
 }
 
