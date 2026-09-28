@@ -86,6 +86,7 @@
         window.Mascota.enterOnboardingPollito(layer);
       }
       if (willBeActive && !wasActive && name === 'home' && window.NidoBiblioteca) window.NidoBiblioteca.cargar();
+      if (willBeActive !== wasActive && screen.dataset.screen === 'home' && window.NidoRecuerdosVideo) setTimeout(window.NidoRecuerdosVideo, 0); // al entrar o salir de Home: vídeos de recuerdos en marcha o en pausa
       if (willBeActive && !wasActive && name === 'personas' && !personasOnboardingSeen && !nidiHablando()) {
         personasOnboardingSeen = true;
         const layer = screen.querySelector('[data-onboarding-layer]');
@@ -859,6 +860,31 @@
     return n + ' de ' + MESES[m - 1] + ' de ' + y;
   }
 
+  // Vídeos de «Mis recuerdos» en bucle, como un GIF (28-sep): se reproduce el que se ve (al menos un 60 % de la tarjeta) mientras Home
+  // está delante, y se pausa al salir de la vista o de la pantalla. Así nunca hay más de uno o dos en marcha (un iPhone no aguanta
+  // varios a la vez: ver la nota de galleryMedia).
+  let recuerdosObs = null;
+  const visiblesRecuerdos = new Set();
+  function videosRecuerdosAlDia() {
+    const enHome = currentScreen() === 'home';
+    document.querySelectorAll('[data-screen="home"] .carousel video').forEach((v) => {
+      v.loop = true; v.muted = true; v.playsInline = true;
+      v.autoplay = false; v.removeAttribute('autoplay'); // el de ejemplo lo traía del HTML y arrancaba solo aunque no se viera
+      if (enHome && visiblesRecuerdos.has(v)) { const p = v.play(); if (p && p.catch) p.catch(() => {}); } else v.pause();
+    });
+  }
+  function vigilarVideosRecuerdos(carousel) {
+    if (recuerdosObs) recuerdosObs.disconnect();
+    visiblesRecuerdos.clear();
+    if (!('IntersectionObserver' in window)) return;
+    recuerdosObs = new IntersectionObserver((entradas) => {
+      entradas.forEach((e) => { const v = e.target.querySelector('video'); if (!v) return; if (e.intersectionRatio >= 0.6) visiblesRecuerdos.add(v); else visiblesRecuerdos.delete(v); });
+      videosRecuerdosAlDia();
+    }, { root: carousel, threshold: [0, 0.6, 1] });
+    carousel.querySelectorAll('.photo-card').forEach((c) => { if (c.querySelector('video')) recuerdosObs.observe(c); });
+  }
+  window.NidoRecuerdosVideo = videosRecuerdosAlDia;
+
   async function cargarGaleria(files) {
     files = files.filter((f) => /^(image|video)\//.test(f.type)).slice(0, MAX_GALLERY);
     if (!files.length) return;
@@ -881,12 +907,16 @@
     todos.forEach((m, i) => fechaDe.set(m, orden[i].d));
     const vids = todos.filter((m) => m.tagName === 'VIDEO').slice(0, 4);
     const fots = todos.filter((m) => m.tagName === 'IMG');
+    // 5 recuerdos en total (28-sep): los 4 más recientes (vídeo, foto, vídeo, foto) + el de ejemplo, que entra en 2.º lugar. Pocos a
+    // propósito: deslizar en horizontal cuesta más a las personas mayores (NN/g, Rogers et al.) y una fila corta se ve entera y se
+    // termina; el resto de fotos sigue en Álbumes → Todas tus fotos y en Personas.
+    const MAX_RECUERDOS = ejemplo ? 4 : 5;
     const recuerdos = [];
-    for (let i = 0; recuerdos.length < 8 && (i < vids.length || i < fots.length); i++) {
+    for (let i = 0; recuerdos.length < MAX_RECUERDOS && (i < vids.length || i < fots.length); i++) {
       if (vids[i]) recuerdos.push(vids[i]);
-      if (fots[i] && recuerdos.length < 8) recuerdos.push(fots[i]);
+      if (fots[i] && recuerdos.length < MAX_RECUERDOS) recuerdos.push(fots[i]);
     }
-    recuerdos.slice(0, 8).forEach((media, i) => {
+    recuerdos.slice(0, MAX_RECUERDOS).forEach((media, i) => {
       const card = template.cloneNode(false);
       card.className = 'photo-card photo-card--tall';
       card.appendChild(media);
@@ -894,12 +924,9 @@
         tituloRecuerdo(fechaDe.get(media)) + '</span><img src="assets/icons/icon-chevron-right.svg" alt="" /></div>');
       carousel.appendChild(card);
     });
-    if (ejemplo) { // vuelve en 2.ª posición y es el único que se reproduce solo (varios vídeos a la vez son demasiado para un iPhone)
-      carousel.insertBefore(ejemplo, carousel.children[1] || null);
-      const ev = ejemplo.querySelector('video');
-      if (ev) { const p = ev.play(); if (p && p.catch) p.catch(() => {}); }
-    }
+    if (ejemplo) carousel.insertBefore(ejemplo, carousel.children[1] || null); // vuelve en 2.ª posición
     carousel.scrollLeft = 0;
+    vigilarVideosRecuerdos(carousel);
 
     // "Todas tus fotos": la cuadrícula completa (el botón "Añadir" se queda).
     const grid = document.querySelector('[data-screen="album-detalle"] .album-grid');
