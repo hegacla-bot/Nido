@@ -1,1 +1,20 @@
+# HU-M01-02 · Log in
 
+**Historia de usuario**
+Como persona mayor, quiero verificar mi número de teléfono sin teclear ningún código, para no arriesgarme a equivocarme.
+
+**Criterios de aceptación**
+- El número de teléfono ya lo introdujo el familiar durante el alta (ver HU-M01-04_Registro); esta pantalla es solo la verificación en el dispositivo de la persona mayor.
+- Se usa el autocompletado nativo de código SMS de iOS y Android; ningún campo para teclear dígitos con límite de tiempo.
+- Un solo toque confirma el código autocompletado.
+- Si falla la verificación, se ofrece un camino claro (reenviar código, avisar a un familiar), nunca un mensaje de error sin salida.
+
+**Decisiones de diseño**
+- Corrige el planteamiento inicial de "como WhatsApp, sin registro": WhatsApp sí verifica con SMS, así que aquí se replica ese patrón, pero con autocompletado, nunca tecleo manual.
+- Coherente con el dato de Pew (48 % de mayores de 65 necesita ayuda para configurar un dispositivo nuevo): el paso pesado de crear la cuenta lo hace el familiar, no la persona mayor.
+
+**Wireframes**
+Pendientes.
+
+**Preguntas abiertas**
+- ¿Qué pasa si la persona mayor cambia de teléfono más adelante? (ya existe como opción en Yo/Ajustes: "cambiar teléfono", pero falta definir el flujo).
