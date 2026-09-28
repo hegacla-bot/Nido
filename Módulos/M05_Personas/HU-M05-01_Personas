@@ -1,1 +1,19 @@
+# HU-M05-01 · Personas
+
+**Historia de usuario**
+Como persona mayor, quiero ver a mi familia representada como caras que puedo tocar, para encontrar sus fotos sin escribir nada.
+
+**Criterios de aceptación**
+- Reconocimiento facial ya hecho (en el propio dispositivo), agrupando fotos por persona.
+- Nombrado por voz cuando aparece alguien nuevo sin identificar.
+- Álbumes de grupo (varias personas juntas) accesibles igual que los individuales.
+
+**Decisiones de diseño**
+- El reconocimiento facial corre en el propio dispositivo (face-api.js en el prototipo), comparando solo contra el círculo familiar, nunca contra una agenda completa.
+
+**Wireframes**
+Pendientes.
+
+**Preguntas abiertas**
+- ¿Qué pasa si el reconocimiento facial se equivoca (caso real detectado: un gato identificado como persona)? ¿Hay una forma sencilla de corregirlo con un toque?
 
