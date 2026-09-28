@@ -404,13 +404,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
 }
+/* 28-sep: espaciado por cercanía. Título y texto juntos (12px); los puntos, anclados 24px sobre el botón para que no se muevan
+   entre pantallas (2 o 3 líneas de texto), con al menos 20px de aire sobre el texto. */
 .intro-textos {
-  height: 6.75rem; /* 108px fijos, como en Figma: los puntos quedan a la misma altura con 2 o 3 líneas de texto */
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 0.75rem;
   width: 100%;
   text-align: center;
   color: var(--color-primary-blue-dark);
@@ -422,10 +422,11 @@
 .intro-texto {
   font-size: var(--font-size-label-medium);
   font-weight: var(--font-weight-regular);
+  line-height: 1.296; /* 23,3px por línea, como las burbujas y Figma */
 }
 /* Los puntos se pueden tocar para ir a esa pantalla. Se ven de 12px separados 16, pero cada uno es un botón de 28×44 para que
    sea fácil acertar; el margen negativo mantiene la altura de 12px del diseño (los puntos no se mueven). */
-.intro-puntos { display: flex; }
+.intro-puntos { display: flex; margin-top: auto; margin-bottom: 1.5rem; }
 .intro-punto {
   width: 1.75rem;
   height: 2.75rem;
