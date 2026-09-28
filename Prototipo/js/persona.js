@@ -1139,7 +1139,7 @@ window.PersonaSelect = (function () {
   // ---- Crear álbum por voz ----
   // Lo que "oye" el prototipo (no hay reconocimiento de voz real): el 1º es el de Figma; los siguientes rotan
   // para poder distinguir varios álbumes creados.
-  const ALBUM_NOMBRES_DEMO = ['Calle concordia', 'Vacaciones en Venecia', 'Cumpleaños de Clara', 'Domingo en familia'];
+  const ALBUM_NOMBRES_DEMO = ['Calle Concordia', 'Vacaciones en Venecia', 'Cumpleaños de Clara', 'Domingo en familia'];
   let albumNombreIdx = 0;
   let albumFallos = 0; // intentos seguidos en los que no se ha podido oír un nombre
 
@@ -1163,7 +1163,8 @@ window.PersonaSelect = (function () {
     window.nidoToast('album-nuevo', 'Álbum «' + album.name + '» creado', null, null, 3500);
     // Con Nidi hablando no sale el tour de primera vez: taparía lo que Nidi acaba de anunciar y pediría un toque que Nidi no conoce.
     // No se da por visto: saldrá la primera vez que la persona cree un álbum ella sola.
-    if (!albumNuevoOnboardingSeen && !(window.NidoAgente && window.NidoAgente.activa)) {
+    // (28-sep) Ya no sale: el estado vacío del álbum (979:2967) explica lo mismo sin tapar la pantalla. Se deja apagado por si vuelve.
+    if (ALBUM_NUEVO_TOUR && !albumNuevoOnboardingSeen && !(window.NidoAgente && window.NidoAgente.activa)) {
       albumNuevoOnboardingSeen = true;
       document.querySelector('.ob-album-nuevo').classList.add('is-visible');
       window.Mascota.enterOnboardingPollito(document.querySelector('.ob-album-nuevo'));
@@ -1171,6 +1172,7 @@ window.PersonaSelect = (function () {
     return album;
   }
   let albumNuevoOnboardingSeen = false;
+  const ALBUM_NUEVO_TOUR = false;
 
   // Mantener pulsado donde no hay silueta hecha a mano: reconocimiento real. Busca la cara tocada, dibuja su
   // contorno y sigue el mismo flujo (contorno → reconocer o preguntar el nombre). Si no hay cara, avisa.
