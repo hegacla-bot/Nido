@@ -1,1 +1,18 @@
+# HU-M02-02 · Onboarding álbumes
 
+**Historia de usuario**
+Como persona mayor, quiero entender qué son los álbumes automáticos y cómo crear uno propio, para no sentirme perdida al entrar por primera vez en esa sección.
+
+**Criterios de aceptación**
+- Explica la diferencia entre álbumes automáticos (por año, por evento) y los que crea la propia persona.
+- Muestra dónde está el botón Añadir (no aparece en "Todas tus fotos").
+- Un solo ejemplo guiado, no una lista de todas las funciones posibles.
+
+**Decisiones de diseño**
+- Principio "confirmar, no crear": si se explica cómo crear un álbum, se enseña como confirmar una sugerencia de la app, no como rellenar un formulario desde cero.
+
+**Wireframes**
+Pendientes.
+
+**Preguntas abiertas**
+- Ninguna por ahora.
