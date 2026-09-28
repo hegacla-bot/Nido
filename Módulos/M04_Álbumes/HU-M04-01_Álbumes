@@ -1,1 +1,18 @@
+# HU-M04-01 · Álbumes
 
+**Historia de usuario**
+Como persona mayor, quiero ver mis álbumes organizados sin tener que crearlos yo, para disfrutar los recuerdos sin gestionar nada.
+
+**Criterios de aceptación**
+- Álbumes automáticos por año y por evento, generados por el agente Nido (curación de momentos).
+- Álbumes creados por la persona, con el mismo patrón de confirmar antes que crear desde cero.
+- Botón Añadir visible en todos los álbumes salvo en "Todas tus fotos".
+
+**Decisiones de diseño**
+- Aplicación directa del principio "no es un gestor de biblioteca": nada de etiquetar o gestionar duplicados a mano, eso ya lo hace el agente.
+
+**Wireframes**
+Pendientes.
+
+**Preguntas abiertas**
+- Ninguna por ahora.
