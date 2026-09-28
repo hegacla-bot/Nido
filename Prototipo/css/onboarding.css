@@ -165,13 +165,13 @@
   box-shadow: 2px 4px 16px 0 rgba(123, 123, 135, 0.3), 2px 4px 4px 0 #868693;
 }
 .ob-step-3 .onboarding-tooltip {
-  left: 7.8125rem; top: 26.5312rem; width: 15.5rem; height: auto; /* 125, 426, 248×90 */
+  left: 7.8125rem; top: 25.875rem; width: 15.5rem; height: auto; /* 125, 414, 248×90 (Figma 759:4680, 28-sep: sube 12px con el pollito nuevo) */
   padding: var(--bubble-pad-y) 1.25rem; /* texto de 208px */
   border-radius: var(--radius-bubble) var(--radius-bubble) var(--radius-bubble) 0;
 }
 .ob-step-3 .onboarding-pollito {
-  /* pollito-onboarding-3-v3.webp: contorno visible, con el giro de -0,52° de Figma ya aplicado en la imagen. */
-  left: 2rem; top: 33.53125rem; width: 12.25rem; height: 13.59375rem; /* 32, 536.5, 196×217.5 */
+  /* pollito-onboarding-3-v4.webp (28-sep, Figma 759:4683: mano en la barbilla): lo visible de la imagen tal como la recorta Figma. */
+  left: 2.7682rem; top: 33.2364rem; width: 11rem; height: 13.7917rem; /* 44.3, 531.8, 176×220.7 */
 }
 
 /* ---- Paso 4 · destaca el título "Mis recuerdos" (759:4688) ---- */
@@ -196,8 +196,8 @@
 /* Cada paso lleva una imagen distinta (4b: pensativo · 5: pollito-2) con su propio aspect
    ratio, así que ya no pueden compartir una sola caja de tamaño fijo (ver ob-step-1). */
 .ob-step-4 .onboarding-pollito {
-  /* pollito-onboarding-4-v3.webp: contorno visible de la pose de Figma. */
-  left: 11.09375rem; top: 33.5rem; width: 10.9375rem; height: 13.09375rem; /* 177.5, 536, 175×209.5 */
+  /* pollito-onboarding-4-v4.webp (28-sep, Figma 759:4763: saludando hacia los recuerdos, en espejo ya aplicado en la imagen). */
+  left: 7.6875rem; top: 33.7468rem; width: 13.2292rem; height: 12.9792rem; /* 123, 540, 211.7×207.7 */
 }
 .ob-step-5 .onboarding-pollito {
   left: 2rem; top: 33.53125rem; width: 12.25rem; height: 13.59375rem; /* tamaño y pose = los del tour nuevo (pollito-onboarding-N-v3.webp), pies sobre el botón */
