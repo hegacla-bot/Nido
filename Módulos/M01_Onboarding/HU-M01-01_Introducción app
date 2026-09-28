@@ -1,1 +1,20 @@
+# HU-M01-01 · Introducción app
 
+**Historia de usuario**
+Como persona mayor, quiero entender en una frase qué es esta app al abrirla por primera vez, para saber qué estoy viendo antes de seguir.
+
+**Criterios de aceptación**
+- Se muestra un mensaje corto tipo "aquí están tus fotos y las de tu familia", sin explicar funciones.
+- Incluye una imagen o ilustración de apoyo (el pollito saliendo del cascarón; ver M07_Chatbot ayuda).
+- Un único botón grande para continuar; no hay forma de quedarse a mitad de la explicación sin salida.
+- Todo se lee y se avanza tocando, sin ningún campo de texto.
+
+**Decisiones de diseño**
+- Principio "solo toca": nada de leer instrucciones largas, un paso, una frase.
+- Aquí solo se transmite propósito, no mecánica de uso — la mecánica se explica más adelante, pantalla a pantalla, en M02_Onboarding Nidi.
+
+**Wireframes**
+Pendientes.
+
+**Preguntas abiertas**
+- ¿Esta pantalla se ve solo una vez (durante el alta) o también la primera vez que la persona mayor abre la app en su propio dispositivo?
