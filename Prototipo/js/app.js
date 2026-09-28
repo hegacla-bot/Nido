@@ -1257,6 +1257,17 @@
     if (!card) return;
     const screen = card.closest('.screen');
     const origen = screen ? screen.dataset.screen : null;
+    // 28-sep: una foto de la galería se quita de TODA la app (Inicio, recopilaciones, Todas tus fotos, álbumes, personas), no solo de la
+    // pantalla de la que se vino; del teléfono nunca (Nido solo las lee). La foto que se ve: en una recopilación, la que está delante.
+    const item = detalleMedia.querySelectorAll('.detail-media__item')[i];
+    const visto = item && (item.querySelector('.recopilacion img.is-activa') || item.querySelector('img, video'));
+    const enGaleria = visto && window.NidoGaleria && window.NidoGaleria.items.find((it) => it.src === visto.src);
+    if (enGaleria && enGaleria.file) {
+      quitarDeNido(enGaleria.file).then((deshacerNido) => {
+        setTimeout(() => nidoToast(currentScreen(), 'Foto eliminada de Nido', 'Deshacer', deshacerNido, 7000), 500);
+      });
+      return;
+    }
     let deshacer;
     if (screen && origen === 'album-nuevo' && NidoAlbums.current) {
       // Álbum creado: se quita de su lista (la posición manda, no la ruta) y se repinta.
@@ -1274,6 +1285,25 @@
     // "Foto eliminada · Deshacer": más amable que preguntar dos veces; la foto vuelve a su sitio.
     setTimeout(() => nidoToast(origen, 'Foto eliminada', 'Deshacer', deshacer, 7000), 700);
   }, true);
+
+  // Quita una foto de la galería de Nido (todas las pantallas se rehacen sin ella) y devuelve cómo deshacerlo. Del teléfono no se borra.
+  async function quitarDeNido(file) {
+    const url = urlDeArchivo.get(file);
+    const quitadas = []; // [álbum, posición, foto] para deshacer
+    NidoAlbums.list.forEach((a) => {
+      for (let k = a.photos.length - 1; k >= 0; k--) if (a.photos[k].src === url) quitadas.push([a, k, a.photos.splice(k, 1)[0]]);
+      if (quitadas.some((q) => q[0] === a)) albumSync(a);
+    });
+    const todas = window.NidoGaleria ? window.NidoGaleria.items.map((it) => it.file).filter(Boolean) : [];
+    const resto = todas.filter((f) => f !== file);
+    if (resto.length) await cargarGaleria(resto);
+    if (NidoAlbums.current) albumRender();
+    return async () => {
+      quitadas.reverse().forEach(([a, k, foto]) => { a.photos.splice(k, 0, foto); albumSync(a); });
+      await cargarGaleria(resto.concat(file)); // se vuelve a ordenar por fecha: la foto vuelve a su sitio
+      if (NidoAlbums.current) albumRender();
+    };
+  }
 
   // Aviso corto sobre una pantalla, con acción opcional ("Deshacer"). Un solo aviso por pantalla; se va solo.
   function nidoToast(screenName, msg, action, onAction, ms) {
