@@ -14,7 +14,7 @@
 window.Reconocimiento = (function () {
   const MODELS = 'assets/models';
   const MAX_SIDE = 800;        // se reduce la foto antes de analizarla: más rápido, y las caras siguen siendo grandes
-  const MATCH_DIST = 0.55;     // distancia máxima entre huellas para decir "es la misma persona" (0,6 es el estándar; algo más estricto evita falsos positivos)
+  const MATCH_DIST = 0.50;     // distancia máxima para decir "es la misma persona" (0,6 es el estándar). 28-sep: 0,55 → 0,50: con 0,53 metía a otro abuelo (con bigote) en Joaquín y con 0,51-0,54 a otras chicas en Ana
   // v2 (28-sep): se empieza de cero. Tras días de pruebas, las huellas guardadas en el navegador podían estar «contaminadas» (una cara
   // equivocada que se reforzó y arrastró más errores: a Joaquín le salían fotos que no eran suyas).
   const STORE_KEY = 'nido-personas-v2';
