@@ -1,0 +1,435 @@
+/* ==========================================================================
+   NIDO v2 · Lenguaje de Acceso Asistido
+   Tres reglas que gobiernan todo lo de abajo:
+   1. Una pantalla = una cosa.
+   2. Icono Y palabra. Nunca un icono suelto.
+   3. La losa de abajo siempre está, siempre en el mismo sitio.
+   ========================================================================== */
+
+/* --- Pantalla ------------------------------------------------------------- */
+
+.screen {
+  position: absolute; inset: 0;
+  display: none;
+  grid-template-rows: auto 1fr auto;
+  background: linear-gradient(180deg, var(--accent-tint) 0%, var(--c-white) 46%);
+}
+.screen.is-active { display: grid; }
+
+.screen[data-accent="nuevas"]   { --accent: var(--f-nuevas);   --accent-tint: var(--f-nuevas-tint); }
+.screen[data-accent="momentos"] { --accent: var(--f-momentos); --accent-tint: var(--f-momentos-tint); }
+.screen[data-accent="familia"]  { --accent: var(--f-familia);  --accent-tint: var(--f-familia-tint); }
+.screen[data-accent="crear"]    { --accent: var(--f-crear);    --accent-tint: var(--f-crear-tint); }
+.screen[data-accent="mano"]     { --accent: var(--f-mano);     --accent-tint: var(--f-mano-tint); }
+
+.screen__body { overflow-y: auto; overscroll-behavior: contain; padding: 0 var(--gutter) 8px; }
+.screen__foot { padding: 10px var(--gutter) 18px; }
+
+/* --- Cabecera: chip de icono + nombre enorme ------------------------------ */
+
+.appbar { display: flex; align-items: center; gap: 14px; padding: 44px var(--gutter) 18px; }
+.appbar__chip {
+  width: 52px; height: 52px; flex: 0 0 auto;
+  border-radius: var(--r-chip);
+  background: var(--accent);
+  display: grid; place-items: center;
+  color: #fff;
+}
+.appbar__chip svg { width: 30px; height: 30px; }
+.appbar__title {
+  font-size: var(--fs-xl); font-weight: 800; letter-spacing: -.02em;
+  line-height: var(--lh-tight); margin: 0;
+  text-wrap: balance;
+}
+.appbar__count { font-size: var(--fs-s); color: var(--c-gray-1); font-weight: 500; margin: 2px 0 0; }
+
+/* --- La losa de abajo -----------------------------------------------------
+   El botón Atrás de Acceso Asistido: ancho completo, abajo del todo, en el
+   mismo sitio en todas las pantallas. No es un chevron en una esquina.
+   -------------------------------------------------------------------------- */
+
+.slab {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  width: 100%; min-height: var(--tap-slab);
+  padding: 14px 24px;
+  border-radius: var(--r-slab);
+  font-size: var(--fs-m); font-weight: 700;
+  line-height: var(--lh-tight);
+  background: #eceef4; color: var(--c-black);
+  transition: transform var(--dur), filter var(--dur);
+}
+.slab:active { transform: scale(.985); }
+.slab svg { width: 28px; height: 28px; flex: 0 0 auto; }
+.slab + .slab { margin-top: 10px; }
+
+.slab--back    { background: #e4e6ee; }
+.slab--accent  { background: var(--accent); color: #fff; }
+.slab--danger  { background: var(--f-peligro); color: #fff; }
+.slab--quiet   { background: none; color: var(--c-gray-1); font-weight: 600; min-height: var(--tap-min); }
+
+/* --- Menú principal: filas o cuadrícula -----------------------------------
+   Las dos disposiciones de Acceso Asistido, aplicadas a la portada de Nido.
+   -------------------------------------------------------------------------- */
+
+.menu { list-style: none; margin: 0; padding: 4px 0 0; }
+.menu__btn {
+  width: 100%;
+  background: var(--c-white);
+  border-radius: var(--r-card);
+  box-shadow: 0 2px 10px rgba(13, 15, 24, .07);
+  transition: transform var(--dur);
+}
+.menu__btn:active { transform: scale(.985); }
+.menu__icon {
+  border-radius: 50%;
+  display: grid; place-items: center;
+  color: #fff; flex: 0 0 auto;
+}
+.menu__icon svg { width: 55%; height: 55%; }
+.menu__label { font-size: var(--fs-m); font-weight: 700; line-height: var(--lh-tight); }
+.menu__meta  { font-size: var(--fs-xs); color: var(--c-gray-1); font-weight: 500; }
+
+[data-view="filas"] .menu { display: flex; flex-direction: column; gap: 12px; }
+[data-view="filas"] .menu__btn {
+  display: flex; align-items: center; gap: 18px;
+  min-height: var(--tap-card); padding: 16px 20px; text-align: left;
+}
+[data-view="filas"] .menu__icon { width: 64px; height: 64px; }
+
+[data-view="cuadricula"] .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+[data-view="cuadricula"] .menu__btn {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; min-height: calc(var(--tap-card) * 1.45); padding: 20px 12px; text-align: center;
+}
+[data-view="cuadricula"] .menu__icon { width: 76px; height: 76px; }
+[data-view="cuadricula"] .menu__meta { display: none; }
+
+/* Colores por función dentro del menú */
+.menu__btn[data-f="nuevas"]   .menu__icon { background: var(--f-nuevas); }
+.menu__btn[data-f="momentos"] .menu__icon { background: var(--f-momentos); }
+.menu__btn[data-f="familia"]  .menu__icon { background: var(--f-familia); }
+.menu__btn[data-f="crear"]    .menu__icon { background: var(--f-crear); }
+
+/* --- Lista de personas / álbumes (patrón "Llamadas") ---------------------- */
+
+.rows { list-style: none; margin: 0; padding: 4px 0 0; display: flex; flex-direction: column; gap: 12px; }
+.row__btn {
+  display: flex; align-items: center; gap: 18px;
+  width: 100%; min-height: var(--tap-card);
+  padding: 14px 20px 14px 14px;
+  background: var(--c-white);
+  border-radius: var(--r-card);
+  box-shadow: 0 2px 10px rgba(13, 15, 24, .07);
+  text-align: left;
+}
+.row__btn:active { transform: scale(.985); }
+.row__label { font-size: var(--fs-m); font-weight: 700; line-height: var(--lh-tight); display: block; }
+.row__meta  { font-size: var(--fs-xs); color: var(--c-gray-1); font-weight: 500; }
+.row__text  { flex: 1 1 auto; min-width: 0; }
+
+.avatar {
+  width: 72px; height: 72px; flex: 0 0 auto;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--c-blue-light); color: var(--c-blue-dark);
+  font-size: var(--fs-m); font-weight: 800;
+  overflow: hidden;
+}
+.avatar--xl { width: 128px; height: 128px; font-size: var(--fs-2xl); }
+.avatar--new { background: #eceef4; color: var(--c-gray-1); border: 3px dashed var(--c-gray-3); }
+
+/* --- Fotos ----------------------------------------------------------------
+   Dos columnas grandes, como la app Fotos de Acceso Asistido. En "filas"
+   pasan a una sola columna, aún más grandes y con su nombre.
+   -------------------------------------------------------------------------- */
+
+.photos { list-style: none; margin: 0; padding: 4px 0 0; display: grid; gap: 10px; }
+[data-view="cuadricula"] .photos { grid-template-columns: 1fr 1fr; }
+[data-view="filas"]      .photos { grid-template-columns: 1fr; gap: 14px; }
+
+.photo__btn { display: block; width: 100%; text-align: left; }
+.photo__img {
+  display: block; width: 100%; aspect-ratio: 1;
+  border-radius: var(--r-photo);
+  background-size: cover; background-position: center;
+}
+[data-view="filas"] .photo__img { aspect-ratio: 4 / 3; }
+.photo__cap { display: block; font-size: var(--fs-xs); font-weight: 600; color: var(--c-gray-1); margin-top: 6px; }
+[data-view="cuadricula"] .photo__cap { display: none; }
+
+/* --- Pantalla de una foto -------------------------------------------------- */
+
+.hero {
+  width: 100%; aspect-ratio: 1;
+  border-radius: var(--r-photo);
+  background-size: cover; background-position: center;
+  margin-top: 4px;
+}
+.context {
+  display: flex; align-items: center; gap: 16px;
+  margin: 18px 0 4px; padding: 16px;
+  background: var(--c-white);
+  border-radius: var(--r-card);
+  box-shadow: 0 2px 10px rgba(13, 15, 24, .07);
+}
+.context__text { font-size: var(--fs-m); font-weight: 700; line-height: var(--lh-tight); }
+.context__meta { font-size: var(--fs-xs); color: var(--c-gray-1); font-weight: 500; }
+
+/* --- Micrófono ------------------------------------------------------------- */
+
+.mic { display: flex; flex-direction: column; align-items: center; gap: 22px; padding: 12px 0; }
+.mic__btn { position: relative; width: 176px; height: 176px; display: grid; place-items: center; }
+.mic__ring { position: absolute; inset: 0; border-radius: 50%; background: var(--accent); opacity: .14; }
+.mic__ring--2 { inset: 26px; opacity: .26; }
+.mic__core {
+  position: relative; width: 84px; height: 84px; border-radius: 50%;
+  background: var(--accent); display: grid; place-items: center; color: #fff;
+}
+.mic__core svg { width: 36px; height: 36px; }
+.mic.is-listening .mic__ring    { animation: pulse 1.9s ease-out infinite; }
+.mic.is-listening .mic__ring--2 { animation: pulse 1.9s ease-out infinite .45s; }
+@keyframes pulse {
+  0%   { transform: scale(.84); opacity: .30; }
+  70%  { transform: scale(1.12); opacity: .05; }
+  100% { transform: scale(1.12); opacity: 0; }
+}
+.said {
+  padding: 18px 20px; border-radius: var(--r-card);
+  background: var(--c-white); box-shadow: 0 2px 10px rgba(13, 15, 24, .07);
+  font-size: var(--fs-m); font-weight: 600; line-height: var(--lh-body);
+  min-height: var(--tap-min); display: flex; align-items: center;
+}
+.said em { color: var(--c-gray-1); font-style: normal; font-weight: 500; }
+
+/* --- Teclado numérico ------------------------------------------------------ */
+
+.field {
+  display: flex; align-items: center; justify-content: center;
+  min-height: var(--tap-min); margin-bottom: 18px;
+  border-radius: var(--r-card); background: var(--c-white);
+  box-shadow: 0 2px 10px rgba(13, 15, 24, .07);
+  font-size: var(--fs-lg); font-weight: 700; letter-spacing: .05em;
+}
+.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.keypad button {
+  min-height: var(--tap-min); border-radius: 22px;
+  background: var(--c-white); box-shadow: 0 2px 10px rgba(13, 15, 24, .07);
+  font-size: var(--fs-lg); font-weight: 600;
+}
+.keypad button:active { background: var(--accent-tint); }
+.keypad .k-empty { visibility: hidden; }
+
+.code { display: flex; gap: 12px; justify-content: center; margin: 22px 0; }
+.code span {
+  flex: 1 1 0; max-width: 82px; height: 96px;
+  border-radius: 22px; background: var(--c-white);
+  box-shadow: 0 2px 10px rgba(13, 15, 24, .07);
+  display: grid; place-items: center;
+  font-size: var(--fs-2xl); font-weight: 700; color: var(--c-gray-3);
+  transition: color var(--dur), background var(--dur);
+}
+.code span.is-filled { color: var(--c-black); background: var(--accent-tint); }
+
+/* --- Diálogo --------------------------------------------------------------- */
+
+.sheet {
+  position: absolute; inset: 0; z-index: 30;
+  background: rgba(13, 15, 24, .5);
+  display: none; align-items: flex-end; padding: var(--gutter);
+}
+.sheet.is-open { display: flex; }
+.sheet__card {
+  width: 100%; background: var(--c-white);
+  border-radius: 34px; padding: 32px 24px 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 18px; text-align: center;
+}
+.sheet__icon { width: 92px; height: 92px; border-radius: 50%; background: var(--accent); display: grid; place-items: center; color: #fff; }
+.sheet__icon svg { width: 44px; height: 44px; }
+.sheet__text { font-size: var(--fs-m); font-weight: 700; line-height: var(--lh-body); margin: 0; }
+
+/* --- Modo visita ----------------------------------------------------------- */
+
+.visit { position: absolute; inset: 0; background: #000; }
+.visit__photo { position: absolute; inset: 0; background-size: cover; background-position: center; }
+.visit__ui { position: absolute; inset: 0; display: grid; grid-template-rows: auto 1fr auto; transition: opacity var(--dur); }
+.visit.is-idle .visit__ui { opacity: 0; pointer-events: none; }
+.visit__top {
+  padding: 44px var(--gutter) 20px; color: #fff;
+  background: linear-gradient(180deg, rgba(0,0,0,.72), transparent);
+  font-size: var(--fs-m); font-weight: 700;
+}
+.visit__bottom {
+  padding: 20px var(--gutter) 22px;
+  background: linear-gradient(0deg, rgba(0,0,0,.72), transparent);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.visit__nav { display: flex; gap: 10px; }
+.visit__nav .slab { background: rgba(255,255,255,.92); }
+.visit .slab--hold { background: rgba(255,255,255,.2); color: #fff; position: relative; overflow: hidden; }
+.visit .slab--hold::after {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0;
+  width: calc(var(--p, 0) * 1%); background: rgba(255,255,255,.34);
+  transition: width 60ms linear;
+}
+.visit__hint { color: rgba(255,255,255,.9); font-size: var(--fs-xs); text-align: center; margin: 0; }
+
+/* --- Ajustes ---------------------------------------------------------------- */
+
+.set { padding: 22px 0; border-bottom: 2px solid #e4e6ee; }
+.set:last-of-type { border-bottom: 0; }
+.set__label { display: block; font-size: var(--fs-m); font-weight: 700; margin-bottom: 4px; }
+.set__help { font-size: var(--fs-xs); color: var(--c-gray-1); margin: 0 0 14px; line-height: var(--lh-body); }
+.pick { display: flex; gap: 10px; }
+.pick button {
+  flex: 1 1 0; min-height: var(--tap-min);
+  border-radius: 22px; background: var(--c-white);
+  box-shadow: 0 2px 10px rgba(13, 15, 24, .07);
+  font-size: var(--fs-s); font-weight: 700;
+}
+.pick button[aria-pressed="true"] { background: var(--c-black); color: #fff; }
+.pick--text button:nth-child(1) { font-size: var(--fs-xs); }
+.pick--text button:nth-child(2) { font-size: var(--fs-s); }
+.pick--text button:nth-child(3) { font-size: var(--fs-m); }
+
+/* --- Utilidades -------------------------------------------------------------- */
+
+.lead { font-size: var(--fs-m); line-height: var(--lh-body); color: var(--c-gray-1); margin: 0 0 20px; font-weight: 500; }
+.center { text-align: center; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Los dos botones de navegar del modo visita van en fila, no apilados. */
+.visit__nav .slab { flex: 1 1 0; }
+.visit__nav .slab + .slab { margin-top: 0; }
+
+/* --- Pestañas Fotos / Álbumes (de la v1, en lenguaje de Acceso Asistido) --- */
+.tabs { display: flex; gap: 10px; padding: 0 var(--gutter) 4px; }
+.tabs button {
+  flex: 1 1 0; min-height: var(--tap-min);
+  border-radius: 22px; background: var(--c-white);
+  box-shadow: 0 2px 10px rgba(13, 15, 24, .07);
+  font-size: var(--fs-m); font-weight: 700;
+}
+.tabs button[aria-selected="true"] { background: var(--accent); color: #fff; }
+
+/* --- Título de sección ---------------------------------------------------- */
+.sect { font-size: var(--fs-m); font-weight: 800; margin: 26px 0 12px; letter-spacing: -.01em; }
+.sect:first-child { margin-top: 10px; }
+
+/* --- Caras dentro de una foto --------------------------------------------- */
+.faces { display: flex; gap: 18px; list-style: none; margin: 0; padding: 2px 0 0; flex-wrap: wrap; }
+.faces__btn { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 96px; }
+.faces__name { font-size: var(--fs-xs); font-weight: 600; text-align: center; line-height: 1.2; }
+
+/* --- Sugerencias de parentesco (de la v1) --------------------------------- */
+.chips { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0 0; }
+.chip {
+  min-height: var(--tap-min); border-radius: 22px;
+  background: var(--c-white); box-shadow: 0 2px 10px rgba(13, 15, 24, .07);
+  font-size: var(--fs-s); font-weight: 700; padding: 12px;
+}
+.chip[aria-pressed="true"] { background: var(--accent); color: #fff; }
+
+/* --- Contacto enlazado (WhatsApp) ----------------------------------------- */
+.contact {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px; margin-top: 10px;
+  background: var(--c-white); border-radius: var(--r-card);
+  box-shadow: 0 2px 10px rgba(13, 15, 24, .07);
+  text-align: left;
+}
+.contact__num { font-size: var(--fs-xs); color: var(--c-gray-1); font-weight: 500; }
+
+/* Acciones dentro del cuerpo: como el botón amarillo "Take Photo" de la
+   cámara de Acceso Asistido — la acción vive en el contenido, no en la
+   franja de abajo, que es solo para Atrás. */
+.actions { display: flex; flex-direction: column; gap: 10px; margin-top: 22px; }
+.actions .slab + .slab { margin-top: 0; }
+
+/* --- Colección con nombre (secciones de la portada y lista de álbumes) -----
+   Mismo contenido en las dos disposiciones; solo cambia la densidad.
+   -------------------------------------------------------------------------- */
+.cards { list-style: none; margin: 0; padding: 0; }
+.card__thumb { display: block; background-size: cover; background-position: center; }
+.card__label { font-size: var(--fs-m); font-weight: 700; line-height: var(--lh-tight); display: block; }
+.card__meta  { font-size: var(--fs-xs); color: var(--c-gray-1); font-weight: 500; }
+
+[data-view="filas"] .cards { display: flex; flex-direction: column; gap: 12px; }
+[data-view="filas"] .card {
+  display: flex; align-items: center; gap: 18px; width: 100%;
+  min-height: var(--tap-card); padding: 14px 20px 14px 14px;
+  background: var(--c-white); border-radius: var(--r-card);
+  box-shadow: 0 2px 10px rgba(13, 15, 24, .07); text-align: left;
+}
+[data-view="filas"] .card__thumb { width: 76px; height: 76px; border-radius: 20px; flex: 0 0 auto; }
+[data-view="filas"] .card__text { flex: 1 1 auto; min-width: 0; }
+
+[data-view="cuadricula"] .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+[data-view="cuadricula"] .card { display: block; width: 100%; text-align: left; }
+[data-view="cuadricula"] .card__thumb { width: 100%; aspect-ratio: 1; border-radius: var(--r-photo); }
+[data-view="cuadricula"] .card__label { font-size: var(--fs-s); margin-top: 8px; }
+[data-view="cuadricula"] .card__meta { display: none; }
+.card:active { transform: scale(.985); }
+
+
+/* --- "A mano" -------------------------------------------------------------
+   Lo único que se mira todos los días. No es una tarjeta más entre las de
+   fotos: va la primera, ocupa el ancho completo y va rellena de color, para
+   que se distinga sin leerla.
+   -------------------------------------------------------------------------- */
+.mano-cta {
+  display: flex; align-items: center; gap: 18px; width: 100%;
+  min-height: var(--tap-card); padding: 18px 20px; margin: 10px 0 4px;
+  background: var(--f-mano); color: #fff;
+  border-radius: var(--r-card); text-align: left;
+}
+.mano-cta__icon {
+  width: 64px; height: 64px; flex: 0 0 auto; border-radius: 50%;
+  background: rgba(255, 255, 255, .2); display: grid; place-items: center;
+}
+.mano-cta__icon svg { width: 34px; height: 34px; }
+.mano-cta__label { font-size: var(--fs-m); font-weight: 800; display: block; line-height: var(--lh-tight); }
+.mano-cta__meta  { font-size: var(--fs-xs); font-weight: 500; opacity: .9; }
+.mano-cta:active { transform: scale(.985); }
+
+/* Las cosas de "A mano" no son fotos: se ven como fichas, no como recuerdos. */
+.docs { list-style: none; margin: 0; padding: 4px 0 0; }
+[data-view="filas"] .docs { display: flex; flex-direction: column; gap: 12px; }
+[data-view="cuadricula"] .docs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.doc {
+  display: flex; align-items: center; gap: 16px; width: 100%;
+  min-height: var(--tap-card); padding: 16px;
+  background: var(--c-white); border-radius: var(--r-card);
+  box-shadow: 0 2px 10px rgba(13, 15, 24, .07);
+  text-align: left;
+}
+[data-view="cuadricula"] .doc { flex-direction: column; align-items: flex-start; justify-content: center; gap: 12px; }
+.doc__icon {
+  width: 60px; height: 60px; flex: 0 0 auto; border-radius: 18px;
+  background: var(--f-mano-tint); color: var(--f-mano);
+  display: grid; place-items: center;
+}
+.doc__icon svg { width: 32px; height: 32px; }
+.doc__label { font-size: var(--fs-m); font-weight: 700; display: block; line-height: var(--lh-tight); }
+.doc__meta  { font-size: var(--fs-xs); color: var(--c-gray-1); font-weight: 500; }
+.doc:active { transform: scale(.985); }
+
+/* Visor de una ficha: fondo blanco a tope y aviso de brillo, como los pases
+   de Wallet. Si es para enseñar el DNI o que te escaneen el bono del bus,
+   la pantalla tiene que verse. */
+.viewer { display: flex; flex-direction: column; align-items: center; gap: 16px; padding-top: 6px; }
+.viewer__sheet {
+  width: 100%; aspect-ratio: 1.58;
+  border-radius: var(--r-photo);
+  background: #fff; border: 3px solid var(--c-gray-3);
+  display: grid; place-items: center; gap: 10px;
+  align-content: center; padding: 20px; text-align: center;
+}
+.viewer__sheet svg { width: 76px; height: 76px; color: var(--f-mano); }
+.viewer__sheet b { font-size: var(--fs-lg); }
+.viewer__bright {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-size: var(--fs-xs); font-weight: 600; color: var(--f-mano);
+  background: var(--f-mano-tint); border-radius: 18px;
+  padding: 12px 16px; width: 100%; text-align: center;
+}

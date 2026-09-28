@@ -1,0 +1,46 @@
+/*
+  Nido · v3 — Pre-registro. El vídeo trae el logo y el pollito ya
+  integrados desde su primer frame (recortado en 02:19 del render
+  original del pollito lanzando las fotos), así que no hace falta
+  ningún elemento estático aparte ni coreografía de fundidos.
+
+  No se puede encajar en una caja pequeña centrada: las fotos llegan hasta
+  el borde del encuadre en algún momento de la animación, así que
+  cualquier recorte las corta. Va a todo el ancho del lienzo, centrado en
+  el hueco entre la barra de estado y la barra inferior.
+*/
+
+.screen--pre-registro {
+  /* Figma (node 571:7578) pide fondo blanco puro. El vídeo fuente traía
+     un fondo casi blanco pero no puro (#edf2f9, muestreado del render
+     original) — se corrigió por código (chroma-key por diferencia de
+     color, ver pollito-fotos.original-fondo-crudo.mp4 para el original)
+     en vez de re-renderizar el vídeo desde cero. Este color tiene que
+     coincidir exactamente con el del vídeo o se ve una línea en el
+     borde donde `object-fit: contain` no cubre el lienzo entero. */
+  background: #ffffff;
+}
+
+.pre-registro-video {
+  position: absolute;
+  left: 0;
+  top: 5.5625rem;
+  width: 100%;
+  aspect-ratio: 800 / 1406; /* proporción real del vídeo exportado */
+  object-fit: contain;
+  /* brightness(1.025): el fondo del vídeo se decodifica como ~(251,254,251), no
+     como blanco puro (deriva de H.264 4:2:0 con blanco a tope; se comprobó
+     que no se arregla re-codificando) y se veía un rectángulo verdoso contra
+     el #fff de la pantalla. 250×1.025 ≥ 255, así que el fondo llega a blanco
+     y el resto de colores solo sube un 2,5 %. */
+  filter: blur(0) brightness(1.025);
+  opacity: 1;
+  transition: filter 0.55s ease, opacity 0.55s ease;
+}
+/* Al terminar el vídeo (js/app.js, evento "ended"): se desenfoca y se
+   desvanece — el hueco que deja es donde entrará el flujo de registro
+   (pantalla aún sin construir). */
+.pre-registro-video.is-ending {
+  filter: blur(24px) brightness(1.025);
+  opacity: 0;
+}

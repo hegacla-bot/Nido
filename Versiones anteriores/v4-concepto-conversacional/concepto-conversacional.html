@@ -1,0 +1,1229 @@
+<title>Nido conversacional</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" />
+<style>
+  /*
+    Nido · CONCEPTO — feedback de David (22-sep): app puramente conversacional, sin controles
+    deterministas ("crear álbum" con botones). Dos únicos gestos posibles en cada pantalla:
+    tocar la foto (explorar más imágenes) o tocar el texto/hablar (conversar con Nidi).
+    Nunca un menú, nunca una rejilla de ajustes, nunca un botón "crear".
+
+    Nidi habla con el agente REAL de ElevenLabs (js/agente-concepto.js + servidor-concepto.mjs,
+    con .env.concepto ya configurado) — no hay guion ni respuestas fijas salvo que ese agente
+    no conecte (sin wifi, sin .env.concepto...), donde entra un modo simulado de emergencia
+    para no dejar la pantalla muda (ver arrancarSimulado más abajo), no es el comportamiento normal.
+    Este archivo es un concepto para llevar a revisión, no la app final.
+
+    Escenario deliberadamente oscuro (el "escenario" alrededor del teléfono simula cómo se
+    enseñaría en una presentación): el interior de cada pantalla de la app tiene su propia
+    paleta fija (foto de inicio oscura, conversación e historia en claro), así que no se
+    redefine por el tema del visor — es una maqueta de una app real, no un documento de lectura.
+  */
+  :root{ color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html,body{ margin:0; height:100%; background:#0c0d14; font-family:'Atkinson Hyperlegible', sans-serif; overflow:hidden; }
+  #lienzo{
+    position:relative; width:393px; height:852px; margin:24px auto; background:#000;
+    border-radius:2.5rem; overflow:hidden; box-shadow:0 30px 80px rgba(0,0,0,.5);
+  }
+  @media (max-width:440px){ #lienzo{ width:100vw; height:100vh; margin:0; border-radius:0; } body{ overflow:auto; } }
+
+  .vista{ position:absolute; inset:0; opacity:0; pointer-events:none; transition:opacity .45s ease; }
+  .vista.activa{ opacity:1; pointer-events:auto; }
+
+  /* ---------------- INICIO: una foto y una frase, nada más ---------------- */
+  #vista-inicio .foto-fondo{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover; cursor:pointer;
+    transition:transform 8s ease-out;
+  }
+  #vista-inicio.activa .foto-fondo{ transform:scale(1.06); } /* respiración lenta, nunca estática del todo */
+  .velo-inicio{
+    position:absolute; inset:0;
+    background:linear-gradient(to bottom, rgba(10,12,25,.15) 0%, rgba(10,12,25,.05) 38%, rgba(10,12,25,.75) 78%, rgba(10,12,25,.92) 100%);
+  }
+  .inicio-contenido{
+    position:absolute; left:0; right:0; bottom:0; padding:0 1.75rem 3rem; z-index:2;
+    display:flex; flex-direction:column; align-items:flex-start; gap:.9rem;
+  }
+  .inicio-mascota{ width:4.25rem; height:4.25rem; margin-bottom:.15rem; filter:drop-shadow(0 6px 14px rgba(0,0,0,.35)); cursor:pointer; }
+  .inicio-prompt{
+    all:unset; cursor:pointer; color:#fff; font-family:inherit; font-weight:700;
+    font-size:1.75rem; line-height:1.22; text-align:left; text-shadow:0 2px 18px rgba(0,0,0,.45);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .inicio-prompt:active{ opacity:.75; }
+  .inicio-pista{ color:rgba(255,255,255,.72); font-size:.95rem; }
+  .inicio-pista b{ color:#fff; font-weight:700; }
+
+  /* ---------------- FOTO: deslizar / tocar para ver más ---------------- */
+  #vista-foto{ background:#000; }
+  .foto-carrusel{ position:absolute; inset:0; display:flex; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; }
+  .foto-carrusel::-webkit-scrollbar{ display:none; }
+  .foto-slide{ position:relative; flex:0 0 100%; scroll-snap-align:center; height:100%; }
+  .foto-slide img{ width:100%; height:100%; object-fit:cover; }
+  .foto-slide .foto-info{
+    position:absolute; left:1.5rem; right:1.5rem; bottom:6.5rem; color:#fff;
+    text-shadow:0 2px 14px rgba(0,0,0,.5); pointer-events:none;
+  }
+  .foto-info .fecha{ font-size:.95rem; opacity:.85; }
+  .foto-info .pregunta{ font-weight:700; font-size:1.3rem; margin-top:.35rem; line-height:1.25; }
+  .foto-volver{
+    position:absolute; top:1.6rem; left:1.4rem; width:2.75rem; height:2.75rem; border-radius:50%;
+    background:rgba(20,20,30,.55); backdrop-filter:blur(6px); border:0; z-index:3; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .foto-volver svg{ width:1.3rem; height:1.3rem; }
+
+  /* ---------------- CONVERSACIÓN ---------------- */
+  /* Sin chat: la conversación vive sobre la propia foto. Nidi (de momento, el pollito de siempre — se
+     cambiará en cuanto haya mascota nueva) habla flotando abajo, con una única línea de lo que dice
+     (como un subtítulo, no un historial de mensajes) y las fotos para tocar cuando hacen falta. */
+  #vista-conversacion{ background:#000; }
+  .conv-foto-fondo{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .conv-velo{ position:absolute; inset:0; background:linear-gradient(to bottom, rgba(10,12,25,.1) 0%, rgba(10,12,25,.05) 30%, rgba(10,12,25,.55) 68%, rgba(10,12,25,.85) 100%); }
+  .conv-tiras{ position:absolute; left:0; right:0; bottom:15.5rem; z-index:2; padding:0 1.4rem; }
+  .conv-pollito-fila{ position:absolute; left:1.4rem; right:1.4rem; bottom:9.5rem; z-index:2; display:flex; align-items:flex-end; gap:.8rem; }
+  .conv-pollito-wrap{
+    width:5.5rem; height:5.5rem; border-radius:50%; overflow:hidden; flex:none;
+    background:#fff; box-shadow:0 6px 18px rgba(0,0,0,.35); border:3px solid rgba(255,255,255,.9);
+  }
+  .conv-pollito-video{ width:100%; height:100%; object-fit:contain; }
+  .conv-caption{
+    flex:1; margin:0 0 .3rem; padding:.75rem 1.1rem; border-radius:1.2rem 1.2rem 1.2rem .3rem;
+    background:#fff; color:#1e2a6b; font-size:1.05rem; line-height:1.32; box-shadow:0 4px 14px rgba(0,0,0,.18);
+    animation:aparece .3s ease;
+  }
+  .conv-caption[hidden]{ display:none; }
+  @keyframes aparece{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
+  .conv-pie{ position:absolute; left:0; right:0; bottom:0; z-index:2; padding:1rem 1.4rem 1.6rem; }
+  .conv-caja{
+    display:flex; align-items:center; gap:.6rem; background:#fff; border-radius:2rem;
+    padding:.5rem .5rem .5rem 1.2rem; box-shadow:0 4px 18px rgba(30,42,107,.12);
+  }
+  .conv-input{ all:unset; flex:1; font-family:inherit; font-size:1.05rem; color:#1a1d2c; }
+  .conv-mic{ all:unset; width:3rem; height:3rem; border-radius:50%; background:#516dff; display:flex; align-items:center; justify-content:center; cursor:pointer; flex:none; }
+  .conv-mic.escuchando{ animation:pulso 1s ease-in-out infinite; background:#e0455a; }
+  /* Ya no se apaga (opacity) mientras Nidi habla: el micrófono sigue abierto de verdad en ese
+     momento (ver js/agente-concepto.js) para poder interrumpirla, así que no debe parecer apagado. */
+  @keyframes pulso{ 50%{ transform:scale(1.08); } }
+  .conv-mic svg{ width:1.4rem; height:1.4rem; fill:#fff; }
+  .conv-estado{ text-align:center; font-size:.82rem; color:rgba(255,255,255,.85); text-shadow:0 1px 6px rgba(0,0,0,.4); margin:0 0 .3rem; min-height:1.1rem; }
+  /* Flechas de fotos relacionadas: alternativa en forma de botón a "deslizar para ver más" —
+     nunca depender solo de un gesto (sección 6 del CLAUDE.md). */
+  .conv-flecha{ position:absolute; top:38%; transform:translateY(-50%); width:2.75rem; height:2.75rem; border-radius:50%; background:rgba(20,20,30,.5); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); border:0; z-index:3; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .conv-flecha svg{ width:1.3rem; height:1.3rem; }
+  .conv-flecha--izq{ left:1rem; }
+  .conv-flecha--der{ right:1rem; }
+  .conv-flecha:active{ transform:translateY(-50%) scale(.92); }
+
+  /* ---------------- Nidi propone una foto (Figma 814:13964) — polaroid + pollito pensativo ---------------- */
+  .propone-fondo{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:blur(2px); }
+  .propone-velo{ position:absolute; inset:0; background:rgba(41,41,41,.6); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
+  .propone-polaroid{ position:absolute; left:2.7075rem; top:10.243rem; width:19.147rem; height:25.529rem; background:#fff; border:1px dashed #d6d6d6; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,.35); }
+  .propone-polaroid img{ position:absolute; left:.768rem; top:1.566rem; width:17.551rem; height:17.551rem; object-fit:cover; }
+  .propone-pollito{ position:absolute; left:-2.9rem; top:25.5rem; width:19rem; height:19rem; max-width:none; object-fit:contain; transform:rotate(-4.97deg); pointer-events:none; filter:drop-shadow(0 10px 20px rgba(0,0,0,.3)); }
+
+  /* ---------------- "Crear un recuerdo nuevo" (simulado, ver comentario en el HTML) ---------------- */
+  .historia-generar{
+    display:flex; align-items:center; gap:.85rem; width:100%; text-align:left; margin-bottom:1.4rem;
+    background:var(--color-primary-blue-lighter, #f4f5fc); border:2px dashed var(--color-primary-blue, #516dff);
+    border-radius:1.2rem; padding:1rem 1.1rem; font-family:inherit; cursor:pointer;
+  }
+  .historia-generar__icono{ font-size:1.5rem; flex:none; }
+  .historia-generar__texto{ display:flex; flex-direction:column; gap:.15rem; }
+  .historia-generar__texto b{ color:var(--color-primary-blue-dark, #1e2a6b); font-size:1rem; }
+  .historia-generar__texto small{ color:var(--color-primary-blue-dark, #1e2a6b); opacity:.75; font-size:.85rem; line-height:1.3; }
+  .historia-generar:active{ transform:scale(.98); }
+
+  /* ---------------- HISTORIA armada ---------------- */
+  #vista-historia{ background:#fff; overflow-y:auto; }
+  .historia-foto{ position:relative; width:100%; height:19.5rem; }
+  .historia-foto img{ width:100%; height:100%; object-fit:cover; }
+  .historia-foto::after{ content:''; position:absolute; inset:0; background:linear-gradient(to bottom, rgba(0,0,0,0) 55%, #fff 100%); }
+  .historia-volver{
+    position:absolute; top:1.6rem; left:1.4rem; width:2.75rem; height:2.75rem; border-radius:50%;
+    background:rgba(20,20,30,.5); backdrop-filter:blur(6px); border:0; z-index:3; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .historia-volver svg{ width:1.3rem; height:1.3rem; }
+  .historia-cuerpo{ padding:0 1.6rem 2.5rem; margin-top:-2.5rem; position:relative; }
+  .historia-fecha{ color:#516dff; font-weight:700; font-size:.95rem; }
+  .historia-texto{ font-size:1.15rem; line-height:1.55; color:#1a1d2c; margin:.6rem 0 1.4rem; }
+  .historia-dato{
+    display:flex; gap:.75rem; align-items:flex-start; background:#f4f5fc; border-radius:1.2rem;
+    padding:1rem 1.1rem; font-size:.95rem; color:#1e2a6b; line-height:1.4; margin-bottom:1.6rem;
+  }
+  .historia-dato svg{ width:1.4rem; height:1.4rem; flex:none; margin-top:.1rem; }
+  .historia-seguir{ font-weight:700; font-size:1.05rem; color:#1a1d2c; margin-bottom:.9rem; }
+  .historia-tiras{ display:flex; gap:.7rem; overflow-x:auto; padding-bottom:.3rem; }
+  .historia-tira{ flex:0 0 6.5rem; height:6.5rem; border-radius:1rem; overflow:hidden; cursor:pointer; opacity:0; animation:tarjetaEntra .5s cubic-bezier(.2,.8,.2,1) forwards; }
+  .historia-tira.tocada{ animation:tocado .38s ease; }
+  .historia-tira img{ width:100%; height:100%; object-fit:cover; }
+
+  /* ---------------- Tira de fotos DENTRO del chat: para buscar a alguien no hace falta un menú,
+     solo tocar la cara que es. Vive como una burbuja más de la conversación. ---------------- */
+  .tiras-aviso{
+    font-size:.95rem; font-weight:700; color:#fff; text-shadow:0 1px 8px rgba(0,0,0,.5);
+    margin:0 0 .6rem .1rem;
+  }
+  .tiras-fila{ display:flex; gap:.6rem; overflow-x:auto; padding-bottom:.3rem; }
+  .tiras-item{ flex:0 0 5.5rem; cursor:pointer; opacity:0; animation:tarjetaEntra .5s cubic-bezier(.2,.8,.2,1) forwards; }
+  .tiras-item img{ width:5.5rem; height:5.5rem; border-radius:1rem; object-fit:cover; display:block; box-shadow:0 4px 14px rgba(0,0,0,.35); }
+  /* Entrada escalonada de las tarjetas (feedback de David sobre la web de referencia): cada foto cae
+     en su sitio con un pequeño desfase, no aparecen todas de golpe. */
+  @keyframes tarjetaEntra{ from{ opacity:0; transform:translateY(20px) scale(.9); } to{ opacity:1; transform:none; } }
+  /* Confirmación al tocar una foto (por ejemplo, al nombrar a alguien): un pequeño rebote antes de
+     pasar a la conversación, para que se note que el toque ha significado algo. */
+  .tiras-item.tocada{ animation:tocado .38s ease; }
+  @keyframes tocado{ 0%{ transform:scale(1); } 35%{ transform:scale(.86); } 70%{ transform:scale(1.08); } 100%{ transform:scale(1); } }
+
+  .home-bar{ position:absolute; left:50%; bottom:.6rem; transform:translateX(-50%); width:8.5rem; height:.3rem; border-radius:1rem; background:rgba(255,255,255,.6); z-index:5; }
+  #vista-conversacion .home-bar, #vista-historia .home-bar{ background:rgba(30,42,107,.25); }
+
+  .marco-nota{
+    max-width:393px; margin:0 auto 1.2rem; padding:0 1.5rem; color:rgba(255,255,255,.45);
+    font-size:.8rem; text-align:center; line-height:1.4;
+  }
+  /* En un móvil real el teléfono ES la pantalla entera: este aviso no debe robarle espacio al chat. */
+  @media (max-width:440px){ .marco-nota{ display:none; } }
+
+  /* ================================================================================
+     REGISTRO (22-sep) — CSS portado de prototipo-v3 (tokens.css/base.css/registro.css/
+     pre-registro.css/bienvenida.css), tal cual salvo dos cosas:
+     1) Las variables de Figma se traen aquí como :root sueltas (no se enlazan las
+        hojas de v3 completas para no arrastrar su body/screen-canvas, pensado para
+        otro sistema de layout que el de este concepto).
+     2) Todo lo que en v3 se llamaba ".status-bar"/".home-bar" se renombra a
+        ".reg-status-bar"/".reg-home-bar": ese nombre YA existe en este concepto con
+        otro diseño (la píldora simple de las vistas de foto/conversación/historia) y
+        pisarlo rompería esas tres pantallas. El resto de nombres (.btn, .registro-*,
+        .screen--bienvenida...) no existían aquí, así que se mantienen intactos.
+     ================================================================================ */
+  :root{
+    --color-white:#ffffff; --color-primary-blue:#516dff; --color-primary-blue-dark:#1e2a6b;
+    --color-primary-blue-light:#dde2fb; --color-primary-blue-lighter:#f4f5fc; --color-input-bg:#e8ebf6;
+    --bg-app:#f4f6ff; --font-size-title-xlarge:1.5rem; --font-size-label-xlarge:1.375rem;
+    --font-size-label-large:1.25rem; --font-size-label-medium:1.125rem; --font-size-time:1.0625rem;
+    --font-weight-bold:700; --font-weight-regular:400; --space-page-margin:1.25rem;
+    --radius-button:0.75rem; --radius-button-lg:1.25rem; --color-ios-black:#1d1d1b;
+    --shadow-button:2px 4px 16px 0px rgba(65,81,162,.1), 2px 4px 4px 0px rgba(85,102,189,.2);
+    --shadow-button-light:2px 4px 16px 0px rgba(159,159,176,.3), 2px 4px 4px 0px rgba(178,178,194,.2);
+  }
+  .reg-flow{ background:var(--color-white); font-family:'Atkinson Hyperlegible', sans-serif; }
+  /* :where() a propósito (especificidad cero): son solo un reset del estilo nativo del
+     navegador, y un reset con más peso que una sola clase (ej. ".reg-flow button" le habría
+     ganado a ".btn--type2") tapaba el fondo azul de los botones — bug real, visto en captura:
+     "Permitir" salía en blanco, sin texto visible encima de fondo blanco. */
+  .reg-flow :where(img){ display:block; max-width:100%; }
+  .reg-flow :where(button){ font-family:inherit; border:none; background:none; cursor:pointer; padding:0; -webkit-tap-highlight-color:transparent; }
+  .reg-flow :where(p, h1, h2, h3){ margin:0; }
+
+  /* ---- status bar / home bar (renombradas, ver nota de arriba) ---- */
+  .reg-status-bar{ position:absolute; top:0; left:0; right:0; height:3.1875rem; z-index:20; pointer-events:none; }
+  .reg-status-bar__time{ position:absolute; left:3.1875rem; top:50%; transform:translateY(-50%); font-family:-apple-system,BlinkMacSystemFont,'SF Pro',sans-serif; font-weight:590; font-size:var(--font-size-time); color:var(--color-ios-black); white-space:nowrap; }
+  .reg-status-bar__levels{ position:absolute; left:15.6242rem; width:8.9383rem; top:-0.09375rem; height:3.375rem; }
+  .reg-status-bar__icon{ position:absolute; display:block; }
+  .reg-status-bar__icon--cellular{ left:2.0004rem; top:1.4708rem; width:1.2rem; }
+  .reg-status-bar__icon--wifi{ left:3.6691rem; top:1.4772rem; width:1.07136rem; }
+  .reg-status-bar__battery{ position:absolute; left:5.1879rem; top:1.4374rem; width:1.5625rem; height:.8127rem; border:1px solid rgba(29,29,27,.35); border-radius:.27rem; }
+  .reg-status-bar__battery-cap{ position:absolute; left:1.6247rem; top:.299rem; width:.083rem; }
+  .reg-status-bar__battery-fill{ position:absolute; inset:.0625rem; background:var(--color-ios-black); border-radius:.15rem; }
+  .reg-home-bar{ position:absolute; bottom:0; left:0; right:0; height:2.125rem; display:flex; align-items:flex-end; justify-content:center; padding-bottom:.5rem; z-index:40; pointer-events:none; }
+  .reg-home-bar__pill{ width:9.625rem; height:.3125rem; border-radius:100px; background:#101c2b; }
+
+  /* ---- bienvenida / pre-registro (bienvenida.css / pre-registro.css de v3, sin cambios) ---- */
+  .screen--bienvenida{ background:linear-gradient(to bottom, #f3f3f8 17.014%, #fafafc 94.127%); }
+  .bienvenida-pollito{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:16rem; height:16rem; object-fit:contain; pointer-events:none; }
+  .screen--pre-registro{ background:#ffffff; }
+  .pre-registro-video{ position:absolute; left:0; top:5.5625rem; width:100%; aspect-ratio:800/1406; object-fit:contain; filter:blur(0) brightness(1.025); }
+
+  /* ---- registro-1/2/3 (registro.css de v3, sin cambios salvo el hero-photo, ver nota) ---- */
+  .screen--registro{ background:var(--bg-app); }
+  .registro-1{ background:var(--color-white); }
+  .registro-wordmark{ position:absolute; left:1.25rem; top:4.6875rem; width:4.25rem; height:1.5625rem; }
+  .registro-cta{ position:absolute; left:var(--space-page-margin); top:46.125rem; width:calc(100% - 2*var(--space-page-margin)); }
+  /* Hero-photo: v3 traía una ilustración ancha (pollitos en un sofá) pensada para
+     desbordar el lienzo (left negativo, 26rem de ancho); las 6 imágenes nuevas del
+     pollito de referencia son fotos de producto cuadradas sobre blanco, así que aquí
+     se centran y se contienen en vez de reusar ese sangrado — mismo hueco visual
+     (top/height), geometría distinta porque el asset ya no es el mismo tipo de arte. */
+  .registro-1-photo{ position:absolute; left:50%; transform:translateX(-50%); top:11.5rem; width:14rem; height:14rem; object-fit:contain; pointer-events:none; }
+  .registro-1-underline{ position:absolute; left:-.0377rem; top:28.5519rem; width:27.1693rem; max-width:none; transform:rotate(-.2deg); pointer-events:none; opacity:.55; }
+  .registro-1-title{ position:absolute; left:1.25rem; top:33rem; width:17.6875rem; font-size:var(--font-size-title-xlarge); font-weight:var(--font-weight-bold); color:var(--color-primary-blue-dark); }
+  .registro-1-subtitle{ position:absolute; left:1.25rem; top:37.75rem; font-size:var(--font-size-label-medium); font-weight:var(--font-weight-regular); color:var(--color-primary-blue-dark); }
+  .registro-title{ position:absolute; left:1.25rem; top:8.75rem; width:14.375rem; font-size:var(--font-size-title-xlarge); font-weight:var(--font-weight-bold); color:var(--color-primary-blue-dark); }
+  .registro-subtitle{ position:absolute; left:1.25rem; font-size:var(--font-size-label-medium); font-weight:var(--font-weight-regular); color:var(--color-primary-blue-dark); }
+  .registro-2 .registro-subtitle{ top:13.5rem; }
+  .registro-3 .registro-subtitle{ top:11.125rem; }
+  .registro-2, .registro-3{ background:var(--color-white); }
+  .registro-display{ position:absolute; left:var(--space-page-margin); top:17.3125rem; width:calc(100% - 2*var(--space-page-margin)); height:4.5rem; background:transparent; border:1px solid var(--color-primary-blue); border-radius:var(--radius-button); display:flex; align-items:center; padding:0 1.25rem; font-size:var(--font-size-label-xlarge); font-weight:var(--font-weight-bold); color:var(--color-primary-blue-dark); }
+  .registro-display::after{ content:''; width:2px; height:1.6rem; margin-left:2px; background:var(--color-primary-blue-dark); animation:reg-caret 1s steps(1) infinite; }
+  @keyframes reg-caret{ 50%{ opacity:0; } }
+  .registro-code{ position:absolute; left:2.4375rem; top:17.0625rem; width:19.6875rem; display:flex; gap:1rem; }
+  .registro-code__box{ flex:1 0 0; height:4.5rem; background:transparent; border:1px solid var(--color-primary-blue); border-radius:var(--radius-button); display:flex; align-items:center; justify-content:center; font-size:var(--font-size-label-xlarge); font-weight:var(--font-weight-bold); color:var(--color-primary-blue-dark); }
+  .registro-keypad{ position:absolute; left:var(--space-page-margin); width:calc(100% - 2*var(--space-page-margin)); top:24.0625rem; display:grid; grid-template-columns:repeat(3,1fr); gap:.5rem; }
+  .registro-key{ height:4.5rem; border-radius:var(--radius-button); display:flex; align-items:center; justify-content:center; font-size:2rem; font-weight:var(--font-weight-regular); font-family:inherit; border:none; cursor:pointer; background:var(--color-primary-blue-lighter); color:var(--color-primary-blue-dark); }
+  .registro-key[data-key="0"]{ grid-column:2; }
+  .registro-key--backspace img{ width:1.75rem; height:1.75rem; }
+  .registro-key:active{ transform:scale(.96); }
+  .registro-2 .registro-cta, .registro-3 .registro-cta{ top:46.625rem; z-index:10; }
+
+  /* ---- registro-nidi · "Hola, soy Nidi" (registro.css de v3, node Figma 765:5974) ----
+     El pollito de v3 era una ilustración alta pensada para esa caja (346×424, ver comentario de
+     registro-1-photo sobre el mismo motivo); con la foto cuadrada nueva se centra y se contiene
+     en vez de forzar esas proporciones. */
+  .registro-nidi{ background:var(--color-white); cursor:pointer; }
+  .registro-nidi-title, .registro-nidi-subtitle{ position:absolute; left:calc(50% + 1px); transform:translateX(-50%); margin:0; text-align:center; color:var(--color-primary-blue); }
+  .registro-nidi-title{ top:16.5rem; width:17.1875rem; font-size:2rem; font-weight:var(--font-weight-bold); }
+  .registro-nidi-subtitle{ top:19.6875rem; width:14.375rem; font-size:var(--font-size-label-large); font-weight:var(--font-weight-regular); }
+  .registro-nidi-pollito{ position:absolute; left:50%; transform:translateX(-50%); top:26rem; width:19rem; height:19rem; max-width:none; object-fit:contain; pointer-events:none; }
+
+  /* ---- Explicación del micrófono (Figma 814:13870) — sobre foto real, no fondo blanco, así que
+     no lleva .reg-flow (esa familia de resets es para las pantallas blancas del registro). ---- */
+  .nidi-mic-fondo{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .nidi-mic-velo{ position:absolute; inset:0; background:rgba(41,41,41,.6); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
+  .nidi-mic-bubble{
+    position:absolute; left:1.25rem; width:13.0625rem; min-height:5.625rem; display:flex; align-items:center;
+    padding:0 1.1rem; margin:0; background:#fff; color:var(--color-primary-blue-dark); font-size:1.125rem;
+    line-height:1.3; box-shadow:0 4px 14px rgba(0,0,0,.25);
+  }
+  .nidi-mic-bubble--1{ top:9rem; border-radius:2rem; }
+  .nidi-mic-bubble--2{ top:15.375rem; border-radius:2rem 2rem 0 2rem; } /* esquina inf-derecha recta: la burbuja "se apila" bajo la primera, igual que en Figma */
+  .nidi-mic-pollito{ position:absolute; left:50%; top:18.5rem; width:18rem; height:18rem; max-width:none; object-fit:contain; transform:translateX(-50%) rotate(-4.97deg); pointer-events:none; filter:drop-shadow(0 10px 20px rgba(0,0,0,.3)); }
+  .nidi-mic-boton{ position:absolute; left:50%; top:40rem; transform:translateX(-50%); width:9.875rem; height:9.875rem; border:none; background:none; padding:0; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .nidi-mic-boton img{ width:100%; height:100%; display:block; }
+  .nidi-mic-boton:active{ transform:translateX(-50%) scale(.94); }
+
+  /* ---- modal "Ayúdanos" (registro.css de v3, sin cambios) ---- */
+  .registro-modal-overlay{ position:absolute; inset:0; z-index:40; -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); background:rgba(41,41,41,.6); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .3s ease; }
+  .registro-modal-overlay.is-visible{ opacity:1; pointer-events:auto; }
+  .registro-modal{ background:var(--color-white); border-radius:2.5rem; width:21.5rem; padding:1.5rem 1.25rem; display:flex; flex-direction:column; align-items:center; gap:1rem; transform:scale(.96); transition:transform .3s ease; }
+  .registro-modal-overlay.is-visible .registro-modal{ transform:scale(1); }
+  .registro-modal-photo{ width:14.75rem; height:8.5rem; object-fit:contain; }
+  .registro-modal-title{ font-size:var(--font-size-label-large); font-weight:var(--font-weight-bold); color:var(--color-primary-blue-dark); text-align:center; }
+  .registro-modal-body{ font-size:var(--font-size-label-medium); font-weight:var(--font-weight-regular); color:var(--color-primary-blue-dark); text-align:center; }
+  .registro-modal-actions{ display:flex; flex-direction:column; gap:.75rem; width:19rem; }
+  .registro-modal-actions .btn{ width:100%; }
+  .registro-modal-actions .btn--type3{ background:var(--color-primary-blue-lighter); border:1px solid var(--color-primary-blue-light); box-shadow:var(--shadow-button-light); height:4.0625rem; }
+
+  /* ---- botones (components.css de v3, sin cambios) ---- */
+  .btn{ display:flex; align-items:center; justify-content:center; gap:.625rem; border-radius:var(--radius-button-lg); box-shadow:var(--shadow-button); font-weight:var(--font-weight-bold); white-space:nowrap; text-decoration:none; }
+  .btn__icon{ width:1.75rem; height:1.75rem; flex-shrink:0; }
+  .btn__icon img{ width:100%; height:100%; }
+  .btn--type2{ background:var(--color-primary-blue); color:var(--color-white); }
+  .btn--type3{ background:var(--color-primary-blue-light); color:var(--color-primary-blue-dark); }
+  .btn--horizontal{ flex-direction:row; padding:1rem 1.25rem; font-size:var(--font-size-label-medium); }
+  .btn--horizontal.btn--lg{ padding:1.25rem 2rem; font-size:var(--font-size-label-large); }
+  .btn--horizontal.btn--icon-wide{ padding-left:2rem; padding-right:2.5rem; }
+  .btn.is-pressed{ transform:scale(.96); transition:transform .15s ease; }
+  .bottom-fade{ position:absolute; left:0; right:0; bottom:0; height:8.75rem; background:linear-gradient(to top, rgba(255,255,255,.75) 74.75%, rgba(255,255,255,.38) 88.29%, rgba(255,255,255,0) 97.47%); backdrop-filter:blur(7px); -webkit-backdrop-filter:blur(7px); mask-image:linear-gradient(to top, rgba(0,0,0,1) 74.75%, rgba(0,0,0,.5) 88.29%, rgba(0,0,0,0) 97.47%); -webkit-mask-image:linear-gradient(to top, rgba(0,0,0,1) 74.75%, rgba(0,0,0,.5) 88.29%, rgba(0,0,0,0) 97.47%); pointer-events:none; z-index:5; }
+</style>
+
+<p class="marco-nota">Concepto interno · Nido — llévalo al móvil para probar el micrófono real. Nidi es una IA libre de verdad (agente de ElevenLabs conectado), sin respuestas de guion salvo que falle la conexión.</p>
+<div id="lienzo">
+
+  <!-- ============================================================================ -->
+  <!-- REGISTRO (22-sep) — petición: "que el inicio de la app sea parecido al del    -->
+  <!-- prototipo que estábamos haciendo". Se porta tal cual el flujo de prototipo-v3  -->
+  <!-- (bienvenida → pre-registro → registro-1 valor → registro-2 teléfono →         -->
+  <!-- registro-3 código + modal "Ayúdanos"), pero al tocar "Permitir" ya NO va a un  -->
+  <!-- registro-nidi/registro-4 con botones: entra directo en la conversación real,   -->
+  <!-- donde Nidi se presenta y pregunta el nombre por voz (saludoInicial más abajo). -->
+  <!-- Las clases originales de v3 (.screen--bienvenida, .registro-1, .btn...) se     -->
+  <!-- mantienen para reutilizar su CSS tal cual; el CSS portado va con prefijo       -->
+  <!-- "reg-" (ver <style> de más abajo) para no chocar con nada de este concepto.    -->
+  <!-- ============================================================================ -->
+  <section id="vista-bienvenida" class="vista activa reg-flow screen--bienvenida" data-reg-bienvenida>
+    <img class="registro-wordmark" src="assets/icons/wordmark-nido.svg" alt="Nido" />
+    <!-- Pollito nuevo (Masko), no el vídeo antiguo del huevo — ese ya no se usa en este concepto. -->
+    <img class="bienvenida-pollito" src="assets/img/concepto/pollito-saludando.webp?v=1" alt="" />
+  </section>
+
+  <section id="vista-pre-registro" class="vista reg-flow screen--pre-registro">
+    <div class="reg-status-bar">
+      <span class="reg-status-bar__time">9:41</span>
+      <div class="reg-status-bar__levels">
+        <img class="reg-status-bar__icon reg-status-bar__icon--cellular" src="assets/icons/statusbar-cellular.svg" alt="" />
+        <img class="reg-status-bar__icon reg-status-bar__icon--wifi" src="assets/icons/statusbar-wifi.svg" alt="" />
+        <span class="reg-status-bar__battery"><span class="reg-status-bar__battery-fill"></span><img class="reg-status-bar__battery-cap" src="assets/icons/statusbar-battery-cap.svg" alt="" /></span>
+      </div>
+    </div>
+    <video class="pre-registro-video" src="assets/video/pollito-fotos.mp4?v=6" muted playsinline data-pre-registro-video></video>
+    <div class="reg-home-bar"><span class="reg-home-bar__pill"></span></div>
+  </section>
+
+  <section id="vista-registro-1" class="vista reg-flow screen--registro registro-1">
+    <div class="reg-status-bar">
+      <span class="reg-status-bar__time">9:41</span>
+      <div class="reg-status-bar__levels">
+        <img class="reg-status-bar__icon reg-status-bar__icon--cellular" src="assets/icons/statusbar-cellular.svg" alt="" />
+        <img class="reg-status-bar__icon reg-status-bar__icon--wifi" src="assets/icons/statusbar-wifi.svg" alt="" />
+        <span class="reg-status-bar__battery"><span class="reg-status-bar__battery-fill"></span><img class="reg-status-bar__battery-cap" src="assets/icons/statusbar-battery-cap.svg" alt="" /></span>
+      </div>
+    </div>
+    <img class="registro-wordmark" src="assets/icons/wordmark-nido.svg" alt="Nido" />
+    <img class="registro-1-photo" src="assets/img/concepto/registro/pollito-ref-alegre.webp?v=1" alt="" />
+    <img class="registro-1-underline" src="assets/icons/decorative-underline-blur.svg" alt="" />
+    <p class="registro-1-title">Revive tus momentos más especiales</p>
+    <p class="registro-1-subtitle">Organiza tus fotos sin ningún esfuerzo</p>
+    <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-wide registro-cta" data-reg-nav="vista-registro-2">
+      <span class="btn__icon"><img src="assets/icons/icon-arrow-narrow-right.svg" alt="" /></span>
+      Entrar
+    </button>
+    <div class="reg-home-bar"><span class="reg-home-bar__pill"></span></div>
+  </section>
+
+  <section id="vista-registro-2" class="vista reg-flow screen--registro registro-2">
+    <div class="reg-status-bar">
+      <span class="reg-status-bar__time">9:41</span>
+      <div class="reg-status-bar__levels">
+        <img class="reg-status-bar__icon reg-status-bar__icon--cellular" src="assets/icons/statusbar-cellular.svg" alt="" />
+        <img class="reg-status-bar__icon reg-status-bar__icon--wifi" src="assets/icons/statusbar-wifi.svg" alt="" />
+        <span class="reg-status-bar__battery"><span class="reg-status-bar__battery-fill"></span><img class="reg-status-bar__battery-cap" src="assets/icons/statusbar-battery-cap.svg" alt="" /></span>
+      </div>
+    </div>
+    <img class="registro-wordmark" src="assets/icons/wordmark-nido.svg" alt="Nido" />
+    <p class="registro-title">¿Cuál es tu número de teléfono?</p>
+    <p class="registro-subtitle">Te enviaremos un código para confirmarlo.</p>
+    <div class="registro-display" data-registro-phone-display></div>
+    <div class="registro-keypad" data-registro-keypad="phone">
+      <button class="registro-key" data-key="1">1</button>
+      <button class="registro-key" data-key="2">2</button>
+      <button class="registro-key" data-key="3">3</button>
+      <button class="registro-key" data-key="4">4</button>
+      <button class="registro-key" data-key="5">5</button>
+      <button class="registro-key" data-key="6">6</button>
+      <button class="registro-key" data-key="7">7</button>
+      <button class="registro-key" data-key="8">8</button>
+      <button class="registro-key" data-key="9">9</button>
+      <button class="registro-key" data-key="0">0</button>
+      <button class="registro-key registro-key--backspace" data-key="backspace" aria-label="Borrar"><img src="assets/icons/icon-delete-blue.svg" alt="" /></button>
+    </div>
+    <div class="bottom-fade"></div>
+    <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-wide registro-cta" data-reg-nav="vista-registro-3">
+      <span class="btn__icon"><img src="assets/icons/icon-arrow-narrow-right.svg" alt="" /></span>
+      Enviar código
+    </button>
+    <div class="reg-home-bar"><span class="reg-home-bar__pill"></span></div>
+  </section>
+
+  <section id="vista-registro-3" class="vista reg-flow screen--registro registro-3">
+    <div class="reg-status-bar">
+      <span class="reg-status-bar__time">9:41</span>
+      <div class="reg-status-bar__levels">
+        <img class="reg-status-bar__icon reg-status-bar__icon--cellular" src="assets/icons/statusbar-cellular.svg" alt="" />
+        <img class="reg-status-bar__icon reg-status-bar__icon--wifi" src="assets/icons/statusbar-wifi.svg" alt="" />
+        <span class="reg-status-bar__battery"><span class="reg-status-bar__battery-fill"></span><img class="reg-status-bar__battery-cap" src="assets/icons/statusbar-battery-cap.svg" alt="" /></span>
+      </div>
+    </div>
+    <img class="registro-wordmark" src="assets/icons/wordmark-nido.svg" alt="Nido" />
+    <p class="registro-title">Introduce el código</p>
+    <p class="registro-subtitle">Te hemos enviado un código de 4 dígitos.</p>
+    <div class="registro-code" data-registro-code-display>
+      <span class="registro-code__box" data-code-box></span>
+      <span class="registro-code__box" data-code-box></span>
+      <span class="registro-code__box" data-code-box></span>
+      <span class="registro-code__box" data-code-box></span>
+    </div>
+    <div class="registro-keypad" data-registro-keypad="code">
+      <button class="registro-key" data-key="1">1</button>
+      <button class="registro-key" data-key="2">2</button>
+      <button class="registro-key" data-key="3">3</button>
+      <button class="registro-key" data-key="4">4</button>
+      <button class="registro-key" data-key="5">5</button>
+      <button class="registro-key" data-key="6">6</button>
+      <button class="registro-key" data-key="7">7</button>
+      <button class="registro-key" data-key="8">8</button>
+      <button class="registro-key" data-key="9">9</button>
+      <button class="registro-key" data-key="0">0</button>
+      <button class="registro-key registro-key--backspace" data-key="backspace" aria-label="Borrar"><img src="assets/icons/icon-delete-blue.svg" alt="" /></button>
+    </div>
+    <div class="bottom-fade"></div>
+    <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-wide registro-cta" data-registro-resend>
+      <span class="btn__icon"><img src="assets/icons/icon-refresh-ccw-02.svg" alt="" /></span>
+      Reenviar código
+    </button>
+
+    <div class="registro-modal-overlay" data-registro-modal>
+      <div class="registro-modal">
+        <img class="registro-modal-photo" src="assets/img/concepto/registro/pollito-ref-saludo.webp?v=1" alt="" />
+        <p class="registro-modal-title">Ayúdanos</p>
+        <p class="registro-modal-body">Permite el acceso a tu galería y organizaremos todas tus fotos automáticamente.</p>
+        <div class="registro-modal-actions">
+          <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-wide" data-reg-nav="vista-registro-nidi">
+            <span class="btn__icon"><img src="assets/icons/icon-check.svg" alt="" /></span>
+            Permitir
+          </button>
+          <button class="btn btn--type3 btn--horizontal btn--lg" data-reg-nav="vista-registro-nidi">
+            Quiero saber más
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="reg-home-bar"><span class="reg-home-bar__pill"></span></div>
+  </section>
+
+  <!-- ============ REGISTRO · saludo de Nidi (Figma 765:5974) — pedido tal cual, con el pollito
+       nuevo. Sin botón: avanza sola tras unos segundos, o al tocar en cualquier sitio (mismo
+       patrón que prototipo-v3). Desde aquí ya se entra en la conversación real, que es quien
+       hace de verdad la pregunta "¿cómo te llamas?" (saludoInicial, más abajo). ============ -->
+  <section id="vista-registro-nidi" class="vista reg-flow registro-nidi" data-reg-permitir>
+    <img class="registro-wordmark" src="assets/icons/wordmark-nido.svg" alt="Nido" />
+    <p class="registro-nidi-title">Hola, soy Nidi.</p>
+    <p class="registro-nidi-subtitle">Estoy aquí para ayudarte en lo que necesites.</p>
+    <!-- Gif animado de verdad (Masko), no la foto fija del modal — pedido explícito: "en la página
+         de hola soy nidi puedes meter el gif saludando". -->
+    <img class="registro-nidi-pollito" src="assets/img/concepto/pollito-saludando.webp?v=1" alt="" />
+    <div class="reg-home-bar"><span class="reg-home-bar__pill"></span></div>
+  </section>
+
+  <!-- ============ Explicación del micrófono (Figma 814:13870) — siguiente pantalla tras "Hola,
+       soy Nidi": dos burbujas fijas explicando el gesto + el mismo pollito saludando + un botón
+       de micrófono grande. Al tocarlo, arranca la conversación real de verdad (abrirConversacion),
+       sobre la misma foto que ya se ve de fondo aquí — sin salto a otra imagen distinta. ============ -->
+  <section id="vista-nidi-mic" class="vista">
+    <img class="nidi-mic-fondo" id="nidi-mic-fondo" alt="" />
+    <div class="nidi-mic-velo"></div>
+    <p class="nidi-mic-bubble nidi-mic-bubble--1">¡Hola! Cuéntame un poco de ti.</p>
+    <p class="nidi-mic-bubble nidi-mic-bubble--2">Pulsa en el micrófono y dime cómo te llamas.</p>
+    <img class="nidi-mic-pollito" src="assets/img/concepto/pollito-saludando.webp?v=1" alt="" />
+    <button class="nidi-mic-boton" data-reg-mic-empezar aria-label="Hablar con Nidi">
+      <img src="assets/icons/icon-mic-boton-grande.svg" alt="" />
+    </button>
+    <div class="home-bar"></div>
+  </section>
+
+  <!-- ============ Nidi propone una foto (Figma 814:13964) — entre tocar el micrófono y que la
+       conversación arranque de verdad: un momento breve, sin texto, con la foto en un polaroid y
+       Nidi pensativa al lado. Avanza sola o al tocar, igual que el resto de pasos de este flujo. -->
+  <section id="vista-nidi-propone" class="vista" data-reg-propuesta>
+    <img class="propone-fondo" id="propone-fondo" alt="" />
+    <div class="propone-velo"></div>
+    <div class="propone-polaroid"><img id="propone-foto" alt="" /></div>
+    <img class="propone-pollito" src="assets/img/concepto/registro/pollito-ref-pensativo.webp?v=1" alt="" />
+    <div class="home-bar"></div>
+  </section>
+
+  <!-- ============ INICIO — una foto, una frase, nada más ============ -->
+  <section id="vista-inicio" class="vista">
+    <img class="foto-fondo" data-accion="ver-foto" alt="" />
+    <div class="velo-inicio"></div>
+    <div class="inicio-contenido">
+      <svg class="inicio-mascota" data-accion="hablar" viewBox="0 0 100 100"><use href="#mascota"/></svg>
+      <button class="inicio-prompt" data-accion="hablar"></button>
+      <p class="inicio-pista">Toca la foto para ver más. <b>Toca aquí</b> para contarme algo.</p>
+    </div>
+    <div class="home-bar"></div>
+  </section>
+
+  <!-- ============ FOTO — deslizar para descubrir más ============ -->
+  <section id="vista-foto" class="vista">
+    <button class="foto-volver" data-accion="al-inicio"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 8 12l10 6"/></svg></button>
+    <div class="foto-carrusel" id="foto-carrusel"></div>
+  </section>
+
+  <!-- ============ CONVERSACIÓN — sin chat: siempre la foto, con Nidi hablando encima ============ -->
+  <section id="vista-conversacion" class="vista">
+    <img class="conv-foto-fondo" id="conv-foto-fondo" alt="" />
+    <div class="conv-velo"></div>
+    <!-- Fotos relacionadas (mismo día, o las más cercanas si no hay bastantes): alternativa en
+         forma de botón a deslizar, nunca depender solo del gesto (sección 6 del CLAUDE.md). -->
+    <button class="conv-flecha conv-flecha--izq" id="conv-flecha-izq" aria-label="Foto relacionada anterior">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+    </button>
+    <button class="conv-flecha conv-flecha--der" id="conv-flecha-der" aria-label="Foto relacionada siguiente">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+    <div class="conv-tiras" id="conv-tiras"></div>
+    <div class="conv-pollito-fila">
+      <div class="conv-pollito-wrap">
+        <img class="conv-pollito-video" id="conv-pollito-video" alt="" />
+      </div>
+      <p class="conv-caption" id="conv-caption" hidden></p>
+    </div>
+    <div class="conv-pie">
+      <p class="conv-estado" id="conv-estado"></p>
+      <div class="conv-caja">
+        <input class="conv-input" id="conv-input" placeholder="Escribe o toca el micrófono…" />
+        <button class="conv-mic" id="conv-mic" aria-label="Hablar">
+          <svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2Z"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="home-bar"></div>
+  </section>
+
+  <!-- ============ HISTORIA — lo que ha quedado armado ============ -->
+  <section id="vista-historia" class="vista">
+    <div class="historia-foto">
+      <button class="historia-volver" data-accion="al-inicio"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 8 12l10 6"/></svg></button>
+      <img id="historia-foto-img" alt="" />
+    </div>
+    <div class="historia-cuerpo">
+      <p class="historia-fecha" id="historia-fecha"></p>
+      <p class="historia-texto" id="historia-texto"></p>
+      <div class="historia-dato" id="historia-dato-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#516dff" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        <span id="historia-dato"></span>
+      </div>
+      <!-- "Generar un recuerdo nuevo" — de MOMENTO SIMULADO, sin ninguna IA de generación de
+           imágenes conectada de verdad (no hay ninguna en este proyecto todavía). Al tocarlo se
+           avisa de eso mismo en vez de fingir un resultado que no existe. -->
+      <button class="historia-generar" id="historia-generar" data-generar-recuerdo>
+        <span class="historia-generar__icono">✨</span>
+        <span class="historia-generar__texto">
+          <b>Crear un recuerdo nuevo</b>
+          <small>Con esta foto, usando IA de generación de imágenes.</small>
+        </span>
+      </button>
+      <p class="historia-seguir">¿Seguimos mirando?</p>
+      <div class="historia-tiras" id="historia-tiras"></div>
+    </div>
+  </section>
+
+  <svg width="0" height="0" style="position:absolute">
+    <!-- Mascota placeholder: forma redonda, plana, un solo color, ojos simples — sin pelo ni textura de IA.
+         Es solo dirección de estilo para el concepto; el asset final se generaría aparte (Rive/Spline). -->
+    <symbol id="mascota" viewBox="0 0 100 100">
+      <ellipse cx="50" cy="58" rx="34" ry="30" fill="#FFC94D"/>
+      <ellipse cx="50" cy="30" rx="20" ry="18" fill="#FFC94D"/>
+      <path d="M50 14 42 4 58 4Z" fill="#FF9F4D"/>
+      <circle cx="42" cy="28" r="4.2" fill="#3A2B1E"/>
+      <circle cx="58" cy="28" r="4.2" fill="#3A2B1E"/>
+      <ellipse cx="35" cy="36" rx="4" ry="2.6" fill="#FFA9A9" opacity=".8"/>
+      <ellipse cx="65" cy="36" rx="4" ry="2.6" fill="#FFA9A9" opacity=".8"/>
+      <path d="M46 36q4 4 8 0" stroke="#B5762E" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M18 62q-8-4-6-14" stroke="#FFC94D" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <path d="M82 62q8-4 6-14" stroke="#FFC94D" stroke-width="9" fill="none" stroke-linecap="round"/>
+    </symbol>
+  </svg>
+</div>
+
+<!-- Sin "defer": el guion principal de más abajo se ejecuta según se lee la página, así que estos tres
+     tienen que haber terminado de cargar antes de llegar a él (face-api.js lo pide reconocimiento.js
+     solo, la primera vez que hace falta — no hace falta traerlo aparte aquí). -->
+<script src="js/reconocimiento.js"></script>
+<script src="js/biblioteca-concepto.js"></script>
+<script src="js/usuario-concepto.js"></script>
+<script src="js/agente-concepto.js"></script>
+<script>
+(function(){
+  // ---- Fotos reales de la biblioteca: las 38 de verdad (assets/biblioteca.json), no solo un puñado.
+  // Con toda la biblioteca cargada, "buscar_persona" puede encontrar a cualquiera en cualquier foto.
+  let FOTOS = [];
+
+  // ---- Datos culturales reales, no inventados sobre la familia: rellenan el hueco de la historia,
+  // igual que "un titular de prensa del día de la boda" en el feedback. Se buscan por fecha, no por foto. ----
+  const HECHOS = [
+    { test:(d)=> d.getMonth()===2 && d.getDate()>=14 && d.getDate()<=19, texto:'Esos días Valencia entera huele a pólvora y azahar: son las Fallas, y la noche de San José arden los monumentos en la calle.' },
+    { test:(d)=> d.getMonth()===11 && d.getDate()>=20, texto:'Esa semana media España ya tenía la mente puesta en la Lotería de Navidad y en el Gordo.' },
+    { test:(d)=> d.getMonth()===0 && d.getDate()<=6, texto:'Eran los días de los Reyes Magos, cuando toda la casa huele a turrón que sobra de Nochebuena.' },
+    { test:(d)=> d.getMonth()>=5 && d.getMonth()<=7, texto:'Pleno verano: las tardes se alargaban y las calles olían a playa.' },
+    { test:()=> true, texto:'Un día cualquiera que, visto ahora, no lo era tanto.' },
+  ];
+  // Las fechas de la biblioteca real ya traen hora ("2025-04-16T15:39:55"); las de antes (fijas en el
+  // concepto) solo traían el día. Se admiten las dos: si no hay hora, se le pone mediodía para que no
+  // cambie de día al convertir la zona horaria.
+  const fechaBonita = (iso) => new Date(/T\d/.test(iso) ? iso : iso+'T12:00:00').toLocaleDateString('es-ES',{ day:'numeric', month:'long', year:'numeric' });
+  const hechoDe = (iso) => HECHOS.find((h) => h.test(new Date(/T\d/.test(iso) ? iso : iso+'T12:00:00'))).texto;
+
+  // ---- Preguntas de Nidi para el modo SIMULADO (guion): red de seguridad si el asistente real
+  // todavía no está configurado (falta .env.concepto) o no hay conexión — nunca deja la pantalla
+  // muda. Con el asistente real conectado, esto no se usa. ----
+  // Frases de invitación más cálidas que un simple "¿qué recuerdos tienes?" (feedback de David: que la
+  // app invite y sugiera, no que pregunte como un formulario). Se ve en la pantalla de inicio.
+  const PREGUNTAS_INICIALES = [
+    'Seguro que esta foto esconde una historia bonita. ¿Me la cuentas?',
+    '¿Nos ponemos a recordar este día?',
+    'Hay algo en esta foto que me encantaría que me contaras.',
+    '¿Qué edad tenías aquí? Cuéntame cómo era ese momento.',
+    '¿Te acuerdas de este día? Cuéntamelo con calma.',
+    'Esta foto me llama la atención… ¿qué pasaba aquí?',
+  ];
+  const SEGUNDA_PREGUNTA = ['¿Quién estaba contigo?', '¿Y cómo acabó el día?', '¿Lo recuerdas con cariño?'];
+  const CIERRES = ['Qué bonito. Voy a guardarlo.', 'Me encanta. Lo dejo guardado como recuerdo tuyo.', 'Gracias por contármelo. Ya lo tengo guardado.'];
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+  let fotoActual = null, turnoSimulado = 0, respuestasSimuladas = [], modoReal = true;
+
+  const vistas = document.querySelectorAll('.vista');
+  function mostrar(id) { vistas.forEach((v) => v.classList.toggle('activa', v.id === id)); }
+
+  // ---- Inicio: cambia de foto cada vez que se vuelve a ella ----
+  function pintarInicio() {
+    fotoActual = pick(FOTOS);
+    document.querySelector('#vista-inicio .foto-fondo').src = fotoActual.src;
+    document.querySelector('.inicio-prompt').textContent = pick(PREGUNTAS_INICIALES);
+  }
+
+  // ---- Foto: carrusel deslizable con todas, empezando en la tocada ----
+  function abrirFoto(desde) {
+    const cont = document.getElementById('foto-carrusel');
+    cont.innerHTML = '';
+    FOTOS.forEach((f) => {
+      const slide = document.createElement('div');
+      slide.className = 'foto-slide';
+      slide.innerHTML = '<img src="' + f.src + '" alt="" data-accion="hablar-foto" data-src="' + f.src + '" />' +
+        '<div class="foto-info"><div class="fecha">' + fechaBonita(f.fecha) + (f.lugar ? ' · ' + f.lugar : '') + '</div>' +
+        '<div class="pregunta">Toca la foto para contarme algo de ella</div></div>';
+      cont.appendChild(slide);
+    });
+    mostrar('vista-foto');
+    const idx = FOTOS.indexOf(desde);
+    requestAnimationFrame(() => { cont.scrollLeft = idx * cont.clientWidth; });
+  }
+
+  // ---- Conversación real con el asistente (ElevenLabs, js/agente-concepto.js) ----
+  const mic = document.getElementById('conv-mic');
+  const input = document.getElementById('conv-input');
+  const estadoTxt = document.getElementById('conv-estado');
+  const pollitoVideo = document.getElementById('conv-pollito-video');
+  const caption = document.getElementById('conv-caption');
+  let recuerdosActuales = [];
+
+  // Pollito de Masko Studio (fondo transparente de verdad): una pose por estado. Un WebP animado no
+  // se "reproduce/pausa" como un vídeo — se anima solo en cuanto carga, en bucle.
+  const POLLITO_QUIETO = 'assets/img/concepto/pollito-cheerful-quieto.webp';
+  const POLLITO_HABLANDO = 'assets/img/concepto/pollito-cheerful.webp';
+  const POLLITO_ESCUCHANDO = 'assets/img/concepto/pollito-pensativo.webp';
+  const POLLITO_SONROJADO = 'assets/img/concepto/pollito-sonrojado.webp';
+  const POLLITO_SALUDANDO = 'assets/img/concepto/pollito-saludando.webp';
+  let ultimoEstado = 'escuchando';
+  let primerHablando = true; // el primer "hablando" de cada conversación saluda; los siguientes, charla normal
+
+  // Sin chat: lo único que se ve escrito es UNA línea con lo último que ha dicho Nidi (como un
+  // subtítulo), nunca un historial. Lo que dice la persona no se escribe: ya lo ha dicho ella misma.
+  function mostrarCaption(texto) {
+    caption.textContent = texto;
+    caption.hidden = false;
+    caption.style.animation = 'none';
+    void caption.offsetWidth; // reinicia la animación de entrada aunque sea la misma frase
+    caption.style.animation = '';
+  }
+
+  function estadoConv(e) {
+    ultimoEstado = e;
+    mic.classList.toggle('escuchando', e === 'escuchando');
+    mic.classList.toggle('hablando', e === 'hablando' || e === 'conectando');
+    estadoTxt.textContent = { conectando: 'Conectando con Nidi…', escuchando: 'Te escucho', hablando: '', cerrado: '' }[e] || '';
+    // Se añade "?t=" (un valor distinto cada vez) para que arranque siempre desde el primer
+    // fotograma, si no el navegador reutilizaría la animación ya cargada tal como se quedó.
+    if (e === 'hablando') {
+      pollitoVideo.src = (primerHablando ? POLLITO_SALUDANDO : POLLITO_HABLANDO) + '?t=' + Date.now();
+      primerHablando = false;
+    }
+    else if (e === 'escuchando') pollitoVideo.src = POLLITO_ESCUCHANDO + '?t=' + Date.now();
+    else pollitoVideo.src = POLLITO_QUIETO;
+  }
+
+  // Reacción tierna (sonrojado): un momento breve al aprender el nombre de la persona, o cuando lo
+  // que cuenta habla de su pareja o de un bebé — y luego vuelve a lo que estuviera pasando.
+  function reaccionTierna() {
+    pollitoVideo.src = POLLITO_SONROJADO + '?t=' + Date.now();
+    setTimeout(() => estadoConv(ultimoEstado), 2600);
+  }
+  const PALABRAS_TIERNAS = /\b(pareja|marido|esposo|esposa|novio|novia|bebe|recien nacid)/;
+  function esMomentoTierno(r) {
+    const t = ((r.quien || '') + ' ' + (r.que || '')).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    return PALABRAS_TIERNAS.test(t);
+  }
+
+  // Fotos "relacionadas": mismo día que la que se está mirando (la señal más fiable que hay en la
+  // biblioteca real, sin inventarse eventos ni personas que no sabemos), y si no hay bastantes, se
+  // completa con las cronológicamente más cercanas. Nunca vacío salvo que solo exista esa foto.
+  function fotosRelacionadas(foto) {
+    const dia = (foto.fecha || '').slice(0, 10);
+    let relacionadas = FOTOS.filter((f) => f !== foto && (f.fecha || '').slice(0, 10) === dia);
+    if (relacionadas.length < 3) {
+      const resto = FOTOS.filter((f) => f !== foto && !relacionadas.includes(f))
+        .sort((a, b) => Math.abs(new Date(a.fecha) - new Date(foto.fecha)) - Math.abs(new Date(b.fecha) - new Date(foto.fecha)));
+      relacionadas = relacionadas.concat(resto.slice(0, 3 - relacionadas.length));
+    }
+    return relacionadas;
+  }
+  let relacionadasActuales = [], relacionadaIdx = -1;
+
+  function abrirConversacion(foto) {
+    fotoActual = foto;
+    document.getElementById('conv-foto-fondo').src = foto.src;
+    document.getElementById('conv-tiras').innerHTML = '';
+    caption.hidden = true;
+    pollitoVideo.src = POLLITO_QUIETO;
+    primerHablando = true;
+    input.value = '';
+    recuerdosActuales = [];
+    relacionadasActuales = fotosRelacionadas(foto);
+    relacionadaIdx = -1;
+    const hayRelacionadas = relacionadasActuales.length > 0;
+    document.getElementById('conv-flecha-izq').style.display = hayRelacionadas ? 'flex' : 'none';
+    document.getElementById('conv-flecha-der').style.display = hayRelacionadas ? 'flex' : 'none';
+    if (window.NidoAgenteConcepto && window.NidoAgenteConcepto.activa) window.NidoAgenteConcepto.stop();
+    mostrar('vista-conversacion');
+
+    if (!window.NidoAgenteConcepto) { modoReal = false; return arrancarSimulado(foto); }
+    modoReal = true;
+    estadoConv('conectando');
+    window.NidoAgenteConcepto.start({
+      contexto: () => contextoParaFoto(foto),
+      variables: () => ({ saludo: saludoInicial(foto) }), // para el "{{saludo}}" del Primer mensaje del agente
+      mensaje: (t) => mostrarCaption(t),
+      recuerdo: (r) => { recuerdosActuales.push(r); if (esMomentoTierno(r)) reaccionTierna(); },
+      cierre: (c) => {
+        // Candado real, no solo una instrucción de texto: si no hay ni un solo recuerdo guardado de
+        // verdad con guardar_recuerdo, NUNCA se enseña una "historia" — por bien escrita que esté,
+        // sería inventada. En su lugar, se sigue con otra foto real, sin dejar la conversación muerta.
+        if (!recuerdosActuales.length) {
+          const otras = FOTOS.filter((f) => f !== fotoActual);
+          setTimeout(() => abrirConversacion(otras.length ? pick(otras) : fotoActual), 2600);
+          return 'Espera: no se ha guardado ningún recuerdo real de esta conversación, así que no se puede mostrar ninguna historia — no te la inventes. Dile con calidez que no pasa nada, sin insistir, y sigue con la otra foto que se le va a enseñar en unos segundos.';
+        }
+        setTimeout(() => { window.NidoAgenteConcepto.stop(); mostrarHistoria(c.resumen); }, 900);
+      },
+      buscarPersona: buscarPersona,
+      otraFoto: otraFoto,
+      nombreUsuario: (u) => { if (window.NidoUsuarioConcepto) window.NidoUsuarioConcepto.guardar(u.nombre, u.comoLlamarla); reaccionTierna(); },
+      estado: estadoConv,
+    }).catch(() => { modoReal = false; arrancarSimulado(foto); });
+  }
+
+  // La primera vez, Nidi pregunta el nombre (y cómo prefiere que la llame) antes de nada. Una vez
+  // que lo sabe, saluda por su nombre y va directa a la foto — nunca se vuelve a preguntar.
+  function saludoInicial(foto) {
+    const u = window.NidoUsuarioConcepto && window.NidoUsuarioConcepto.obtener();
+    if (!u) return '¡Hola! Soy Nidi, tu compañera para mirar fotos. Antes de nada, ¿cómo te llamas, y cómo te gustaría que te llame?';
+    return '¡Hola, ' + u.comoLlamarla + '! ¿Qué recuerdas de esta foto del ' + fechaBonita(foto.fecha) + '?';
+  }
+
+  // La persona no quiere seguir con esta foto, o corrige algo que se había asumido mal sobre ella
+  // (por ejemplo, dice que no estaba en la foto): en vez de que Nidi insista con la misma premisa,
+  // se pasa a otra foto real. Nunca se inventa nada, siempre es un momento de verdad de la biblioteca.
+  function otraFoto() {
+    const otras = FOTOS.filter((f) => f !== fotoActual);
+    setTimeout(() => abrirConversacion(otras.length ? pick(otras) : fotoActual), 2200);
+    return 'Voy a enseñarle otra foto en unos segundos. Dile con calidez que vais a mirar otra cosa, sin insistir en lo anterior.';
+  }
+
+  // ---- "Enséñame fotos de mi nieta Laura": la app no pide nada, solo enseña candidatas para tocar.
+  // Si Nido ya conoce el nombre, enseña sus fotos directamente. Si no, enseña caras sin nombre para que
+  // la persona toque la suya — al tocar, Nido aprende ese nombre para siempre (localStorage). ----
+  async function buscarPersona(nombre) {
+    if (!window.NidoBibliotecaConcepto) return 'No tengo tu biblioteca de fotos cargada todavía.';
+    estadoTxt.textContent = 'Repasando tus fotos…';
+    const r = await window.NidoBibliotecaConcepto.buscarPorNombre(nombre);
+    estadoTxt.textContent = '';
+    if (r.conocida && r.fotos.length) {
+      mostrarTirasConversacion('Fotos de ' + r.nombre, r.fotos, (f) => abrirConversacion({ src: f.src, fecha: f.fecha, lugar: '' }));
+      return 'Le he enseñado ' + r.fotos.length + (r.fotos.length === 1 ? ' foto' : ' fotos') + ' de ' + r.nombre + ' para que toque la que quiera.';
+    }
+    // Sin nadie que enseñar: nunca un callejón sin salida. En vez de dejar la conversación muerta, se
+    // sigue con otra foto real de la biblioteca — el asistente lo cuenta con sus propias palabras.
+    if (!r.candidatos.length) {
+      const otras = FOTOS.filter((f) => f !== fotoActual);
+      const otra = otras.length ? pick(otras) : fotoActual;
+      setTimeout(() => abrirConversacion(otra), 2600); // tiempo de sobra para que Nidi termine de decir esto antes de cambiar de foto
+      return 'No he encontrado a nadie con ese nombre en tus fotos. Le he puesto otra foto en pantalla para que sigáis charlando con ella mientras tanto.';
+    }
+    mostrarTirasConversacion('Aún no sé quién es ' + nombre + '. ¿Es alguna de estas?', r.candidatos.map((c) => c.foto), (f, i) => {
+      const cand = r.candidatos[i];
+      window.NidoBibliotecaConcepto.nombrar(cand.id, nombre);
+      abrirConversacion({ src: f.src, fecha: f.fecha, lugar: '' });
+    });
+    return 'Todavía no conozco a ' + nombre + '. Le he enseñado unas caras sin nombre para que toque la suya; en cuanto la toque, aprenderé quién es.';
+  }
+
+  // Fotos para tocar, flotando sobre la propia conversación — nunca un menú, nunca una pantalla nueva.
+  // Cada una entra con un pequeño desfase (ver @keyframes tarjetaEntra) y, al tocarla, un rebote breve
+  // confirma el toque antes de pasar a la nueva conversación.
+  function mostrarTirasConversacion(titulo, fotos, onTap) {
+    const cont = document.getElementById('conv-tiras');
+    cont.innerHTML = '';
+    const aviso = document.createElement('p');
+    aviso.className = 'tiras-aviso';
+    aviso.textContent = titulo;
+    const fila = document.createElement('div');
+    fila.className = 'tiras-fila';
+    fotos.forEach((f, i) => {
+      const item = document.createElement('div');
+      item.className = 'tiras-item';
+      item.style.animationDelay = (i * 90) + 'ms';
+      item.innerHTML = '<img src="' + f.src + '" alt="" />';
+      item.addEventListener('click', () => {
+        if (item.classList.contains('tocada')) return; // evita el doble toque mientras rebota
+        item.classList.add('tocada');
+        setTimeout(() => onTap(f, i), 260);
+      });
+      fila.appendChild(item);
+    });
+    cont.appendChild(aviso);
+    cont.appendChild(fila);
+  }
+
+  // Lo único que el asistente sabe: la fecha, el lugar si lo hay, y un dato de la época YA VERIFICADO
+  // (no inventado, no buscado en vivo) — nunca ve la foto ni supone quién sale en ella.
+  function contextoParaFoto(foto) {
+    // "una foto suya" (contradice la frase siguiente) fue un bug real: la propia instrucción daba
+    // por hecho que la persona sale en la foto, y el agente lo repetía en voz ("tengo aquí una foto
+    // TUYA..."). Nunca se sabe quién sale hasta que ella lo dice.
+    return 'Vas a hablar con la persona sobre una foto de la biblioteca familiar, del ' + fechaBonita(foto.fecha) + (foto.lugar ? ', en ' + foto.lugar : '') + '. ' +
+      'No has visto la foto y NO SABES si la propia persona sale en ella o no: nunca describas qué hay en ella, nunca digas ' +
+      '"esta foto tuya" ni des por hecho que aparece — di solo "esta foto" y pregúntale quién sale y qué recuerda. ' +
+      'Cuando te cuente algo (quién estaba o qué pasó), guárdalo con la herramienta guardar_recuerdo (quien, que). ' +
+      'En cuanto tengas al menos dos recuerdos, o si notas que ya ha terminado de contarte, cierra la conversación con ' +
+      'cerrar_historia: escribe tú misma un resumen cálido de 2-3 frases con lo que te ha contado, en segunda persona ("tú"), ' +
+      'sin inventar nada que no te haya dicho. Si encaja de forma natural, puedes añadir este dato real de ese día, tal cual, ' +
+      'sin adornarlo más: «' + hechoDe(foto.fecha) + '». ' +
+      'Si en cualquier momento te pide ver fotos de alguien por su nombre (por ejemplo «enséñame fotos de mi nieta Laura»), usa la ' +
+      'herramienta buscar_persona con ese nombre — puede tardar unos segundos en repasar las fotos, está bien si tienes que esperar. ' +
+      'Si dice que no quiere hablar de esta foto, o te corrige algo que has asumido mal sobre ella (por ejemplo, dice que ella no estaba en la foto, ' +
+      'o que no es esa persona), acepta la corrección de inmediato, no vuelvas a insistir en lo anterior, y usa la herramienta otra_foto para seguir ' +
+      'con una foto distinta. Nunca sigas la conversación como si la persona hubiera confirmado algo que en realidad ha negado. ' +
+      'No hace falta que describas lo que ha aparecido en pantalla: la app ya le enseña las fotos, tú solo cuéntale en una frase lo que ha pasado. ' +
+      nombreUsuarioContexto();
+  }
+
+  function nombreUsuarioContexto() {
+    const u = window.NidoUsuarioConcepto && window.NidoUsuarioConcepto.obtener();
+    if (u) return 'La persona con la que hablas se llama ' + u.nombre + ' y le gusta que la llames ' + u.comoLlamarla + '. Ya se lo has preguntado antes: no se lo vuelvas a preguntar.';
+    return 'Todavía no sabes cómo se llama la persona con la que hablas: en tu primer mensaje ya se lo has preguntado. En cuanto te lo diga, guárdalo con guardar_nombre_usuario.';
+  }
+
+  // ---- Modo SIMULADO: red de seguridad si no hay asistente configurado o falla la conexión ----
+  function arrancarSimulado(foto) {
+    turnoSimulado = 0; respuestasSimuladas = [];
+    estadoTxt.textContent = '';
+    mostrarCaption(pick(PREGUNTAS_INICIALES));
+  }
+  function responderSimulado(texto) {
+    respuestasSimuladas.push(texto.trim());
+    turnoSimulado++;
+    setTimeout(() => {
+      if (turnoSimulado === 1) mostrarCaption(pick(SEGUNDA_PREGUNTA));
+      else { mostrarCaption(pick(CIERRES)); setTimeout(() => mostrarHistoria(respuestasSimuladas.join('. ') + '.'), 1400); }
+    }, 700);
+  }
+
+  // ---- Historia armada: el propio asistente escribe el resumen (o, en modo simulado, se cose con
+  // lo contado) + un dato real de la época, no inventado sobre la familia ----
+  function mostrarHistoria(resumen) {
+    document.getElementById('historia-foto-img').src = fotoActual.src;
+    document.getElementById('historia-fecha').textContent = fechaBonita(fotoActual.fecha);
+    document.getElementById('historia-texto').textContent = resumen;
+    document.getElementById('historia-dato').textContent = hechoDe(fotoActual.fecha);
+    const tiras = document.getElementById('historia-tiras');
+    tiras.innerHTML = '';
+    FOTOS.filter((f) => f !== fotoActual).slice(0, 5).forEach((f, i) => {
+      const d = document.createElement('div');
+      d.className = 'historia-tira';
+      d.style.animationDelay = (i * 90) + 'ms';
+      d.innerHTML = '<img src="' + f.src + '" alt="" />';
+      d.addEventListener('click', () => {
+        if (d.classList.contains('tocada')) return;
+        d.classList.add('tocada');
+        setTimeout(() => abrirConversacion(f), 260);
+      });
+      tiras.appendChild(d);
+    });
+    mostrar('vista-historia');
+  }
+
+  function responder(texto) {
+    if (!texto.trim()) return;
+    input.value = '';
+    if (modoReal && window.NidoAgenteConcepto && window.NidoAgenteConcepto.activa) window.NidoAgenteConcepto.enviarTexto(texto);
+    else responderSimulado(texto);
+  }
+
+  // Micrófono: conversación real por voz. Sin asistente conectado, se usa el reconocimiento del
+  // navegador solo como red de seguridad para el modo simulado.
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  mic.addEventListener('click', () => {
+    if (modoReal && window.NidoAgenteConcepto) return; // la voz ya está siempre abierta en la conversación real
+    if (!SR) { input.focus(); return; }
+    const rec = new SR();
+    rec.lang = 'es-ES';
+    mic.classList.add('escuchando');
+    rec.onresult = (e) => { input.value = e.results[0][0].transcript; };
+    rec.onend = () => { mic.classList.remove('escuchando'); if (input.value) responder(input.value); };
+    rec.onerror = () => { mic.classList.remove('escuchando'); input.focus(); };
+    try { rec.start(); } catch (e) { input.focus(); }
+  });
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') responder(input.value); });
+
+  // Flechas de fotos relacionadas: cada toque abre una conversación nueva sobre la foto de al lado
+  // (misma lógica que "otra_foto" por voz, pero aquí como botón visible, con destino elegido).
+  document.getElementById('conv-flecha-der').addEventListener('click', () => {
+    if (!relacionadasActuales.length) return;
+    relacionadaIdx = (relacionadaIdx + 1) % relacionadasActuales.length;
+    abrirConversacion(relacionadasActuales[relacionadaIdx]);
+  });
+  document.getElementById('conv-flecha-izq').addEventListener('click', () => {
+    if (!relacionadasActuales.length) return;
+    relacionadaIdx = (relacionadaIdx - 1 + relacionadasActuales.length) % relacionadasActuales.length;
+    abrirConversacion(relacionadasActuales[relacionadaIdx]);
+  });
+
+  // ================================================================================
+  // REGISTRO (22-sep) — teclado/autorrelleno portados de prototipo-v3 (js/app.js), sin
+  // más cambio real que el final: al tocar "Permitir" ya no hay registro-nidi/registro-4
+  // con botones, se entra directo en la conversación real — Nidi se presenta y pregunta
+  // el nombre ella misma (saludoInicial ya la tiene, ver más arriba), que es el
+  // "onboarding" pedido.
+  // ================================================================================
+  const REGISTRO_PHONE_MAX = 9, REGISTRO_CODE_LEN = 4;
+  const REGISTRO_DEMO_PHONE = '612345678', REGISTRO_DEMO_CODE = '6294';
+  let registroPhone = '', registroCode = '', registroAutofillTimers = [];
+
+  function clearRegistroAutofillTimers() { registroAutofillTimers.forEach(clearTimeout); registroAutofillTimers = []; }
+
+  function renderRegistroPhone() {
+    const d = document.querySelector('#vista-registro-2 [data-registro-phone-display]');
+    if (d) d.textContent = registroPhone;
+  }
+  function enterRegistroPhone() {
+    registroPhone = '';
+    renderRegistroPhone();
+    clearRegistroAutofillTimers();
+    REGISTRO_DEMO_PHONE.split('').forEach((digit, i) => {
+      registroAutofillTimers.push(setTimeout(() => { registroPhone += digit; renderRegistroPhone(); }, 300 + i * 90));
+    });
+  }
+
+  function renderRegistroCode() {
+    document.querySelectorAll('#vista-registro-3 [data-code-box]').forEach((box, i) => { box.textContent = registroCode[i] || ''; });
+  }
+  function scheduleModalReveal() {
+    const modal = document.querySelector('#vista-registro-3 [data-registro-modal]');
+    setTimeout(() => { if (modal && registroCode.length === REGISTRO_CODE_LEN) modal.classList.add('is-visible'); }, 450);
+  }
+  function enterRegistroCode() {
+    registroCode = '';
+    renderRegistroCode();
+    const modal = document.querySelector('#vista-registro-3 [data-registro-modal]');
+    if (modal) modal.classList.remove('is-visible');
+    clearRegistroAutofillTimers();
+    REGISTRO_DEMO_CODE.split('').forEach((digit, i) => {
+      registroAutofillTimers.push(setTimeout(() => {
+        registroCode += digit; renderRegistroCode();
+        if (registroCode.length === REGISTRO_CODE_LEN) scheduleModalReveal();
+      }, 450 + i * 280));
+    });
+  }
+
+  // Navegación simple dentro del propio flujo de registro (Entrar → teléfono → código → Nidi).
+  let registroNidiTimer = null, registroNidiAvanzado = false;
+  const REGISTRO_NIDI_MS = 3500; // el saludo de Nidi no tiene botón: pasa solo (o al tocar), como en v3
+
+  // Desde "Hola, soy Nidi" se pasa a la pantalla de explicación del micrófono (Figma 814:13870),
+  // sobre la misma foto que luego se hablará — se elige aquí, no al tocar el micrófono, para que
+  // no haya un salto de foto entre esta pantalla y la conversación real que viene justo después.
+  let fotoOnboarding = null;
+  function avanzarDesdeNidi() {
+    if (registroNidiAvanzado) return; // por si coinciden el temporizador y un toque
+    registroNidiAvanzado = true;
+    clearTimeout(registroNidiTimer);
+    fotosListoPromise.then(() => {
+      if (!FOTOS.length) return;
+      fotoOnboarding = pick(FOTOS);
+      document.getElementById('nidi-mic-fondo').src = fotoOnboarding.src;
+      mostrar('vista-nidi-mic');
+      presentarseComoNidi();
+    });
+  }
+
+  // Si no se toca el micrófono, que no se quede callada esperando: Nidi se presenta ella sola por
+  // voz real (sin esperar el toque) y, si aun así no hay respuesta al cabo de un rato, recuerda con
+  // calidez que hay que pulsar el micrófono — para que sea la persona quien decide cuándo empieza a
+  // hablar (sensación de control), no un micrófono que ya está escuchando desde el principio.
+  let micForzadoMudo = true, nidiMicSilencioTimer = null;
+  function presentarseComoNidi() {
+    micForzadoMudo = true;
+    clearTimeout(nidiMicSilencioTimer);
+    if (!window.NidoAgenteConcepto) return; // sin agente real disponible: se quedan los textos fijos de las burbujas, nunca en blanco
+    window.NidoAgenteConcepto.start({
+      contexto: () => 'Te acabas de presentar a alguien que va a usar la app por primera vez. Todavía no sabes nada de ella.',
+      variables: () => ({ saludo: 'Preséntate como Nidi, cálida y en una sola frase corta, e invítale a pulsar el micrófono cuando quiera contarte algo.' }),
+      mensaje: () => {}, // esta pantalla no tiene subtítulo propio: ya lleva las dos burbujas fijas de Figma
+      estado: (e) => {
+        if (e === 'escuchando') {
+          clearTimeout(nidiMicSilencioTimer);
+          nidiMicSilencioTimer = setTimeout(() => {
+            const b2 = document.querySelector('.nidi-mic-bubble--2');
+            if (b2) b2.textContent = 'Cuando quieras, pulsa el micrófono para contarme algo.';
+          }, 7000);
+        }
+      },
+      microForzadoMudo: () => micForzadoMudo,
+    }).catch(() => {}); // si falla la conexión, se quedan las burbujas fijas — nunca una pantalla muda
+  }
+
+  // Tras tocar el micrófono, un momento breve (Figma 814:13964) donde Nidi "propone" la foto —
+  // polaroid + pollito pensativo, sin texto — antes de que la conversación arranque de verdad.
+  let proponeTimer = null, proponeAvanzado = false;
+  function mostrarPropuesta(foto) {
+    proponeAvanzado = false;
+    clearTimeout(proponeTimer);
+    document.getElementById('propone-fondo').src = foto.src;
+    document.getElementById('propone-foto').src = foto.src;
+    mostrar('vista-nidi-propone');
+    proponeTimer = setTimeout(() => avanzarDesdePropuesta(foto), 2600);
+  }
+  function avanzarDesdePropuesta(foto) {
+    if (proponeAvanzado) return;
+    proponeAvanzado = true;
+    clearTimeout(proponeTimer);
+    abrirConversacion(foto);
+  }
+
+  function mostrarRegistro(id) {
+    mostrar(id);
+    if (id === 'vista-registro-2') enterRegistroPhone();
+    else if (id === 'vista-registro-3') enterRegistroCode();
+    else if (id === 'vista-registro-nidi') {
+      registroNidiAvanzado = false;
+      clearTimeout(registroNidiTimer);
+      registroNidiTimer = setTimeout(avanzarDesdeNidi, REGISTRO_NIDI_MS);
+    }
+  }
+
+  document.addEventListener('click', (e) => {
+    const nav = e.target.closest('[data-reg-nav]');
+    if (nav) { mostrarRegistro(nav.dataset.regNav); return; }
+
+    const key = e.target.closest('.registro-key');
+    if (key) {
+      const seccion = key.closest('.vista');
+      const digit = key.dataset.key;
+      if (seccion.classList.contains('registro-2')) {
+        if (digit === 'backspace') registroPhone = registroPhone.slice(0, -1);
+        else if (registroPhone.length < REGISTRO_PHONE_MAX) registroPhone += digit;
+        renderRegistroPhone();
+      } else if (seccion.classList.contains('registro-3')) {
+        if (digit === 'backspace') { registroCode = registroCode.slice(0, -1); renderRegistroCode(); }
+        else if (registroCode.length < REGISTRO_CODE_LEN) {
+          registroCode += digit; renderRegistroCode();
+          if (registroCode.length === REGISTRO_CODE_LEN) scheduleModalReveal();
+        }
+      }
+      return;
+    }
+
+    if (e.target.closest('[data-registro-resend]')) {
+      registroCode = ''; renderRegistroCode();
+      const modal = document.querySelector('#vista-registro-3 [data-registro-modal]');
+      if (modal) modal.classList.remove('is-visible');
+      return;
+    }
+
+    // Tocar en cualquier sitio de la bienvenida adelanta el paso (además de pasar sola a los 2,2s).
+    if (e.target.closest('[data-reg-bienvenida]')) { irAPreRegistro(); return; }
+
+    // Tocar en cualquier sitio de "Hola, soy Nidi" adelanta el paso a la explicación del
+    // micrófono (igual que en v3, que además avanza sola tras REGISTRO_NIDI_MS si no se toca).
+    if (e.target.closest('[data-reg-permitir]')) { avanzarDesdeNidi(); return; }
+
+    // Botón grande de micrófono (Figma 814:13870): el toque es lo que de verdad le da el control —
+    // para la "presentación" (que hasta ahora solo podía hablar, nunca escuchar) y entra YA en la
+    // conversación real, con el micrófono de verdad. Antes pasaba primero por "Nidi propone la foto"
+    // (polaroid, Figma 814:13964) sin poder tocar nada durante 2,6s — quitado por feedback directo:
+    // "no me ha dejado pulsar el micrófono, ha saltado directamente a una imagen y a eso". La
+    // pantalla del polaroid se queda montada (vista-nidi-propone/mostrarPropuesta) por si se quiere
+    // usar en otro momento, pero ya no se interpone aquí.
+    if (e.target.closest('[data-reg-mic-empezar]')) {
+      micForzadoMudo = false;
+      clearTimeout(nidiMicSilencioTimer);
+      if (window.NidoAgenteConcepto) { window.NidoAgenteConcepto.setMicMuted(false); window.NidoAgenteConcepto.stop(); }
+      abrirConversacion(fotoOnboarding || pick(FOTOS));
+      return;
+    }
+
+    // Tocar en cualquier sitio de la propuesta adelanta el paso a la conversación real (además de
+    // avanzar sola tras 2,6s si no se toca). De momento sin usar desde ningún otro sitio, ver arriba.
+    if (e.target.closest('[data-reg-propuesta]')) { avanzarDesdePropuesta(fotoOnboarding); return; }
+
+    // "Crear un recuerdo nuevo" (simulado, ver comentario en el HTML): avisa con honestidad de que
+    // esto es un botón de maqueta, no genera nada real todavía.
+    if (e.target.closest('[data-generar-recuerdo]')) {
+      const btn = e.target.closest('[data-generar-recuerdo]');
+      if (btn.dataset.simulando) return;
+      btn.dataset.simulando = '1';
+      const texto = btn.querySelector('.historia-generar__texto');
+      const original = texto.innerHTML;
+      texto.innerHTML = '<b>Creando tu recuerdo…</b><small>Esto es una maqueta: en la app real, aquí se generaría de verdad.</small>';
+      setTimeout(() => { texto.innerHTML = original; delete btn.dataset.simulando; }, 3200);
+      return;
+    }
+  });
+
+  // Vídeos de bienvenida/pre-registro: pasan solos al siguiente paso al terminar (igual que v3),
+  // con la animación WebP como respaldo si el navegador bloquea el autoplay con sonido/segundo plano.
+  function videoConRespaldo(video, opts) {
+    let sonando = false, respaldo = false;
+    video.muted = true; video.setAttribute('muted', ''); video.playsInline = true;
+    video.addEventListener('playing', () => { sonando = true; });
+    const pon = () => {
+      if (sonando || respaldo || !opts.activa()) return;
+      const p = video.play();
+      if (p && p.then) p.then(() => { sonando = true; }).catch(() => {});
+    };
+    ['loadeddata', 'canplay'].forEach((ev) => video.addEventListener(ev, pon));
+    window.addEventListener('pageshow', pon);
+    ['touchstart', 'pointerdown', 'click'].forEach((ev) => document.addEventListener(ev, pon, { passive: true }));
+    pon();
+    setTimeout(pon, 300);
+    setTimeout(() => {
+      if (sonando || !opts.activa()) return;
+      respaldo = true;
+      const img = document.createElement('img');
+      img.className = video.className;
+      img.alt = '';
+      img.src = opts.animacion + '?t=' + Date.now();
+      video.style.display = 'none';
+      video.after(img);
+      setTimeout(() => { if (opts.activa()) opts.fin(img); }, opts.ms);
+    }, 1200);
+  }
+  const activaId = (id) => document.querySelector('.vista.activa')?.id === id;
+
+  const preRegistroVideo = document.querySelector('[data-pre-registro-video]');
+  function irAPreRegistro() {
+    mostrar('vista-pre-registro');
+    if (!preRegistroVideo) return;
+    preRegistroVideo.classList.remove('is-ending');
+    preRegistroVideo.currentTime = 0;
+    const p = preRegistroVideo.play();
+    if (p && p.catch) p.catch(() => {});
+  }
+
+  // Bienvenida: ya NO es el vídeo antiguo del pollito saliendo del huevo (ese ya no se usa en este
+  // concepto) — ahora es el pollito nuevo quieto, con el mismo patrón que el resto del flujo: pasa
+  // sola al cabo de un momento, o al tocar en cualquier sitio.
+  setTimeout(() => { if (activaId('vista-bienvenida')) irAPreRegistro(); }, 2200);
+  if (preRegistroVideo) {
+    preRegistroVideo.addEventListener('ended', () => { if (activaId('vista-pre-registro')) mostrarRegistro('vista-registro-1'); });
+    videoConRespaldo(preRegistroVideo, { activa: () => activaId('vista-pre-registro'), animacion: 'assets/video/pollito-fotos.webp', ms: 3000, fin: () => mostrarRegistro('vista-registro-1') });
+  }
+
+  // ---- Todos los gestos posibles, en un único sitio: nunca un menú, solo tocar la foto o hablar ----
+  document.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-accion]');
+    if (!el) return;
+    const a = el.dataset.accion;
+    if (a === 'ver-foto') abrirFoto(fotoActual);
+    else if (a === 'hablar') abrirConversacion(fotoActual);
+    else if (a === 'hablar-foto') abrirConversacion(FOTOS.find((f) => f.src === el.dataset.src));
+    else if (a === 'al-inicio') { pintarInicio(); mostrar('vista-inicio'); }
+  });
+
+  // Arranque: primero solo la lista de fotos (rápido, sin caras) para que la pantalla de inicio no
+  // espere nada; el reconocimiento de personas (lento) se lanza justo después, en segundo plano.
+  // "Permitir" del registro espera esta misma promesa para saber cuándo ya hay una foto real que
+  // enseñar antes de arrancar la conversación.
+  let fotosListoPromise = Promise.resolve();
+  if (window.NidoBibliotecaConcepto) {
+    fotosListoPromise = window.NidoBibliotecaConcepto.cargarFotos().then(() => {
+      FOTOS = window.NidoBibliotecaConcepto.fotos;
+      pintarInicio();
+      window.NidoBibliotecaConcepto.iniciarReconocimiento(); // no se espera: sigue corriendo aunque ya se esté hablando
+    });
+  }
+})();
+</script>

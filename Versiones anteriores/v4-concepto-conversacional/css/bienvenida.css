@@ -1,0 +1,20 @@
+/*
+  Nido · v3 — Bienvenida: el pollito nace del cascarón, una sola vez.
+  Tamaño, posición y fondo copiados 1:1 del frame de Figma (node 499:6993,
+  capa "MP4 2K-9 1" — el mismo vídeo que ya tenemos integrado, solo se
+  copia el encaje). El vídeo desborda ligeramente los bordes izq/der del
+  lienzo a propósito, así está en Figma.
+*/
+
+.screen--bienvenida {
+  background: linear-gradient(to bottom, #f3f3f8 17.014%, #fafafc 94.127%);
+}
+
+.bienvenida-video {
+  position: absolute;
+  left: -0.82938rem;
+  top: 3.17125rem;
+  width: 26.22144rem;
+  height: 46.90725rem;
+  object-fit: contain;
+}

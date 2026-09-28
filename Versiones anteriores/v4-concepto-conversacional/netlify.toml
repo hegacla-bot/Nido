@@ -1,0 +1,33 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+# Concepto conversacional: el HTML llama a "/api/agente-concepto" (mismo path que usa el servidor
+# local, servidor-concepto.mjs) — así no hace falta tocar el fetch del cliente según dónde corra.
+[[redirects]]
+  from = "/api/agente-concepto"
+  to = "/.netlify/functions/agente-concepto"
+  status = 200
+
+# Este sitio es SOLO para el concepto conversacional (el duplicado, no prototipo-v3). La carpeta
+# entera se sube igual (funciones/CSS/JS compartidos), pero tanto la raíz como el index.html viejo
+# (copia intacta de v3, con el pollito de IA antiguo que ya no se usa aquí) deben llevar siempre al
+# concepto — así no hay manera de aterrizar por error en la versión vieja.
+# force=true hace falta porque "index.html" existe de verdad como archivo: sin forzar, Netlify sirve
+# el archivo real en vez de aplicar la redirección (comprobado — sin force, seguía saliendo el viejo).
+[[redirects]]
+  from = "/"
+  to = "/concepto-conversacional.html"
+  status = 200
+  force = true
+[[redirects]]
+  from = "/index.html"
+  to = "/concepto-conversacional.html"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"

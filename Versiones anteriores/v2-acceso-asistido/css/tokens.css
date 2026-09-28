@@ -1,0 +1,94 @@
+/* ==========================================================================
+   NIDO v2 · Tokens
+   Base: los colores del design system de Figma + el lenguaje visual de
+   Acceso Asistido de iOS (tarjeta blanca sobre fondo teñido, color por
+   función, losa de Atrás anclada abajo).
+   ========================================================================== */
+
+:root {
+  /* --- Marca [FIGMA] ---------------------------------------------------- */
+  --c-blue:       #516dff;
+  --c-blue-light: #c4ceff;
+  --c-blue-dark:  #2d3c8c;
+  --c-black:      #1a1d2c;
+  --c-white:      #ffffff;
+  --c-gray-1:     #6b6e7c;   /* subido de #9799a2: no pasaba AA a 18px */
+  --c-gray-3:     #d0d1d7;
+
+  /* --- Color por función -------------------------------------------------
+     Acceso Asistido le da a cada app su color y lo repite en el icono, el
+     fondo y los botones. Aquí cada zona de Nido tiene el suyo: es una ayuda
+     de memoria, no decoración — se reconoce «la verde» antes que se lee.
+     ---------------------------------------------------------------------- */
+  --f-nuevas:   #516dff;   --f-nuevas-tint:   #e9edff;
+  --f-momentos: #c2610f;   --f-momentos-tint: #fdeee0;
+  --f-familia:  #1f7a52;   --f-familia-tint:  #e2f4ec;
+  --f-crear:    #6d3bd4;   --f-crear-tint:    #efe9fd;
+  /* "A mano" no es una zona de fotos: es la única que se usa a diario y para
+     algo que no es recordar. Por eso tiene color propio y no comparte el azul. */
+  --f-mano:     #0b6b74;   --f-mano-tint:     #dff1f3;
+  --f-peligro:  #c0322b;
+
+  /* Acento activo de la pantalla; cada pantalla lo redefine. */
+  --accent:      var(--c-blue);
+  --accent-tint: var(--f-nuevas-tint);
+
+  /* --- Tipografía --------------------------------------------------------
+     Misma escalera de la v1, pero la v2 arranca dos peldaños más arriba:
+     Acceso Asistido es notablemente más grande que una app normal.
+     Escalera: 18 · 20 · 24 · 28 · 34 · 40 · 46 · 52
+     ---------------------------------------------------------------------- */
+  --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --fs-xs:  1.125rem;  /* 18 */
+  --fs-s:   1.25rem;   /* 20 */
+  --fs-m:   1.5rem;    /* 24 */
+  --fs-lg:  1.75rem;   /* 28 */
+  --fs-xl:  2.125rem;  /* 34 */
+  --fs-2xl: 2.5rem;    /* 40 */
+
+  --lh-tight: 1.15;
+  --lh-body:  1.4;
+
+  /* --- Forma ------------------------------------------------------------- */
+  --r-card:  28px;
+  --r-slab:  28px;
+  --r-chip:  18px;
+  --r-photo: 22px;
+
+  --gutter: 20px;
+  --gap:    14px;
+
+  /* --- Zonas de toque ----------------------------------------------------
+     Muy por encima de los 44pt de Apple y los 48dp de Material, y atadas al
+     cuerpo de texto para que crezcan con él.
+     ---------------------------------------------------------------------- */
+  --tap-min:  calc(var(--fs-m) * 3);     /* 72 · 84 · 102 */
+  --tap-card: calc(var(--fs-m) * 4.5);   /* 108 · 126 · 153 */
+  --tap-slab: calc(var(--fs-m) * 3.8);   /* 91 · 106 · 129 */
+
+  --dur: 200ms;
+}
+
+/* 100 %, nunca px: el ajuste del sistema entra como base y el de Nido se
+   suma encima subiendo peldaños. */
+html { font-size: 100%; }
+
+html[data-text="grande"] {
+  --fs-xs: 1.25rem; --fs-s: 1.5rem; --fs-m: 1.75rem;
+  --fs-lg: 2.125rem; --fs-xl: 2.5rem; --fs-2xl: 2.875rem;
+}
+html[data-text="enorme"] {
+  --fs-xs: 1.5rem; --fs-s: 1.75rem; --fs-m: 2.125rem;
+  --fs-lg: 2.5rem; --fs-xl: 2.875rem; --fs-2xl: 3.25rem;
+}
+
+/* Alto contraste: quita el fondo teñido y sube todos los bordes. */
+html[data-contrast="alto"] {
+  --f-nuevas:   #2b3fd6; --f-nuevas-tint:   #ffffff;
+  --f-momentos: #8f4400; --f-momentos-tint: #ffffff;
+  --f-familia:  #0f5c3a; --f-familia-tint:  #ffffff;
+  --f-crear:    #4c1fa8; --f-crear-tint:    #ffffff;
+  --f-mano:     #044a52; --f-mano-tint:     #ffffff;
+  --c-gray-1:   #3a3d49;
+  --c-gray-3:   #6b6e7c;
+}

@@ -1,0 +1,101 @@
+/* ==========================================================================
+   NIDO · Tokens
+   Extraídos con Figma MCP del archivo de wireframes (O9nhqFGKGybgtrG9uhGW6P).
+   Los valores marcados [FIGMA] vienen literalmente de las variables del archivo.
+   Los marcados [A11Y] los añade el prototipo por accesibilidad; van explicados
+   en el README.
+   ========================================================================== */
+
+:root {
+  /* --- Color [FIGMA] ---------------------------------------------------- */
+  --c-blue:        #516dff;   /* Color/Primary/Blue */
+  --c-blue-light:  #c4ceff;   /* Color/Primary/Blue light */
+  --c-blue-dark:   #2d3c8c;   /* Color/Primary/Blue dark */
+  --c-black:       #1a1d2c;   /* Color/Black */
+  --c-white:       #ffffff;   /* Color/White */
+  --c-gray-1:      #9799a2;   /* Color/Grays/Gray 1 */
+  --c-gray-3:      #d0d1d7;   /* Color/Grays/Gray 3 */
+
+  /* Derivados del prototipo */
+  --c-blue-soft:   #eef1ff;
+  --c-scrim:       rgba(0, 0, 0, 0.45);
+  --c-shadow:      0 -4px 12px rgba(0, 0, 0, 0.08);
+
+  /* --- Tipografía ------------------------------------------------------- */
+  /* Una sola escalera: 16 · 18 · 20 · 24 · 28 · 32 · 36 · 40.
+     Cada modo sube un peldaño. Es el modelo de tabla de Dynamic Type (iOS),
+     no un multiplicador: el texto pequeño crece más que el grande, igual que
+     hace el escalado no lineal de Android 14. Así el titular sigue siendo un
+     titular en los tres modos, en vez de aplanarse justo en el modo que usa
+     quien peor ve.
+     El modo Normal son los valores de los wireframes (s 18 · m 20 · xl 28).
+     Los px de los comentarios son a tamaño de sistema por defecto: si la
+     persona ya tiene la letra grande en su móvil, todo esto sale mayor. */
+  --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --fs-xs:  1rem;      /* 16 */
+  --fs-s:   1.125rem;  /* 18 */
+  --fs-m:   1.25rem;   /* 20 */
+  --fs-lg:  1.5rem;    /* 24 */
+  --fs-xl:  1.75rem;   /* 28 */
+  --fs-2xl: 2rem;      /* 32 */
+
+  /* Interlineado: el tamaño solo no hace legible un texto. */
+  --lh-tight: 1.2;   /* titulares */
+  --lh-body:  1.45;  /* cuerpo y párrafos */
+
+  /* --- Radios [FIGMA] --------------------------------------------------- */
+  --r-pill:  32px;
+  --r-card:  20px;
+  --r-modal: 28px;
+
+  /* --- Espaciado -------------------------------------------------------- */
+  --gutter: 24px;     /* margen lateral de todas las pantallas [FIGMA] */
+  --gap:    12px;
+
+  /* --- Zonas de toque [A11Y] -------------------------------------------- */
+  /* Mínimo de Apple: 44pt. Mínimo de Material: 48dp. Aquí 64px porque la
+     evidencia (Rogers et al.) dice que la experiencia previa NO mejora la
+     precisión motora en mayores: el objetivo grande no es para novatos, es
+     para todos. */
+  --tap-min:  calc(var(--fs-m) * 3.2);   /* 64 · 77 · 90 */
+  --tap-big:  calc(var(--fs-m) * 3.6);   /* 72 · 86 · 101 */
+
+  --dur: 220ms;
+}
+
+/* Escalones de tamaño de letra.
+   El control de la demo (y "Tu perfil" dentro de la app) cambia data-text en
+   <html>. Ojo en la app real: este ajuste debe SUMARSE al del sistema
+   operativo, no sustituirlo — en código, sp en Android y Dynamic Type en iOS. */
+/* 100%, NO 16px. Fijar píxeles aquí anularía el tamaño de letra que la
+   persona ya tenga puesto en su navegador o en su sistema. Con 100%, el
+   ajuste del sistema entra como base y el de la app se suma encima. */
+html { font-size: 100%; }
+
+html[data-text="grande"] {
+  --fs-xs:  1.125rem;  /* 18 */
+  --fs-s:   1.25rem;   /* 20 */
+  --fs-m:   1.5rem;    /* 24 */
+  --fs-lg:  1.75rem;   /* 28 */
+  --fs-xl:  2rem;      /* 32 */
+  --fs-2xl: 2.25rem;   /* 36 */
+}
+
+html[data-text="enorme"] {
+  --fs-xs:  1.25rem;   /* 20 */
+  --fs-s:   1.5rem;    /* 24 */
+  --fs-m:   1.75rem;   /* 28 */
+  --fs-lg:  2rem;      /* 32 */
+  --fs-xl:  2.25rem;   /* 36 */
+  --fs-2xl: 2.5rem;    /* 40 */
+}
+
+/* Alto contraste [A11Y] — equivalente a "Aumentar contraste" (iOS) /
+   "Texto de alto contraste" (Android). No inventa una paleta nueva: oscurece
+   la existente hasta pasar AAA sobre blanco. */
+html[data-contrast="alto"] {
+  --c-blue:    #2b3fd6;
+  --c-gray-1:  #4a4d59;
+  --c-gray-3:  #7c7f8b;
+  --c-blue-dark: #1b2668;
+}

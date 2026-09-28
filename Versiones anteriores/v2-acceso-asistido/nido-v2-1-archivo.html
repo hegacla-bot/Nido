@@ -1,0 +1,1595 @@
+<title>Nido v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+/* ==========================================================================
+   NIDO v2 · Tokens
+   Base: los colores del design system de Figma + el lenguaje visual de
+   Acceso Asistido de iOS (tarjeta blanca sobre fondo teñido, color por
+   función, losa de Atrás anclada abajo).
+   ========================================================================== */
+
+:root {
+  /* --- Marca [FIGMA] ---------------------------------------------------- */
+  --c-blue:       #516dff;
+  --c-blue-light: #c4ceff;
+  --c-blue-dark:  #2d3c8c;
+  --c-black:      #1a1d2c;
+  --c-white:      #ffffff;
+  --c-gray-1:     #6b6e7c;   /* subido de #9799a2: no pasaba AA a 18px */
+  --c-gray-3:     #d0d1d7;
+
+  /* --- Color por función -------------------------------------------------
+     Acceso Asistido le da a cada app su color y lo repite en el icono, el
+     fondo y los botones. Aquí cada zona de Nido tiene el suyo: es una ayuda
+     de memoria, no decoración — se reconoce «la verde» antes que se lee.
+     ---------------------------------------------------------------------- */
+  --f-nuevas:   #516dff;   --f-nuevas-tint:   #e9edff;
+  --f-momentos: #c2610f;   --f-momentos-tint: #fdeee0;
+  --f-familia:  #1f7a52;   --f-familia-tint:  #e2f4ec;
+  --f-crear:    #6d3bd4;   --f-crear-tint:    #efe9fd;
+  /* "A mano" no es una zona de fotos: es la única que se usa a diario y para
+     algo que no es recordar. Por eso tiene color propio y no comparte el azul. */
+  --f-mano:     #0b6b74;   --f-mano-tint:     #dff1f3;
+  --f-peligro:  #c0322b;
+
+  /* Acento activo de la pantalla; cada pantalla lo redefine. */
+  --accent:      var(--c-blue);
+  --accent-tint: var(--f-nuevas-tint);
+
+  /* --- Tipografía --------------------------------------------------------
+     Misma escalera de la v1, pero la v2 arranca dos peldaños más arriba:
+     Acceso Asistido es notablemente más grande que una app normal.
+     Escalera: 18 · 20 · 24 · 28 · 34 · 40 · 46 · 52
+     ---------------------------------------------------------------------- */
+  --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --fs-xs:  1.125rem;  /* 18 */
+  --fs-s:   1.25rem;   /* 20 */
+  --fs-m:   1.5rem;    /* 24 */
+  --fs-lg:  1.75rem;   /* 28 */
+  --fs-xl:  2.125rem;  /* 34 */
+  --fs-2xl: 2.5rem;    /* 40 */
+
+  --lh-tight: 1.15;
+  --lh-body:  1.4;
+
+  /* --- Forma ------------------------------------------------------------- */
+  --r-card:  28px;
+  --r-slab:  28px;
+  --r-chip:  18px;
+  --r-photo: 22px;
+
+  --gutter: 20px;
+  --gap:    14px;
+
+  /* --- Zonas de toque ----------------------------------------------------
+     Muy por encima de los 44pt de Apple y los 48dp de Material, y atadas al
+     cuerpo de texto para que crezcan con él.
+     ---------------------------------------------------------------------- */
+  --tap-min:  calc(var(--fs-m) * 3);     /* 72 · 84 · 102 */
+  --tap-card: calc(var(--fs-m) * 4.5);   /* 108 · 126 · 153 */
+  --tap-slab: calc(var(--fs-m) * 3.8);   /* 91 · 106 · 129 */
+
+  --dur: 200ms;
+}
+
+/* 100 %, nunca px: el ajuste del sistema entra como base y el de Nido se
+   suma encima subiendo peldaños. */
+html { font-size: 100%; }
+
+html[data-text="grande"] {
+  --fs-xs: 1.25rem; --fs-s: 1.5rem; --fs-m: 1.75rem;
+  --fs-lg: 2.125rem; --fs-xl: 2.5rem; --fs-2xl: 2.875rem;
+}
+html[data-text="enorme"] {
+  --fs-xs: 1.5rem; --fs-s: 1.75rem; --fs-m: 2.125rem;
+  --fs-lg: 2.5rem; --fs-xl: 2.875rem; --fs-2xl: 3.25rem;
+}
+
+/* Alto contraste: quita el fondo teñido y sube todos los bordes. */
+html[data-contrast="alto"] {
+  --f-nuevas:   #2b3fd6; --f-nuevas-tint:   #ffffff;
+  --f-momentos: #8f4400; --f-momentos-tint: #ffffff;
+  --f-familia:  #0f5c3a; --f-familia-tint:  #ffffff;
+  --f-crear:    #4c1fa8; --f-crear-tint:    #ffffff;
+  --f-mano:     #044a52; --f-mano-tint:     #ffffff;
+  --c-gray-1:   #3a3d49;
+  --c-gray-3:   #6b6e7c;
+}
+
+
+/* ==========================================================================
+   NIDO v2 · Base + banco de pruebas
+   Fuera del marco del móvil todo es andamiaje: no es la app.
+   ========================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  color: var(--c-black);
+  background: #e6e8f0;
+  -webkit-font-smoothing: antialiased;
+}
+
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+
+:focus-visible {
+  outline: 4px solid var(--c-black);
+  outline-offset: 3px;
+  border-radius: 10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+.stage {
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 24px;
+  min-height: 100vh;
+}
+
+.device {
+  position: relative;
+  width: 393px;
+  height: 852px;
+  flex: 0 0 auto;
+  background: var(--c-white);
+  border-radius: 46px;
+  border: 11px solid #0d0f18;
+  overflow: hidden;
+  box-shadow: 0 26px 64px rgba(13, 15, 24, .3);
+}
+.device__viewport { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--c-white); }
+
+/* --- Panel de la demo ----------------------------------------------------- */
+
+.demo {
+  width: 340px; flex: 0 0 auto;
+  background: var(--c-white);
+  border-radius: 20px; padding: 22px;
+  font-size: 14px; line-height: 1.5;
+  box-shadow: 0 8px 24px rgba(13, 15, 24, .08);
+}
+.demo h1 { font-size: 21px; margin: 0 0 6px; letter-spacing: -.01em; }
+.demo h2 {
+  font-size: 11.5px; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--c-gray-1); margin: 24px 0 8px;
+}
+.demo p { margin: 0 0 12px; color: #4a4d59; }
+.demo__note { font-size: 12.5px; color: var(--c-gray-1); }
+.demo__note strong { color: #35384a; }
+
+.demo__seg { display: flex; gap: 6px; flex-wrap: wrap; }
+.demo__seg button {
+  flex: 1 1 auto; min-width: 62px; padding: 10px;
+  border-radius: 10px; background: #f0f1f6; color: #4a4d59;
+  font-size: 13px; font-weight: 600;
+  transition: background var(--dur), color var(--dur);
+}
+.demo__seg button[aria-pressed="true"] { background: var(--c-black); color: #fff; }
+
+.demo__list { list-style: none; margin: 0; padding: 0; }
+.demo__list li + li { margin-top: 1px; }
+.demo__list button {
+  display: block; width: 100%; text-align: left;
+  padding: 9px 10px; border-radius: 8px;
+  font-size: 13.5px; color: #35384a;
+}
+.demo__list button:hover { background: #f0f1f6; }
+.demo__list button[aria-current="true"] { background: #eef1ff; color: #2d3c8c; font-weight: 700; }
+.demo__group { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #a6a8b4; margin: 14px 0 4px 10px; }
+
+@media (max-width: 820px) {
+  .stage { flex-direction: column; align-items: center; padding: 16px; }
+  .demo { width: 100%; max-width: 393px; order: 2; }
+  .device { width: 100%; max-width: 393px; height: min(852px, 86vh); order: 1; }
+}
+
+
+/* ==========================================================================
+   NIDO v2 · Lenguaje de Acceso Asistido
+   Tres reglas que gobiernan todo lo de abajo:
+   1. Una pantalla = una cosa.
+   2. Icono Y palabra. Nunca un icono suelto.
+   3. La losa de abajo siempre está, siempre en el mismo sitio.
+   ========================================================================== */
+
+/* --- Pantalla ------------------------------------------------------------- */
+
+.screen {
+  position: absolute; inset: 0;
+  display: none;
+  grid-template-rows: auto 1fr auto;
+  background: linear-gradient(180deg, var(--accent-tint) 0%, var(--c-white) 46%);
+}
+.screen.is-active { display: grid; }
+
+.screen[data-accent="nuevas"]   { --accent: var(--f-nuevas);   --accent-tint: var(--f-nuevas-tint); }
+.screen[data-accent="momentos"] { --accent: var(--f-momentos); --accent-tint: var(--f-momentos-tint); }
+.screen[data-accent="familia"]  { --accent: var(--f-familia);  --accent-tint: var(--f-familia-tint); }
+.screen[data-accent="crear"]    { --accent: var(--f-crear);    --accent-tint: var(--f-crear-tint); }
+.screen[data-accent="mano"]     { --accent: var(--f-mano);     --accent-tint: var(--f-mano-tint); }
+
+.screen__body { overflow-y: auto; overscroll-behavior: contain; padding: 0 var(--gutter) 8px; }
+.screen__foot { padding: 10px var(--gutter) 18px; }
+
+/* --- Cabecera: chip de icono + nombre enorme ------------------------------ */
+
+.appbar { display: flex; align-items: center; gap: 14px; padding: 44px var(--gutter) 18px; }
+.appbar__chip {
+  width: 52px; height: 52px; flex: 0 0 auto;
+  border-radius: var(--r-chip);
+  background: var(--accent);
+  display: grid; place-items: center;
+  color: #fff;
+}
+.appbar__chip svg { width: 30px; height: 30px; }
+.appbar__title {
+  font-size: var(--fs-xl); font-weight: 800; letter-spacing: -.02em;
+  line-height: var(--lh-tight); margin: 0;
+  text-wrap: balance;
+}
+.appbar__count { font-size: var(--fs-s); color: var(--c-gray-1); font-weight: 500; margin: 2px 0 0; }
+
+/* --- La losa de abajo -----------------------------------------------------
+   El botón Atrás de Acceso Asistido: ancho completo, abajo del todo, en el
+   mismo sitio en todas las pantallas. No es un chevron en una esquina.
+   -------------------------------------------------------------------------- */
+
+.slab {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  width: 100%; min-height: var(--tap-slab);
+  padding: 14px 24px;
+  border-radius: var(--r-slab);
+  font-size: var(--fs-m); font-weight: 700;
+  line-height: var(--lh-tight);
+  background: #eceef4; color: var(--c-black);
+  transition: transform var(--dur), filter var(--dur);
+}
+.slab:active { transform: scale(.985); }
+.slab svg { width: 28px; height: 28px; flex: 0 0 auto; }
+.slab + .slab { margin-top: 10px; }
+
+.slab--back    { background: #e4e6ee; }
+.slab--accent  { background: var(--accent); color: #fff; }
+.slab--danger  { background: var(--f-peligro); color: #fff; }
+.slab--quiet   { background: none; color: var(--c-gray-1); font-weight: 600; min-height: var(--tap-min); }
+
+/* --- Menú principal: filas o cuadrícula -----------------------------------
+   Las dos disposiciones de Acceso Asistido, aplicadas a la portada de Nido.
+   -------------------------------------------------------------------------- */
+
+.menu { list-style: none; margin: 0; padding: 4px 0 0; }
+.menu__btn {
+  width: 100%;
+  background: var(--c-white);
+  border-radius: var(--r-card);
+  box-shadow: 0 2px 10px rgba(13, 15, 24, .07);
+  transition: transform var(--dur);
+}
+.menu__btn:active { transform: scale(.985); }
+.menu__icon {
+  border-radius: 50%;
+  display: grid; place-items: center;
+  color: #fff; flex: 0 0 auto;
+}
+.menu__icon svg { width: 55%; height: 55%; }
+.menu__label { font-size: var(--fs-m); font-weight: 700; line-height: var(--lh-tight); }
+.menu__meta  { font-size: var(--fs-xs); color: var(--c-gray-1); font-weight: 500; }
+
+[data-view="filas"] .menu { display: flex; flex-direction: column; gap: 12px; }
+[data-view="filas"] .menu__btn {
+  display: flex; align-items: center; gap: 18px;
+  min-height: var(--tap-card); padding: 16px 20px; text-align: left;
+}
+[data-view="filas"] .menu__icon { width: 64px; height: 64px; }
+
+[data-view="cuadricula"] .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+[data-view="cuadricula"] .menu__btn {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; min-height: calc(var(--tap-card) * 1.45); padding: 20px 12px; text-align: center;
+}
+[data-view="cuadricula"] .menu__icon { width: 76px; height: 76px; }
+[data-view="cuadricula"] .menu__meta { display: none; }
+
+/* Colores por función dentro del menú */
+.menu__btn[data-f="nuevas"]   .menu__icon { background: var(--f-nuevas); }
+.menu__btn[data-f="momentos"] .menu__icon { background: var(--f-momentos); }
+.menu__btn[data-f="familia"]  .menu__icon { background: var(--f-familia); }
+.menu__btn[data-f="crear"]    .menu__icon { background: var(--f-crear); }
+
+/* --- Lista de personas / álbumes (patrón "Llamadas") ---------------------- */
+
+.rows { list-style: none; margin: 0; padding: 4px 0 0; display: flex; flex-direction: column; gap: 12px; }
+.row__btn {
+  display: flex; align-items: center; gap: 18px;
+  width: 100%; min-height: var(--tap-card);
+  padding: 14px 20px 14px 14px;
+  background: var(--c-white);
+  border-radius: var(--r-card);
+  box-shadow: 0 2px 10px rgba(13, 15, 24, .07);
+  text-align: left;
+}
+.row__btn:active { transform: scale(.985); }
+.row__label { font-size: var(--fs-m); font-weight: 700; line-height: var(--lh-tight); display: block; }
+.row__meta  { font-size: var(--fs-xs); color: var(--c-gray-1); font-weight: 500; }
+.row__text  { flex: 1 1 auto; min-width: 0; }
+
+.avatar {
+  width: 72px; height: 72px; flex: 0 0 auto;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--c-blue-light); color: var(--c-blue-dark);
+  font-size: var(--fs-m); font-weight: 800;
+  overflow: hidden;
+}
+.avatar--xl { width: 128px; height: 128px; font-size: var(--fs-2xl); }
+.avatar--new { background: #eceef4; color: var(--c-gray-1); border: 3px dashed var(--c-gray-3); }
+
+/* --- Fotos ----------------------------------------------------------------
+   Dos columnas grandes, como la app Fotos de Acceso Asistido. En "filas"
+   pasan a una sola columna, aún más grandes y con su nombre.
+   -------------------------------------------------------------------------- */
+
+.photos { list-style: none; margin: 0; padding: 4px 0 0; display: grid; gap: 10px; }
+[data-view="cuadricula"] .photos { grid-template-columns: 1fr 1fr; }
+[data-view="filas"]      .photos { grid-template-columns: 1fr; gap: 14px; }
+
+.photo__btn { display: block; width: 100%; text-align: left; }
+.photo__img {
+  display: block; width: 100%; aspect-ratio: 1;
+  border-radius: var(--r-photo);
+  background-size: cover; background-position: center;
+}
+[data-view="filas"] .photo__img { aspect-ratio: 4 / 3; }
+.photo__cap { display: block; font-size: var(--fs-xs); font-weight: 600; color: var(--c-gray-1); margin-top: 6px; }
+[data-view="cuadricula"] .photo__cap { display: none; }
+
+/* --- Pantalla de una foto -------------------------------------------------- */
+
+.hero {
+  width: 100%; aspect-ratio: 1;
+  border-radius: var(--r-photo);
+  background-size: cover; background-position: center;
+  margin-top: 4px;
+}
+.context {
+  display: flex; align-items: center; gap: 16px;
+  margin: 18px 0 4px; padding: 16px;
+  background: var(--c-white);
+  border-radius: var(--r-card);
+  box-shadow: 0 2px 10px rgba(13, 15, 24, .07);
+}
+.context__text { font-size: var(--fs-m); font-weight: 700; line-height: var(--lh-tight); }
+.context__meta { font-size: var(--fs-xs); color: var(--c-gray-1); font-weight: 500; }
+
+/* --- Micrófono ------------------------------------------------------------- */
+
+.mic { display: flex; flex-direction: column; align-items: center; gap: 22px; padding: 12px 0; }
+.mic__btn { position: relative; width: 176px; height: 176px; display: grid; place-items: center; }
+.mic__ring { position: absolute; inset: 0; border-radius: 50%; background: var(--accent); opacity: .14; }
+.mic__ring--2 { inset: 26px; opacity: .26; }
+.mic__core {
+  position: relative; width: 84px; height: 84px; border-radius: 50%;
+  background: var(--accent); display: grid; place-items: center; color: #fff;
+}
+.mic__core svg { width: 36px; height: 36px; }
+.mic.is-listening .mic__ring    { animation: pulse 1.9s ease-out infinite; }
+.mic.is-listening .mic__ring--2 { animation: pulse 1.9s ease-out infinite .45s; }
+@keyframes pulse {
+  0%   { transform: scale(.84); opacity: .30; }
+  70%  { transform: scale(1.12); opacity: .05; }
+  100% { transform: scale(1.12); opacity: 0; }
+}
+.said {
+  padding: 18px 20px; border-radius: var(--r-card);
+  background: var(--c-white); box-shadow: 0 2px 10px rgba(13, 15, 24, .07);
+  font-size: var(--fs-m); font-weight: 600; line-height: var(--lh-body);
+  min-height: var(--tap-min); display: flex; align-items: center;
+}
+.said em { color: var(--c-gray-1); font-style: normal; font-weight: 500; }
+
+/* --- Teclado numérico ------------------------------------------------------ */
+
+.field {
+  display: flex; align-items: center; justify-content: center;
+  min-height: var(--tap-min); margin-bottom: 18px;
+  border-radius: var(--r-card); background: var(--c-white);
+  box-shadow: 0 2px 10px rgba(13, 15, 24, .07);
+  font-size: var(--fs-lg); font-weight: 700; letter-spacing: .05em;
+}
+.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.keypad button {
+  min-height: var(--tap-min); border-radius: 22px;
+  background: var(--c-white); box-shadow: 0 2px 10px rgba(13, 15, 24, .07);
+  font-size: var(--fs-lg); font-weight: 600;
+}
+.keypad button:active { background: var(--accent-tint); }
+.keypad .k-empty { visibility: hidden; }
+
+.code { display: flex; gap: 12px; justify-content: center; margin: 22px 0; }
+.code span {
+  flex: 1 1 0; max-width: 82px; height: 96px;
+  border-radius: 22px; background: var(--c-white);
+  box-shadow: 0 2px 10px rgba(13, 15, 24, .07);
+  display: grid; place-items: center;
+  font-size: var(--fs-2xl); font-weight: 700; color: var(--c-gray-3);
+  transition: color var(--dur), background var(--dur);
+}
+.code span.is-filled { color: var(--c-black); background: var(--accent-tint); }
+
+/* --- Diálogo --------------------------------------------------------------- */
+
+.sheet {
+  position: absolute; inset: 0; z-index: 30;
+  background: rgba(13, 15, 24, .5);
+  display: none; align-items: flex-end; padding: var(--gutter);
+}
+.sheet.is-open { display: flex; }
+.sheet__card {
+  width: 100%; background: var(--c-white);
+  border-radius: 34px; padding: 32px 24px 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 18px; text-align: center;
+}
+.sheet__icon { width: 92px; height: 92px; border-radius: 50%; background: var(--accent); display: grid; place-items: center; color: #fff; }
+.sheet__icon svg { width: 44px; height: 44px; }
+.sheet__text { font-size: var(--fs-m); font-weight: 700; line-height: var(--lh-body); margin: 0; }
+
+/* --- Modo visita ----------------------------------------------------------- */
+
+.visit { position: absolute; inset: 0; background: #000; }
+.visit__photo { position: absolute; inset: 0; background-size: cover; background-position: center; }
+.visit__ui { position: absolute; inset: 0; display: grid; grid-template-rows: auto 1fr auto; transition: opacity var(--dur); }
+.visit.is-idle .visit__ui { opacity: 0; pointer-events: none; }
+.visit__top {
+  padding: 44px var(--gutter) 20px; color: #fff;
+  background: linear-gradient(180deg, rgba(0,0,0,.72), transparent);
+  font-size: var(--fs-m); font-weight: 700;
+}
+.visit__bottom {
+  padding: 20px var(--gutter) 22px;
+  background: linear-gradient(0deg, rgba(0,0,0,.72), transparent);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.visit__nav { display: flex; gap: 10px; }
+.visit__nav .slab { background: rgba(255,255,255,.92); }
+.visit .slab--hold { background: rgba(255,255,255,.2); color: #fff; position: relative; overflow: hidden; }
+.visit .slab--hold::after {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0;
+  width: calc(var(--p, 0) * 1%); background: rgba(255,255,255,.34);
+  transition: width 60ms linear;
+}
+.visit__hint { color: rgba(255,255,255,.9); font-size: var(--fs-xs); text-align: center; margin: 0; }
+
+/* --- Ajustes ---------------------------------------------------------------- */
+
+.set { padding: 22px 0; border-bottom: 2px solid #e4e6ee; }
+.set:last-of-type { border-bottom: 0; }
+.set__label { display: block; font-size: var(--fs-m); font-weight: 700; margin-bottom: 4px; }
+.set__help { font-size: var(--fs-xs); color: var(--c-gray-1); margin: 0 0 14px; line-height: var(--lh-body); }
+.pick { display: flex; gap: 10px; }
+.pick button {
+  flex: 1 1 0; min-height: var(--tap-min);
+  border-radius: 22px; background: var(--c-white);
+  box-shadow: 0 2px 10px rgba(13, 15, 24, .07);
+  font-size: var(--fs-s); font-weight: 700;
+}
+.pick button[aria-pressed="true"] { background: var(--c-black); color: #fff; }
+.pick--text button:nth-child(1) { font-size: var(--fs-xs); }
+.pick--text button:nth-child(2) { font-size: var(--fs-s); }
+.pick--text button:nth-child(3) { font-size: var(--fs-m); }
+
+/* --- Utilidades -------------------------------------------------------------- */
+
+.lead { font-size: var(--fs-m); line-height: var(--lh-body); color: var(--c-gray-1); margin: 0 0 20px; font-weight: 500; }
+.center { text-align: center; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Los dos botones de navegar del modo visita van en fila, no apilados. */
+.visit__nav .slab { flex: 1 1 0; }
+.visit__nav .slab + .slab { margin-top: 0; }
+
+/* --- Pestañas Fotos / Álbumes (de la v1, en lenguaje de Acceso Asistido) --- */
+.tabs { display: flex; gap: 10px; padding: 0 var(--gutter) 4px; }
+.tabs button {
+  flex: 1 1 0; min-height: var(--tap-min);
+  border-radius: 22px; background: var(--c-white);
+  box-shadow: 0 2px 10px rgba(13, 15, 24, .07);
+  font-size: var(--fs-m); font-weight: 700;
+}
+.tabs button[aria-selected="true"] { background: var(--accent); color: #fff; }
+
+/* --- Título de sección ---------------------------------------------------- */
+.sect { font-size: var(--fs-m); font-weight: 800; margin: 26px 0 12px; letter-spacing: -.01em; }
+.sect:first-child { margin-top: 10px; }
+
+/* --- Caras dentro de una foto --------------------------------------------- */
+.faces { display: flex; gap: 18px; list-style: none; margin: 0; padding: 2px 0 0; flex-wrap: wrap; }
+.faces__btn { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 96px; }
+.faces__name { font-size: var(--fs-xs); font-weight: 600; text-align: center; line-height: 1.2; }
+
+/* --- Sugerencias de parentesco (de la v1) --------------------------------- */
+.chips { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0 0; }
+.chip {
+  min-height: var(--tap-min); border-radius: 22px;
+  background: var(--c-white); box-shadow: 0 2px 10px rgba(13, 15, 24, .07);
+  font-size: var(--fs-s); font-weight: 700; padding: 12px;
+}
+.chip[aria-pressed="true"] { background: var(--accent); color: #fff; }
+
+/* --- Contacto enlazado (WhatsApp) ----------------------------------------- */
+.contact {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px; margin-top: 10px;
+  background: var(--c-white); border-radius: var(--r-card);
+  box-shadow: 0 2px 10px rgba(13, 15, 24, .07);
+  text-align: left;
+}
+.contact__num { font-size: var(--fs-xs); color: var(--c-gray-1); font-weight: 500; }
+
+/* Acciones dentro del cuerpo: como el botón amarillo "Take Photo" de la
+   cámara de Acceso Asistido — la acción vive en el contenido, no en la
+   franja de abajo, que es solo para Atrás. */
+.actions { display: flex; flex-direction: column; gap: 10px; margin-top: 22px; }
+.actions .slab + .slab { margin-top: 0; }
+
+/* --- Colección con nombre (secciones de la portada y lista de álbumes) -----
+   Mismo contenido en las dos disposiciones; solo cambia la densidad.
+   -------------------------------------------------------------------------- */
+.cards { list-style: none; margin: 0; padding: 0; }
+.card__thumb { display: block; background-size: cover; background-position: center; }
+.card__label { font-size: var(--fs-m); font-weight: 700; line-height: var(--lh-tight); display: block; }
+.card__meta  { font-size: var(--fs-xs); color: var(--c-gray-1); font-weight: 500; }
+
+[data-view="filas"] .cards { display: flex; flex-direction: column; gap: 12px; }
+[data-view="filas"] .card {
+  display: flex; align-items: center; gap: 18px; width: 100%;
+  min-height: var(--tap-card); padding: 14px 20px 14px 14px;
+  background: var(--c-white); border-radius: var(--r-card);
+  box-shadow: 0 2px 10px rgba(13, 15, 24, .07); text-align: left;
+}
+[data-view="filas"] .card__thumb { width: 76px; height: 76px; border-radius: 20px; flex: 0 0 auto; }
+[data-view="filas"] .card__text { flex: 1 1 auto; min-width: 0; }
+
+[data-view="cuadricula"] .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+[data-view="cuadricula"] .card { display: block; width: 100%; text-align: left; }
+[data-view="cuadricula"] .card__thumb { width: 100%; aspect-ratio: 1; border-radius: var(--r-photo); }
+[data-view="cuadricula"] .card__label { font-size: var(--fs-s); margin-top: 8px; }
+[data-view="cuadricula"] .card__meta { display: none; }
+.card:active { transform: scale(.985); }
+
+
+/* --- "A mano" -------------------------------------------------------------
+   Lo único que se mira todos los días. No es una tarjeta más entre las de
+   fotos: va la primera, ocupa el ancho completo y va rellena de color, para
+   que se distinga sin leerla.
+   -------------------------------------------------------------------------- */
+.mano-cta {
+  display: flex; align-items: center; gap: 18px; width: 100%;
+  min-height: var(--tap-card); padding: 18px 20px; margin: 10px 0 4px;
+  background: var(--f-mano); color: #fff;
+  border-radius: var(--r-card); text-align: left;
+}
+.mano-cta__icon {
+  width: 64px; height: 64px; flex: 0 0 auto; border-radius: 50%;
+  background: rgba(255, 255, 255, .2); display: grid; place-items: center;
+}
+.mano-cta__icon svg { width: 34px; height: 34px; }
+.mano-cta__label { font-size: var(--fs-m); font-weight: 800; display: block; line-height: var(--lh-tight); }
+.mano-cta__meta  { font-size: var(--fs-xs); font-weight: 500; opacity: .9; }
+.mano-cta:active { transform: scale(.985); }
+
+/* Las cosas de "A mano" no son fotos: se ven como fichas, no como recuerdos. */
+.docs { list-style: none; margin: 0; padding: 4px 0 0; }
+[data-view="filas"] .docs { display: flex; flex-direction: column; gap: 12px; }
+[data-view="cuadricula"] .docs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.doc {
+  display: flex; align-items: center; gap: 16px; width: 100%;
+  min-height: var(--tap-card); padding: 16px;
+  background: var(--c-white); border-radius: var(--r-card);
+  box-shadow: 0 2px 10px rgba(13, 15, 24, .07);
+  text-align: left;
+}
+[data-view="cuadricula"] .doc { flex-direction: column; align-items: flex-start; justify-content: center; gap: 12px; }
+.doc__icon {
+  width: 60px; height: 60px; flex: 0 0 auto; border-radius: 18px;
+  background: var(--f-mano-tint); color: var(--f-mano);
+  display: grid; place-items: center;
+}
+.doc__icon svg { width: 32px; height: 32px; }
+.doc__label { font-size: var(--fs-m); font-weight: 700; display: block; line-height: var(--lh-tight); }
+.doc__meta  { font-size: var(--fs-xs); color: var(--c-gray-1); font-weight: 500; }
+.doc:active { transform: scale(.985); }
+
+/* Visor de una ficha: fondo blanco a tope y aviso de brillo, como los pases
+   de Wallet. Si es para enseñar el DNI o que te escaneen el bono del bus,
+   la pantalla tiene que verse. */
+.viewer { display: flex; flex-direction: column; align-items: center; gap: 16px; padding-top: 6px; }
+.viewer__sheet {
+  width: 100%; aspect-ratio: 1.58;
+  border-radius: var(--r-photo);
+  background: #fff; border: 3px solid var(--c-gray-3);
+  display: grid; place-items: center; gap: 10px;
+  align-content: center; padding: 20px; text-align: center;
+}
+.viewer__sheet svg { width: 76px; height: 76px; color: var(--f-mano); }
+.viewer__sheet b { font-size: var(--fs-lg); }
+.viewer__bright {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-size: var(--fs-xs); font-weight: 600; color: var(--f-mano);
+  background: var(--f-mano-tint); border-radius: 18px;
+  padding: 12px 16px; width: 100%; text-align: center;
+}
+
+</style>
+
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <g id="i-back"><path d="M11 5 4 12l7 7M4 12h16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <g id="i-photos"><rect x="3" y="5" width="18" height="14" rx="3.4" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="8.4" cy="10" r="1.8" fill="currentColor"/><path d="m4.2 17.6 4.9-4.5 3.6 3.1 2.7-2.3 4.3 3.7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></g>
+  <g id="i-moments"><rect x="3.2" y="4.8" width="17.6" height="16" rx="3.4" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M3.2 9.6h17.6M8 2.8v4M16 2.8v4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></g>
+  <g id="i-family"><circle cx="9" cy="9.4" r="3.2" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="16.6" cy="10.6" r="2.4" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M3.4 19.4c.9-3.2 3-4.8 5.6-4.8s4.7 1.6 5.6 4.8M16 15c2.2 0 3.7 1.2 4.5 3.4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></g>
+  <g id="i-spark"><path d="M12 2.6 14 9.4l6.8 2-6.8 2-2 6.8-2-6.8-6.8-2 6.8-2z" fill="currentColor"/></g>
+  <g id="i-mic"><rect x="8.8" y="2.4" width="6.4" height="11.8" rx="3.2" fill="currentColor"/><path d="M5.2 11.6a6.8 6.8 0 0 0 13.6 0M12 18.4V22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></g>
+  <g id="i-phone"><path d="M6.4 3.6h3l1.6 4-2 1.6a12 12 0 0 0 5.8 5.8l1.6-2 4 1.6v3a2 2 0 0 1-2.2 2C10.6 19 5 13.4 4.4 5.8a2 2 0 0 1 2-2.2z" fill="currentColor"/></g>
+  <g id="i-user"><circle cx="12" cy="8.4" r="3.8" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M4.6 20.2c1.4-3.8 4.2-5.6 7.4-5.6s6 1.8 7.4 5.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></g>
+  <g id="i-camera"><path d="M4 8h3.2l1.4-2h6.8l1.4 2H20a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="12" cy="13.4" r="3.6" fill="none" stroke="currentColor" stroke-width="2.2"/></g>
+  <g id="i-cloud"><path d="M7 18.6a4.1 4.1 0 0 1-.3-8.2 5.5 5.5 0 0 1 10.6 1.2A3.7 3.7 0 0 1 17 18.6z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></g>
+  <g id="i-close"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></g>
+  <g id="i-prev"><path d="M14.5 4.6 7 12l7.5 7.4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <g id="i-next"><path d="M9.5 4.6 17 12l-7.5 7.4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <g id="i-expand"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <g id="i-check"><path d="M4.6 12.6 9.6 17.6 19.4 7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <g id="i-play"><path d="M8 5 19 12 8 19z" fill="currentColor"/></g>
+  <g id="i-mano"><path d="M6.6 3.4h10.8a1.4 1.4 0 0 1 1.4 1.4v15.8l-6.8-3.6-6.8 3.6V4.8a1.4 1.4 0 0 1 1.4-1.4z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></g>
+  <g id="i-id"><rect x="2.6" y="5" width="18.8" height="14" rx="2.6" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="8.4" cy="11" r="2.4" fill="currentColor"/><path d="M4.8 16.4c.7-1.6 2-2.4 3.6-2.4s2.9.8 3.6 2.4M14.6 10h4.2M14.6 13.6h4.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></g>
+  <g id="i-bus"><rect x="4.4" y="3.4" width="15.2" height="13.4" rx="2.6" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M4.4 10.6h15.2M7.6 20.6v-3.8M16.4 20.6v-3.8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="8.2" cy="13.8" r="1.3" fill="currentColor"/><circle cx="15.8" cy="13.8" r="1.3" fill="currentColor"/></g>
+  <g id="i-health"><rect x="3" y="5.4" width="18" height="13.2" rx="2.6" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 8.8v6.4M8.8 12h6.4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></g>
+  <g id="i-wifi"><path d="M2.6 8.8a14 14 0 0 1 18.8 0M6 12.6a9 9 0 0 1 12 0M9.4 16.2a4.2 4.2 0 0 1 5.2 0" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="19.4" r="1.5" fill="currentColor"/></g>
+  <g id="i-pill"><rect x="3.2" y="8.6" width="17.6" height="6.8" rx="3.4" transform="rotate(-40 12 12)" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M9.2 6.6 17.4 14.8" stroke="currentColor" stroke-width="2.2"/></g>
+  <g id="i-sun"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><path d="M12 2.6v2.6M12 18.8v2.6M2.6 12h2.6M18.8 12h2.6M5.3 5.3l1.9 1.9M16.8 16.8l1.9 1.9M18.7 5.3l-1.9 1.9M7.2 16.8l-1.9 1.9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></g>
+  <g id="i-screenshot"><rect x="3.4" y="3.4" width="17.2" height="17.2" rx="3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-dasharray="5 3.4"/><path d="M8.6 12h6.8M12 8.6v6.8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></g>
+  <g id="i-share"><path d="M12 15.4V3.6M12 3.6 7.6 8M12 3.6 16.4 8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.6 13.4v5.2a1.8 1.8 0 0 0 1.8 1.8h11.2a1.8 1.8 0 0 0 1.8-1.8v-5.2" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></g>
+  <g id="i-nest"><path d="M3 13.6C3 9.8 7 6.8 12 6.8s9 3 9 6.8c0 2.5-2.4 3.9-9 3.9s-9-1.4-9-3.9z" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="9.2" cy="12.6" r="1.9" fill="currentColor"/><circle cx="14.8" cy="12.6" r="1.9" fill="currentColor"/></g>
+</defs></svg>
+
+<div class="stage">
+<div class="device"><div class="device__viewport">
+
+<!-- ============ A1 · Bienvenida ============ -->
+<section class="screen is-active" data-screen="bienvenida" data-accent="nuevas" aria-label="Bienvenida">
+  <div></div>
+  <div class="screen__body center" style="display:flex;flex-direction:column;align-items:center;justify-content:center">
+    <div class="appbar__chip" style="width:104px;height:104px;border-radius:34px;margin-bottom:26px">
+      <svg viewBox="0 0 24 24" style="width:58px;height:58px"><use href="#i-nest"/></svg>
+    </div>
+    <h1 class="appbar__title" style="font-size:var(--fs-2xl)">Nido</h1>
+    <p class="lead" style="margin-top:10px">Tus recuerdos, siempre contigo</p>
+  </div>
+  <div class="screen__foot">
+    <button class="slab slab--accent" data-go="telefono">Empezar<svg viewBox="0 0 24 24" style="transform:rotate(180deg)"><use href="#i-back"/></svg></button>
+  </div>
+</section>
+
+<!-- ============ A2 · Número ============ -->
+<section class="screen" data-screen="telefono" data-accent="nuevas" aria-label="Tu número">
+  <div class="appbar"><h1 class="appbar__title">¿Cuál es tu número?</h1></div>
+  <div class="screen__body">
+    <p class="lead">Te mandamos un código para confirmarlo. No hay que recordar ninguna contraseña.</p>
+    <p class="field" id="field" aria-live="polite">612 · 345 · 678</p>
+    <div class="keypad" id="keypad" role="group" aria-label="Teclado numérico"></div>
+  </div>
+  <div class="screen__foot">
+    <button class="slab slab--accent" data-go="codigo">Continuar</button>
+    <button class="slab slab--back" data-back><svg viewBox="0 0 24 24"><use href="#i-back"/></svg>Atrás</button>
+  </div>
+</section>
+
+<!-- ============ A3 · Código ============ -->
+<section class="screen" data-screen="codigo" data-accent="nuevas" aria-label="Código">
+  <div class="appbar"><h1 class="appbar__title">Te hemos mandado un código</h1></div>
+  <div class="screen__body">
+    <p class="lead" id="code-status">Se está escribiendo solo. No hace falta que lo teclees.</p>
+    <div class="code" id="code" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+  </div>
+  <div class="screen__foot">
+    <button class="slab slab--back" data-back><svg viewBox="0 0 24 24"><use href="#i-back"/></svg>Atrás</button>
+  </div>
+</section>
+
+
+
+<!-- ============ 07 · Home ============ -->
+<section class="screen" data-screen="home" data-accent="nuevas" aria-label="Inicio">
+  <div>
+    <div class="appbar">
+      <span class="appbar__chip"><svg viewBox="0 0 24 24"><use href="#i-nest"/></svg></span>
+      <div><h1 class="appbar__title">Nido</h1><p class="appbar__count">Hola, Pilar</p></div>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Fotos o álbumes">
+      <button role="tab" aria-selected="true" data-tab="fotos">Fotos</button>
+      <button role="tab" aria-selected="false" data-tab="albumes">Álbumes</button>
+    </div>
+  </div>
+  <div class="screen__body">
+    <button class="mano-cta" data-go="a-mano">
+      <span class="mano-cta__icon"><svg viewBox="0 0 24 24"><use href="#i-mano"/></svg></span>
+      <span><span class="mano-cta__label">A mano</span><span class="mano-cta__meta">El DNI, el horario del bus, lo que miras cada día</span></span>
+    </button>
+    <div id="home-body"></div>
+  </div>
+  <div class="screen__foot">
+    <button class="slab slab--accent" data-go="crear">
+      <svg viewBox="0 0 24 24"><use href="#i-spark"/></svg>Crear con IA
+    </button>
+    <div class="visit__nav" style="margin-top:10px">
+      <button class="slab" data-go="buscar"><svg viewBox="0 0 24 24"><use href="#i-mic"/></svg>Buscar</button>
+      <button class="slab" data-go="ajustes"><svg viewBox="0 0 24 24"><use href="#i-user"/></svg>Tus cosas</button>
+    </div>
+  </div>
+</section>
+
+
+
+
+
+
+
+
+
+<!-- ============ Crear ============ -->
+<section class="screen" data-screen="crear" data-accent="crear" aria-label="Crear">
+  <div class="appbar">
+    <span class="appbar__chip"><svg viewBox="0 0 24 24"><use href="#i-spark"/></svg></span>
+    <div><h1 class="appbar__title">¿Creamos algo?</h1><p class="appbar__count">Un vídeo, un álbum, una felicitación</p></div>
+  </div>
+  <div class="screen__body">
+    <div class="mic" id="mic-crear">
+      <button class="mic__btn" data-mic="crear" aria-label="Aprieta y di qué quieres crear">
+        <span class="mic__ring"></span><span class="mic__ring mic__ring--2"></span>
+        <span class="mic__core"><svg viewBox="0 0 24 24"><use href="#i-mic"/></svg></span>
+      </button>
+    </div>
+    <p class="said" id="crear-said" aria-live="polite"><em>Aprieta el botón y di qué quieres.</em></p>
+    <p class="lead" style="margin:22px 0 8px;font-size:var(--fs-s)">Lo último que hiciste</p>
+    <ul class="photos" id="crear-grid"></ul>
+  </div>
+  <div class="screen__foot">
+    <button class="slab slab--back" data-back><svg viewBox="0 0 24 24"><use href="#i-back"/></svg>Atrás</button>
+  </div>
+</section>
+
+<!-- ============ Tus cosas ============ -->
+<section class="screen" data-screen="ajustes" data-accent="nuevas" aria-label="Tus cosas">
+  <div class="appbar">
+    <span class="appbar__chip"><svg viewBox="0 0 24 24"><use href="#i-user"/></svg></span>
+    <div><h1 class="appbar__title">Tus cosas</h1><p class="appbar__count">Pilar · 612 345 678</p></div>
+  </div>
+  <div class="screen__body">
+    <div class="set">
+      <span class="set__label">Cómo se ve todo</span>
+      <p class="set__help">En lista se ve más grande y con su nombre. En cuadrícula caben más cosas.</p>
+      <div class="pick" role="group">
+        <button data-set-view="filas" aria-pressed="true">En lista</button>
+        <button data-set-view="cuadricula" aria-pressed="false">En cuadrícula</button>
+      </div>
+    </div>
+    <div class="set">
+      <span class="set__label">Tamaño de la letra</span>
+      <p class="set__help">Empieza por el que ya tienes puesto en el teléfono. Aquí solo lo subes más.</p>
+      <div class="pick pick--text" role="group">
+        <button data-set-text="normal" aria-pressed="true">Como está</button>
+        <button data-set-text="grande" aria-pressed="false">Un poco más</button>
+        <button data-set-text="enorme" aria-pressed="false">Mucho más</button>
+      </div>
+    </div>
+    <div class="set">
+      <span class="set__label">Colores más marcados</span>
+      <p class="set__help">Quita los fondos de color y sube el contraste de todo.</p>
+      <div class="pick" role="group">
+        <button data-set-contrast="normal" aria-pressed="true">Normal</button>
+        <button data-set-contrast="alto" aria-pressed="false">Más marcados</button>
+      </div>
+    </div>
+  </div>
+  <div class="screen__foot">
+    <button class="slab slab--back" data-back><svg viewBox="0 0 24 24"><use href="#i-back"/></svg>Atrás</button>
+  </div>
+</section>
+
+<!-- ============ Modo visita ============ -->
+<section class="screen" data-screen="visita" aria-label="Ver en grande">
+  <div class="visit" id="visit" tabindex="0" style="grid-column:1/-1;grid-row:1/-1">
+    <div class="visit__photo" id="visit-photo"></div>
+    <div class="visit__ui">
+      <p class="visit__top" id="visit-title">Viaje a la playa · agosto de 2023</p>
+      <div></div>
+      <div class="visit__bottom">
+        <div class="visit__nav">
+          <button class="slab" id="visit-prev"><svg viewBox="0 0 24 24"><use href="#i-prev"/></svg>Anterior</button>
+          <button class="slab" id="visit-next">Siguiente<svg viewBox="0 0 24 24"><use href="#i-next"/></svg></button>
+        </div>
+        <button class="slab slab--hold" id="visit-exit"><svg viewBox="0 0 24 24"><use href="#i-close"/></svg>Mantén pulsado para salir</button>
+        <p class="visit__hint">Los botones se esconden solos. Toca la foto para verlos.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============ 04 · Tu foto y tu nombre ============ -->
+<section class="screen" data-screen="perfil-foto" data-accent="familia" aria-label="Tu foto y tu nombre">
+  <div class="appbar"><h1 class="appbar__title">¿Cómo te llamamos?</h1></div>
+  <div class="screen__body center">
+    <p class="lead" style="text-align:left">Hazte una foto y dinos tu nombre en voz alta.</p>
+    <div class="avatar avatar--xl" style="margin:8px auto 20px"><svg viewBox="0 0 24 24" style="width:56px;height:56px"><use href="#i-user"/></svg></div>
+    <p class="said" id="perfil-foto-said" aria-live="polite" style="text-align:left"><em>Todavía no hay nombre.</em></p>
+    <div class="actions">
+      <button class="slab slab--accent" data-voz="perfil-foto"><svg viewBox="0 0 24 24"><use href="#i-mic"/></svg>Decir mi nombre</button>
+      <button class="slab" data-go="copia"><svg viewBox="0 0 24 24"><use href="#i-camera"/></svg>Hacerme una foto</button>
+    </div>
+  </div>
+  <div class="screen__foot">
+    <button class="slab slab--quiet" data-go="copia">Ahora no</button>
+  </div>
+</section>
+
+<!-- ============ 05 · Copia de seguridad ============ -->
+<section class="screen" data-screen="copia" data-accent="nuevas" aria-label="Copia de seguridad">
+  <div class="appbar"><h1 class="appbar__title">Guarda una copia</h1></div>
+  <div class="screen__body">
+    <p class="lead">Así nunca perderás tus fotos, aunque cambies de teléfono.</p>
+    <div class="actions" style="margin-top:8px">
+      <button class="slab" data-go="home" data-permisos><svg viewBox="0 0 24 24"><use href="#i-cloud"/></svg>Usar mi cuenta de Google</button>
+      <button class="slab" data-go="home" data-permisos><svg viewBox="0 0 24 24"><use href="#i-cloud"/></svg>Usar mi cuenta de Apple</button>
+    </div>
+  </div>
+  <div class="screen__foot">
+    <button class="slab slab--quiet" data-go="home" data-permisos>Ahora no</button>
+  </div>
+</section>
+
+<!-- ============ 08 · Álbum ============ -->
+<section class="screen" data-screen="album" data-accent="momentos" aria-label="Álbum">
+  <div class="appbar">
+    <span class="appbar__chip"><svg viewBox="0 0 24 24"><use href="#i-moments"/></svg></span>
+    <div><h1 class="appbar__title" id="album-title">Viaje a la playa</h1><p class="appbar__count" id="album-meta">9 fotos · agosto de 2023</p></div>
+  </div>
+  <div class="screen__body">
+    <ul class="photos" id="album-grid"></ul>
+    <div class="actions">
+      <button class="slab slab--accent" data-go="visita"><svg viewBox="0 0 24 24"><use href="#i-expand"/></svg>Verlas en grande</button>
+      <button class="slab" data-voz="nombrar-album"><svg viewBox="0 0 24 24"><use href="#i-mic"/></svg>Ponerle nombre</button>
+      <button class="slab" data-crear-video="album"><svg viewBox="0 0 24 24"><use href="#i-spark"/></svg>Hacer un vídeo con estas fotos</button>
+    </div>
+  </div>
+  <div class="screen__foot">
+    <button class="slab slab--back" data-back><svg viewBox="0 0 24 24"><use href="#i-back"/></svg>Atrás</button>
+  </div>
+</section>
+
+<!-- ============ 09 · Foto ============ -->
+<section class="screen" data-screen="foto" data-accent="nuevas" aria-label="Foto">
+  <div class="appbar"><h1 class="appbar__title" id="foto-title">Agosto de 2023</h1></div>
+  <div class="screen__body">
+    <div class="hero" id="foto-hero"></div>
+    <h2 class="sect">Quién sale en esta foto</h2>
+    <ul class="faces" id="foto-faces"></ul>
+    <div class="actions">
+      <button class="slab slab--accent" id="foto-share"><svg viewBox="0 0 24 24"><use href="#i-share"/></svg>Mandársela a Lucía</button>
+      <button class="slab" data-go="visita"><svg viewBox="0 0 24 24"><use href="#i-expand"/></svg>Ver en grande</button>
+      <button class="slab" id="foto-mano"><svg viewBox="0 0 24 24"><use href="#i-mano"/></svg>Tenerlo a mano</button>
+      <button class="slab" data-crear-video="foto"><svg viewBox="0 0 24 24"><use href="#i-spark"/></svg>Hacer un vídeo con esta foto</button>
+    </div>
+  </div>
+  <div class="screen__foot">
+    <button class="slab slab--back" data-back><svg viewBox="0 0 24 24"><use href="#i-back"/></svg>Atrás</button>
+  </div>
+</section>
+
+<!-- ============ 10 · Persona no identificada ============ -->
+<section class="screen" data-screen="persona-nueva" data-accent="familia" aria-label="Persona no identificada">
+  <div class="appbar"><h1 class="appbar__title">¿Quién es esta persona?</h1></div>
+  <div class="screen__body">
+    <div class="hero" id="nueva-hero" style="aspect-ratio:4/3;display:grid;place-items:center">
+      <span class="avatar avatar--xl" style="background:rgba(255,255,255,.88);border:0"><svg viewBox="0 0 24 24" style="width:56px;height:56px"><use href="#i-user"/></svg></span>
+    </div>
+    <p class="lead" style="margin:18px 0 6px">Sale en 4 fotos. Si nos dices quién es, las juntamos todas.</p>
+    <div class="actions" style="margin-top:10px">
+      <button class="slab slab--accent" data-voz="persona-nueva"><svg viewBox="0 0 24 24"><use href="#i-mic"/></svg>Decirlo con la voz</button>
+    </div>
+    <h2 class="sect">¿Quizás es…?</h2>
+    <div class="chips" role="group" aria-label="Sugerencias">
+      <button class="chip" aria-pressed="false">Tu nieta</button>
+      <button class="chip" aria-pressed="false">Tu hijo</button>
+      <button class="chip" aria-pressed="false">Tu amiga</button>
+      <button class="chip" aria-pressed="false">Tu vecino</button>
+    </div>
+    <div class="actions">
+      <button class="slab slab--quiet" data-back>No es nadie que yo conozca</button>
+    </div>
+  </div>
+  <div class="screen__foot">
+    <button class="slab slab--back" data-back><svg viewBox="0 0 24 24"><use href="#i-back"/></svg>Atrás</button>
+  </div>
+</section>
+
+<!-- ============ 11 · Persona identificada ============ -->
+<section class="screen" data-screen="persona" data-accent="familia" aria-label="Persona identificada">
+  <div class="appbar">
+    <span class="avatar" id="persona-av" style="width:52px;height:52px;font-size:var(--fs-s)">L</span>
+    <div><h1 class="appbar__title" id="persona-nom">Lucía</h1><p class="appbar__count" id="persona-rel">Tu nieta · 58 fotos</p></div>
+  </div>
+  <div class="screen__body"><ul class="photos" id="persona-grid"></ul></div>
+  <div class="screen__foot">
+    <button class="slab slab--back" data-back><svg viewBox="0 0 24 24"><use href="#i-back"/></svg>Atrás</button>
+  </div>
+</section>
+
+<!-- ============ Buscar por voz ============ -->
+<section class="screen" data-screen="buscar" data-accent="nuevas" aria-label="Buscar">
+  <div class="appbar"><h1 class="appbar__title">¿Qué quieres ver?</h1></div>
+  <div class="screen__body">
+    <p class="lead">Por ejemplo: «las fotos de la Navidad» o «fotos de Lucía».</p>
+    <div class="mic" id="mic-buscar">
+      <button class="mic__btn" data-mic="buscar" aria-label="Aprieta y habla">
+        <span class="mic__ring"></span><span class="mic__ring mic__ring--2"></span>
+        <span class="mic__core"><svg viewBox="0 0 24 24"><use href="#i-mic"/></svg></span>
+      </button>
+    </div>
+    <p class="said" id="buscar-said" aria-live="polite"><em>Aprieta el botón y habla.</em></p>
+    <h2 class="sect">Personas</h2>
+    <ul class="faces" id="buscar-faces"></ul>
+  </div>
+  <div class="screen__foot">
+    <button class="slab slab--back" data-back><svg viewBox="0 0 24 24"><use href="#i-back"/></svg>Atrás</button>
+  </div>
+</section>
+
+
+<!-- ============ A mano ============ -->
+<section class="screen" data-screen="a-mano" data-accent="mano" aria-label="A mano">
+  <div class="appbar">
+    <span class="appbar__chip"><svg viewBox="0 0 24 24"><use href="#i-mano"/></svg></span>
+    <div><h1 class="appbar__title">A mano</h1><p class="appbar__count">Lo que necesitas todos los días</p></div>
+  </div>
+  <div class="screen__body">
+    <ul class="docs" id="mano-list"></ul>
+    <div class="actions">
+      <button class="slab" data-voz="guardar-mano"><svg viewBox="0 0 24 24"><use href="#i-mic"/></svg>Decir qué quiero guardar aquí</button>
+    </div>
+  </div>
+  <div class="screen__foot">
+    <button class="slab slab--back" data-back><svg viewBox="0 0 24 24"><use href="#i-back"/></svg>Atrás</button>
+  </div>
+</section>
+
+<!-- ============ Ver una ficha de "A mano" ============ -->
+<section class="screen" data-screen="documento" data-accent="mano" aria-label="Ver una ficha">
+  <div class="appbar"><h1 class="appbar__title" id="doc-title">DNI · delante</h1></div>
+  <div class="screen__body">
+    <div class="viewer">
+      <div class="viewer__sheet" id="doc-sheet">
+        <svg viewBox="0 0 24 24"><use href="#i-id"/></svg>
+        <b id="doc-name">DNI · delante</b>
+      </div>
+      <p class="viewer__bright"><svg viewBox="0 0 24 24" style="width:24px;height:24px"><use href="#i-sun"/></svg>Pantalla al máximo para que se vea bien</p>
+    </div>
+  </div>
+  <div class="screen__foot">
+    <button class="slab slab--back" data-back><svg viewBox="0 0 24 24"><use href="#i-back"/></svg>Atrás</button>
+  </div>
+</section>
+
+<!-- ============ Diálogo ============ -->
+<div class="sheet" id="sheet" role="dialog" aria-modal="true"><div class="sheet__card"></div></div>
+<p class="sr-only" id="announcer" aria-live="polite"></p>
+
+</div></div>
+
+<aside class="demo">
+  <h1>Nido · versión 2</h1>
+  <p class="demo__note">Rehecha con el lenguaje de <strong>Acceso Asistido</strong> de iPhone: tarjetas grandes sobre fondo teñido, icono y palabra siempre juntos, color por función, y la losa de <strong>Atrás</strong> anclada abajo en todas las pantallas.</p>
+
+  <h2>Disposición</h2>
+  <div class="demo__seg" role="group" aria-label="Disposición">
+    <button data-set-view="filas" aria-pressed="true">Filas</button>
+    <button data-set-view="cuadricula" aria-pressed="false">Cuadrícula</button>
+  </div>
+  <p class="demo__note" style="margin-top:8px">Cámbialo en la portada: es donde mejor se ve la diferencia.</p>
+
+  <h2>Tamaño de letra</h2>
+  <div class="demo__seg" role="group" aria-label="Tamaño de letra">
+    <button data-set-text="normal" aria-pressed="true">Como está</button>
+    <button data-set-text="grande" aria-pressed="false">+</button>
+    <button data-set-text="enorme" aria-pressed="false">++</button>
+  </div>
+
+  <h2>Contraste</h2>
+  <div class="demo__seg" role="group" aria-label="Contraste">
+    <button data-set-contrast="normal" aria-pressed="true">Normal</button>
+    <button data-set-contrast="alto" aria-pressed="false">Alto</button>
+  </div>
+
+  <h2>Probar un caso</h2>
+  <div class="demo__seg">
+    <button id="demo-captura" style="flex:1 1 100%">Llega una captura de pantalla</button>
+  </div>
+  <p class="demo__note" style="margin-top:8px">La gente hace capturas para tener las cosas a mano. Nido lo caza en el momento y ofrece guardarlo donde toca.</p>
+
+  <h2>Pantallas</h2>
+  <ul class="demo__list" id="demo-list"></ul>
+</aside>
+</div>
+
+<script>
+/* ==========================================================================
+   NIDO v2 · Datos de ejemplo
+   Los nombres y las agrupaciones son los de vuestros wireframes.
+   Las "fotos" son degradados deterministas: cuando haya fotos reales se
+   sustituye solo esta capa.
+   ========================================================================== */
+
+const NIDO = (() => {
+
+  function bg(seed) {
+    let h = 0;
+    for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) % 360;
+    return `radial-gradient(120% 90% at 26% 16%, hsl(${h} 74% 86%), transparent 62%),
+            linear-gradient(148deg, hsl(${h} 60% 74%), hsl(${(h + 44) % 360} 54% 56%))`;
+  }
+  const it = (label, meta) => ({ label, meta, bg: bg(label) });
+
+  /* Personas del círculo cercano. `tel` es el contacto de la agenda con el
+     que la app enlaza el nombre — ver el README sobre qué parte de esto es
+     construible de verdad. */
+  const personas = [
+    { id: 'lucia', nombre: 'Lucía', rel: 'Tu nieta',  ini: 'L', fotos: 58, contacto: 'Lucía Nieta', tel: '+34 611 22 33 44' },
+    { id: 'mario', nombre: 'Mario', rel: 'Tu hijo',   ini: 'M', fotos: 73, contacto: 'Mario Hijo',  tel: '+34 622 33 44 55' },
+    { id: 'pilar', nombre: 'Abuela Pilar', rel: 'Tú', ini: 'P', fotos: 120, contacto: null, tel: null }
+  ];
+
+  const hoyHace2 = [it('Playa 2023', '9 fotos'), it('Cumple Sofía', '14 fotos'), it('Navidad', '22 fotos')];
+  const grupos   = [it('Familia García', '186 fotos'), it('Los nietos', '94 fotos'), it('Amigas del barrio', '41 fotos')];
+
+  const albumes = [
+    it('Viaje a la playa 2023', '9 fotos · agosto de 2023'),
+    it('Cumple de Sofía',       '14 fotos · mayo de 2024'),
+    it('Navidad 2024',          '22 fotos · diciembre de 2024'),
+    it('Comida del domingo',    '11 fotos · el domingo pasado'),
+    it('Los nietos en el parque','17 fotos · marzo'),
+    it('Boda de Marta',         '63 fotos · junio de 2022')
+  ];
+
+  const delAlbum   = Array.from({ length: 9 }, (_, i) => it(`Playa ${i + 1}`, 'Agosto de 2023'));
+  const dePersona  = Array.from({ length: 8 }, (_, i) => it(`Lucía ${i + 1}`, '2024'));
+  const creaciones = [it('Vídeo de la playa', 'hace 2 días'), it('Álbum de Navidad', 'en enero')];
+
+  /* "A mano": lo que la gente revisa a diario y hoy resuelve haciendo capturas
+     de pantalla para que la foto vuelva arriba del carrete. No son recuerdos,
+     son cosas de uso — por eso se ven como fichas y no como fotos. */
+  const aMano = [
+    { icon: 'i-id',     label: 'DNI · delante',      meta: 'Guardado en marzo' },
+    { icon: 'i-id',     label: 'DNI · detrás',       meta: 'Guardado en marzo' },
+    { icon: 'i-bus',    label: 'Horario del bus 42', meta: 'Lo miras casi todos los días' },
+    { icon: 'i-health', label: 'Tarjeta sanitaria',  meta: 'Guardado en enero' },
+    { icon: 'i-wifi',   label: 'Wifi de casa',       meta: 'La contraseña larga' },
+    { icon: 'i-pill',   label: 'Pastillas de la mañana', meta: 'Foto de la caja' }
+  ];
+
+  const guiones = {
+    buscar: ['Las fotos de la Navidad', 'Fotos de Lucía', 'Las de la comida del domingo'],
+    crear: ['Un vídeo con las fotos de la playa', 'Una felicitación para Sofía'],
+    'persona-nueva': ['Es mi vecina Carmen', 'Es mi nieta Lucía'],
+    'perfil-foto': ['Pilar', 'Me llamo Pilar'],
+    'nombrar-album': ['Verano en Denia', 'La comida del domingo'],
+    'guardar-mano': ['El horario del médico', 'La receta de las pastillas', 'El número de la vecina']
+  };
+
+  return { bg, personas, hoyHace2, grupos, albumes, delAlbum, dePersona, creaciones, aMano, guiones };
+})();
+
+
+/* ==========================================================================
+   NIDO v2 · La v1 adaptada al lenguaje de Acceso Asistido
+   Mismas pantallas y mismo flujo que los wireframes; cambia cómo se
+   presentan y cómo se navega.
+   ========================================================================== */
+
+(() => {
+  'use strict';
+
+  const $  = (s, c = document) => c.querySelector(s);
+  const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
+  const root = document.documentElement;
+  const svg  = id => `<svg viewBox="0 0 24 24"><use href="#${id}"/></svg>`;
+
+  const SCREENS = [
+    { g: 'Alta', id: 'bienvenida', n: '01 · Bienvenida' },
+    { id: 'telefono',      n: '02 · Tu número' },
+    { id: 'codigo',        n: '03 · Código' },
+    { id: 'perfil-foto',   n: '04 · Tu foto y tu nombre' },
+    { id: 'copia',         n: '05 · Copia de seguridad' },
+    { g: 'Uso diario', id: 'home', n: '07 · Home (+ 06 permisos)' },
+    { id: 'a-mano',        n: 'A mano' },
+    { id: 'documento',     n: 'Ver una ficha' },
+    { id: 'album',         n: '08 · Álbum' },
+    { id: 'foto',          n: '09 · Foto' },
+    { id: 'persona-nueva', n: '10 · Persona no identificada' },
+    { id: 'persona',       n: '11 · Persona identificada' },
+    { id: 'crear',         n: '12 · Crear con IA' },
+    { g: 'Extras de la v1', id: 'buscar', n: 'Buscar por voz' },
+    { id: 'visita',        n: '13/14 · Ver en grande' },
+    { id: 'ajustes',       n: 'Tus cosas' }
+  ];
+
+  let stack = [], current = null;
+  const announce = m => { $('#announcer').textContent = String(m).replace(/<[^>]+>/g, ' ').trim(); };
+
+  function go(id, { replace = false } = {}) {
+    if (id === current) return;
+    if (current && !replace) stack.push(current);
+    if (current === 'visita') stopVisita();
+
+    $$('.screen').forEach(s => s.classList.toggle('is-active', s.dataset.screen === id));
+    current = id;
+
+    const view = $(`.screen[data-screen="${id}"]`);
+    const body = view.querySelector('.screen__body');
+    if (body) body.scrollTop = 0;
+    const f = view.querySelector('.appbar__title') || view;
+    f.setAttribute('tabindex', '-1');
+    f.focus({ preventScroll: true });
+
+    announce(SCREENS.find(s => s.id === id)?.n || id);
+    $$('#demo-list button').forEach(b => b.setAttribute('aria-current', String(b.dataset.goto === id)));
+
+    if (id === 'codigo') autofill();
+    if (id === 'visita') startVisita();
+  }
+  const back = () => go(stack.pop() || 'home', { replace: true });
+
+  /* --- Preferencias -------------------------------------------------------- */
+
+  const DEFAULTS = { view: 'filas', text: 'normal', contrast: 'normal' };
+  function setPref(k, v) {
+    root.dataset[k] = v;
+    try { localStorage.setItem('nido2.' + k, v); } catch (e) {}
+    $$(`[data-set-${k}]`).forEach(b => b.setAttribute('aria-pressed', String(b.getAttribute('data-set-' + k) === v)));
+  }
+  ['view', 'text', 'contrast'].forEach(k => {
+    let s = null;
+    try { s = localStorage.getItem('nido2.' + k); } catch (e) {}
+    setPref(k, s || root.dataset[k] || DEFAULTS[k]);
+  });
+
+  /* --- Piezas -------------------------------------------------------------- */
+
+  const sect = t => { const h = document.createElement('h2'); h.className = 'sect'; h.textContent = t; return h; };
+
+  function cardList(items, onPick) {
+    const ul = document.createElement('ul');
+    ul.className = 'cards';
+    items.forEach(it => {
+      const li = document.createElement('li');
+      li.innerHTML =
+        `<button class="card">
+           <span class="card__thumb" style="background-image:${it.bg}"></span>
+           <span class="card__text"><span class="card__label">${it.label}</span><span class="card__meta">${it.meta}</span></span>
+         </button>`;
+      li.querySelector('button').addEventListener('click', () => onPick(it));
+      ul.appendChild(li);
+    });
+    return ul;
+  }
+
+  function faceList(ul, people, onPick, addUnknown) {
+    ul.innerHTML = '';
+    people.forEach(p => {
+      const li = document.createElement('li');
+      li.innerHTML = `<button class="faces__btn"><span class="avatar">${p.ini}</span><span class="faces__name">${p.nombre}</span></button>`;
+      li.querySelector('button').addEventListener('click', () => onPick(p));
+      ul.appendChild(li);
+    });
+    if (addUnknown) {
+      const li = document.createElement('li');
+      li.innerHTML = `<button class="faces__btn"><span class="avatar avatar--new">${svg('i-user')}</span><span class="faces__name">¿Quién es?</span></button>`;
+      li.querySelector('button').addEventListener('click', () => go('persona-nueva'));
+      ul.appendChild(li);
+    }
+  }
+
+  function photoList(ul, items, onPick) {
+    ul.innerHTML = '';
+    items.forEach(it => {
+      const li = document.createElement('li');
+      li.innerHTML = `<button class="photo__btn"><span class="photo__img" style="background-image:${it.bg}"></span><span class="photo__cap">${it.meta}</span></button>`;
+      li.querySelector('button').addEventListener('click', () => onPick(it));
+      ul.appendChild(li);
+    });
+  }
+
+  /* --- Home: pestañas y secciones de la v1 --------------------------------- */
+
+  let tab = 'fotos';
+  function renderHome() {
+    const b = $('#home-body');
+    b.innerHTML = '';
+    if (tab === 'albumes') {
+      b.appendChild(sect('Todos tus álbumes'));
+      b.appendChild(cardList(NIDO.albumes, openAlbum));
+      return;
+    }
+    b.appendChild(sect('Hoy hace 2 años'));
+    b.appendChild(cardList(NIDO.hoyHace2, openAlbum));
+    b.appendChild(sect('Por grupos de personas'));
+    b.appendChild(cardList(NIDO.grupos, openAlbum));
+    b.appendChild(sect('Por persona'));
+    const ul = document.createElement('ul');
+    ul.className = 'faces';
+    faceList(ul, NIDO.personas, openPersona, true);
+    b.appendChild(ul);
+  }
+
+  /* --- "A mano" -------------------------------------------------------------
+     El hallazgo detrás de esta pantalla: la gente hace capturas de pantalla
+     para que una foto vuelva arriba del carrete. La captura no es una copia,
+     es un marcador improvisado. Aquí hay un sitio de verdad para eso, siempre
+     en el mismo lugar, y no hace falta buscar nada.
+     ------------------------------------------------------------------------ */
+
+  function renderMano() {
+    const ul = $('#mano-list');
+    ul.innerHTML = '';
+    NIDO.aMano.forEach(d => {
+      const li = document.createElement('li');
+      li.innerHTML =
+        `<button class="doc">
+           <span class="doc__icon">${svg(d.icon)}</span>
+           <span><span class="doc__label">${d.label}</span><span class="doc__meta">${d.meta}</span></span>
+         </button>`;
+      li.querySelector('button').addEventListener('click', () => openDoc(d));
+      ul.appendChild(li);
+    });
+  }
+
+  function openDoc(d) {
+    $('#doc-title').textContent = d.label;
+    $('#doc-name').textContent  = d.label;
+    $('#doc-sheet').querySelector('use').setAttribute('href', '#' + d.icon);
+    go('documento');
+  }
+
+  /* Cazar la captura de pantalla en el momento en que ocurre. Es "confirmar,
+     no crear": la app ya ha detectado qué es, la persona solo dice sí o no. */
+  function capturaDetectada() {
+    dialog({
+      icon: 'i-screenshot',
+      text: 'Acabas de hacer una captura.<br>¿La quieres tener <strong>a mano</strong>?',
+      extra: '<span class="contact"><span class="doc__icon">' + svg('i-bus') + '</span>' +
+             '<span><span class="card__label">Parece un horario</span>' +
+             '<span class="contact__num">Lo guardamos en A mano</span></span></span>',
+      ok: 'Sí, guárdala', quiet: 'No, déjala en las fotos',
+      onOk: () => { announce('Guardado en A mano'); go('a-mano'); }
+    });
+  }
+
+  /* --- Álbum, foto, persona ------------------------------------------------ */
+
+  function openAlbum(a) {
+    $('#album-title').textContent = a.label;
+    $('#album-meta').textContent  = a.meta;
+    photoList($('#album-grid'), NIDO.delAlbum, f => openFoto(f, a.label));
+    go('album');
+  }
+
+  let personaActual = NIDO.personas[0];
+
+  function openPersona(p) {
+    personaActual = p;
+    $('#persona-av').textContent = p.ini;
+    $('#persona-nom').textContent = p.nombre;
+    $('#persona-rel').textContent = `${p.rel} · ${p.fotos} fotos`;
+    photoList($('#persona-grid'), NIDO.dePersona, f => openFoto(f, p.nombre));
+    go('persona');
+  }
+
+  function openFoto(f, titulo) {
+    $('#foto-hero').style.backgroundImage = f.bg;
+    $('#foto-title').textContent = titulo || f.meta;
+    const enLaFoto = NIDO.personas.slice(0, 2);
+    personaActual = enLaFoto[0];
+    faceList($('#foto-faces'), enLaFoto, openPersona, true);
+    $('#foto-share').innerHTML = svg('i-share') + 'Mandársela a ' + personaActual.nombre;
+    go('foto');
+  }
+
+  $('#foto-mano').addEventListener('click', () => dialog({
+    icon: 'i-mano',
+    text: '¿Guardamos esta foto <strong>a mano</strong>?',
+    ok: 'Sí, guardarla', quiet: 'Ahora no',
+    onOk: () => { announce('Guardado en A mano'); go('a-mano'); }
+  }));
+
+  /* --- Compartir por WhatsApp ----------------------------------------------
+     Lo que enseña el prototipo es lo que de verdad se puede construir:
+     el nombre que la persona puso a la cara se busca en la agenda, y el
+     contacto encontrado sale ARRIBA del selector del sistema. La app no
+     manda la foto sola: la manda a través del selector, porque el enlace
+     wa.me solo admite texto, no imágenes. Detalle en el README.
+     ------------------------------------------------------------------------ */
+
+  $('#foto-share').addEventListener('click', () => {
+    const p = personaActual;
+    if (!p.contacto) {
+      return dialog({
+        icon: 'i-share',
+        text: `No encuentro a <strong>${p.nombre}</strong> en tu agenda.`,
+        ok: 'Elegir yo a quién', quiet: 'Dejarlo'
+      });
+    }
+    dialog({
+      icon: 'i-share',
+      text: `Se la mandamos a <strong>${p.nombre}</strong> por WhatsApp`,
+      extra: `<span class="contact"><span class="avatar" style="width:56px;height:56px">${p.ini}</span>
+                <span><span class="card__label">${p.contacto}</span><span class="contact__num">${p.tel}</span></span>
+              </span>`,
+      ok: 'Sí, mandársela', quiet: 'Elegir otra persona',
+      onOk: () => dialog({ icon: 'i-check', text: `Foto mandada a ${p.nombre}`, ok: 'Vale' })
+    });
+  });
+
+  /* --- Diálogo --------------------------------------------------------------- */
+
+  const sheet = $('#sheet');
+  let lastFocus = null;
+
+  function dialog({ icon = 'i-check', text, extra = '', ok = 'Vale', quiet, onOk, onQuiet }) {
+    lastFocus = document.activeElement;
+    sheet.querySelector('.sheet__card').innerHTML =
+      `<span class="sheet__icon">${svg(icon)}</span>
+       <p class="sheet__text">${text}</p>
+       ${extra}
+       <button class="slab slab--accent" data-ok>${ok}</button>
+       ${quiet ? `<button class="slab slab--quiet" data-quiet>${quiet}</button>` : ''}`;
+    sheet.classList.add('is-open');
+    const okB = sheet.querySelector('[data-ok]');
+    okB.focus();
+    okB.onclick = () => { closeDialog(); onOk && onOk(); };
+    const q = sheet.querySelector('[data-quiet]');
+    if (q) q.onclick = () => { closeDialog(); onQuiet && onQuiet(); };
+    announce(text);
+  }
+  function closeDialog() { sheet.classList.remove('is-open'); if (lastFocus) lastFocus.focus(); }
+
+  sheet.addEventListener('keydown', e => {
+    if (e.key !== 'Tab') return;
+    const f = $$('button', sheet);
+    e.preventDefault();
+    f[(f.indexOf(document.activeElement) + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+  });
+
+  const permisos = () => dialog({
+    icon: 'i-photos',
+    text: 'Danos acceso a tu galería y organizaremos tus momentos.',
+    ok: 'Permitir', quiet: 'Quiero saber más',
+    onQuiet: () => dialog({
+      icon: 'i-photos',
+      text: 'Las miramos aquí dentro, en tu teléfono, para agruparlas por momentos y por personas. No salen a ningún sitio.',
+      ok: 'Entendido', onOk: permisos
+    })
+  });
+
+  /* --- Teclado y código ------------------------------------------------------ */
+
+  let digits = '';
+  const paint = () => { $('#field').textContent = digits ? (digits.match(/.{1,3}/g) || []).join(' · ') : '612 · 345 · 678'; };
+  ['1','2','3','4','5','6','7','8','9','','0','←'].forEach(k => {
+    const b = document.createElement('button');
+    b.textContent = k;
+    if (!k) { b.className = 'k-empty'; b.tabIndex = -1; b.setAttribute('aria-hidden', 'true'); }
+    if (k === '←') b.setAttribute('aria-label', 'Borrar');
+    b.addEventListener('click', () => {
+      if (k === '←') digits = digits.slice(0, -1);
+      else if (k && digits.length < 9) digits += k;
+      paint();
+    });
+    $('#keypad').appendChild(b);
+  });
+
+  let timers = [];
+  function autofill() {
+    timers.forEach(clearTimeout); timers = [];
+    const boxes = $$('#code span');
+    boxes.forEach(b => { b.textContent = ''; b.classList.remove('is-filled'); });
+    '6294'.split('').forEach((n, i) => timers.push(setTimeout(() => {
+      boxes[i].textContent = n; boxes[i].classList.add('is-filled');
+    }, 450 + i * 280)));
+    timers.push(setTimeout(() => { $('#code-status').textContent = 'Listo. Ya está confirmado.'; announce('Código correcto'); }, 1800));
+    timers.push(setTimeout(() => { if (current === 'codigo') go('perfil-foto', { replace: true }); }, 3000));
+  }
+
+  /* --- Voz -------------------------------------------------------------------- */
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  function listen(kind, done) {
+    const g = NIDO.guiones[kind] || ['…'];
+    const fake = g[Math.floor(Math.random() * g.length)];
+    if (!SR) return setTimeout(() => done(fake), 2000);
+    try {
+      const r = new SR(); r.lang = 'es-ES'; r.interimResults = false;
+      let fired = false;
+      const end = t => { if (!fired) { fired = true; done(t); } };
+      r.onresult = e => end(e.results[0][0].transcript);
+      r.onerror = () => end(fake);
+      r.onend = () => end(fake);
+      r.start();
+      setTimeout(() => { try { r.stop(); } catch (e) {} }, 6000);
+    } catch (e) { setTimeout(() => done(fake), 2000); }
+  }
+
+  function resolver(kind, texto) {
+    if (kind === 'buscar') {
+      $('#buscar-said').textContent = '«' + texto + '»';
+      dialog({ icon: 'i-photos', text: `He encontrado fotos de<br><strong>${texto}</strong>`, ok: 'Verlas', quiet: 'Pedir otra cosa',
+        onOk: () => openAlbum(NIDO.albumes[0]) });
+    }
+    if (kind === 'crear') {
+      $('#crear-said').textContent = '«' + texto + '»';
+      dialog({ icon: 'i-spark', text: `¿Preparo esto?<br><strong>${texto}</strong>`, ok: 'Sí, prepáralo', quiet: 'No, otra cosa',
+        onOk: () => dialog({ icon: 'i-play', text: 'Listo. Te aviso cuando esté.', ok: 'Vale', onOk: () => go('home', { replace: true }) }) });
+    }
+    if (kind === 'persona-nueva') {
+      dialog({ icon: 'i-family', text: `¿Guardo esta cara como<br><strong>${texto}</strong>?`, ok: 'Sí', quiet: 'No',
+        onOk: () => openPersona(NIDO.personas[0]) });
+    }
+    if (kind === 'perfil-foto') $('#perfil-foto-said').textContent = '«' + texto + '»';
+    if (kind === 'nombrar-album') { $('#album-title').textContent = texto; announce('Álbum renombrado: ' + texto); }
+    if (kind === 'guardar-mano') {
+      dialog({ icon: 'i-mano', text: `¿Guardo <strong>${texto}</strong> a mano?`, ok: 'Sí', quiet: 'No',
+        onOk: () => announce('Guardado en A mano') });
+    }
+  }
+
+  $$('[data-mic]').forEach(b => {
+    const kind = b.dataset.mic, box = $('#mic-' + kind), said = $('#' + kind + '-said');
+    b.addEventListener('click', () => {
+      if (box.classList.contains('is-listening')) return;
+      box.classList.add('is-listening');
+      if (said) said.innerHTML = '<em>Escuchando…</em>';
+      announce('Te escucho');
+      listen(kind, t => { box.classList.remove('is-listening'); resolver(kind, t); });
+    });
+  });
+
+  $$('[data-voz]').forEach(b => {
+    const kind = b.dataset.voz, original = b.innerHTML;
+    b.addEventListener('click', () => {
+      b.innerHTML = svg('i-mic') + 'Te escucho…';
+      announce('Te escucho');
+      listen(kind, t => { b.innerHTML = original; resolver(kind, t); });
+    });
+  });
+
+  /* --- Ver en grande ----------------------------------------------------------- */
+
+  const visit = $('#visit');
+  let vi = 0, idle = null, raf = null;
+  const paintVisita = () => {
+    const f = NIDO.delAlbum[vi];
+    $('#visit-photo').style.backgroundImage = f.bg;
+    $('#visit-title').textContent = `${f.label} · ${f.meta}`;
+  };
+  function wake() { visit.classList.remove('is-idle'); clearTimeout(idle); idle = setTimeout(() => visit.classList.add('is-idle'), 4500); }
+  function startVisita() { vi = 0; paintVisita(); wake(); visit.focus(); announce('Ver en grande. Mantén pulsado el botón de abajo para salir.'); }
+  function stopVisita() { clearTimeout(idle); cancelHold(); }
+
+  visit.addEventListener('pointerdown', wake);
+  visit.addEventListener('mousemove', wake);
+  $('#visit-prev').addEventListener('click', () => { vi = (vi - 1 + NIDO.delAlbum.length) % NIDO.delAlbum.length; paintVisita(); wake(); });
+  $('#visit-next').addEventListener('click', () => { vi = (vi + 1) % NIDO.delAlbum.length; paintVisita(); wake(); });
+
+  const HOLD = 1200, exit = $('#visit-exit');
+  function startHold() {
+    cancelHold();
+    const t0 = performance.now();
+    const step = now => {
+      const p = Math.min(100, ((now - t0) / HOLD) * 100);
+      exit.style.setProperty('--p', p);
+      if (p >= 100) { cancelHold(); back(); } else raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+  }
+  function cancelHold() { if (raf) cancelAnimationFrame(raf); raf = null; exit.style.setProperty('--p', 0); }
+  exit.addEventListener('pointerdown', e => { e.preventDefault(); startHold(); });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(e => exit.addEventListener(e, cancelHold));
+  exit.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); back(); } });
+
+  /* --- Cableado ------------------------------------------------------------------ */
+
+  document.addEventListener('click', e => {
+    const el = e.target.closest('[data-go],[data-back],[data-tab],[data-crear-video],[data-set-view],[data-set-text],[data-set-contrast],.chip');
+    if (!el) return;
+
+    if (el.dataset.setView)     return setPref('view', el.dataset.setView);
+    if (el.dataset.setText)     return setPref('text', el.dataset.setText);
+    if (el.dataset.setContrast) return setPref('contrast', el.dataset.setContrast);
+
+    if (el.classList.contains('chip')) {
+      const on = el.getAttribute('aria-pressed') === 'true';
+      $$('.chip').forEach(c => c.setAttribute('aria-pressed', 'false'));
+      el.setAttribute('aria-pressed', String(!on));
+      if (!on) dialog({ icon: 'i-family', text: `¿Guardo esta cara como <strong>${el.textContent.trim().toLowerCase()}</strong>?`,
+        ok: 'Sí, guardar', quiet: 'No', onOk: () => openPersona(NIDO.personas[0]) });
+      return;
+    }
+
+    if (el.dataset.tab) {
+      tab = el.dataset.tab;
+      $$('[data-tab]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
+      return renderHome();
+    }
+
+    if (el.dataset.crearVideo) {
+      const qué = el.dataset.crearVideo === 'album' ? 'con las 9 fotos de este álbum' : 'con esta foto';
+      return dialog({ icon: 'i-spark', text: `¿Hago un vídeo ${qué}?`, ok: 'Sí, hazlo', quiet: 'Ahora no',
+        onOk: () => dialog({ icon: 'i-play', text: 'Listo. Te aviso cuando esté.', ok: 'Vale' }) });
+    }
+
+    if (el.dataset.back !== undefined) return back();
+
+    if (el.dataset.go) {
+      go(el.dataset.go);
+      if (el.dataset.permisos !== undefined) setTimeout(permisos, 500);
+    }
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if (sheet.classList.contains('is-open')) closeDialog();
+    else if (current !== 'home' && current !== 'bienvenida') back();
+  });
+
+  /* --- Índice de la demo ---------------------------------------------------------- */
+
+  const list = $('#demo-list');
+  SCREENS.forEach(s => {
+    if (s.g) { const g = document.createElement('li'); g.className = 'demo__group'; g.textContent = s.g; list.appendChild(g); }
+    const li = document.createElement('li');
+    const b = document.createElement('button');
+    b.textContent = s.n; b.dataset.goto = s.id;
+    b.addEventListener('click', () => {
+      if (s.id === 'album')   return openAlbum(NIDO.albumes[0]);
+      if (s.id === 'persona') return openPersona(NIDO.personas[0]);
+      if (s.id === 'foto')    return openFoto(NIDO.delAlbum[0], 'Viaje a la playa 2023');
+      go(s.id);
+    });
+    li.appendChild(b); list.appendChild(li);
+  });
+
+  /* --- Arranque -------------------------------------------------------------------- */
+
+  renderHome();
+  renderMano();
+  $('#demo-captura').addEventListener('click', capturaDetectada);
+  photoList($('#crear-grid'), NIDO.creaciones, () => {});
+  faceList($('#buscar-faces'), NIDO.personas, openPersona);
+  $('#nueva-hero').style.backgroundImage = NIDO.bg('cara sin nombre');
+  paint();
+  current = 'bienvenida';
+})();
+
+</script>

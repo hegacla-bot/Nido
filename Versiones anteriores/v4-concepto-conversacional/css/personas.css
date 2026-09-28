@@ -1,0 +1,692 @@
+/*
+  Nido · v3 — Personas, rediseño (692:2107). Cabecera y footer compartidos con
+  Álbumes/Yo (.top-fade, .bottom-fade, Volver azul); fondo blanco como el resto
+  de pantallas rediseñadas. Grupos en fila con scroll lateral, personas en
+  círculos de 116px.
+*/
+
+/* "Grupos de personas" empieza en 131px en Figma (692:2110), no en los 255px
+   genéricos de .screen-content. */
+[data-screen="personas"] .screen-content {
+  padding-top: 8.1875rem; /* 131px */
+}
+
+/* Tarjetas de grupo: 131.687 × 181.822, hueco 9.56px, arrancan en x=22 y
+   asoman por el borde derecho (692:2163). Margen negativo = mismo truco que
+   .carousel para que la fila llegue al borde real de la pantalla. */
+.personas-groups {
+  display: flex;
+  gap: 0.5976rem; /* 9.56px */
+  margin-left: -1.25rem;
+  margin-right: -1.25rem;
+  padding-left: 1.375rem; /* 22px */
+  padding-right: 1.375rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
+  /* .section-title ya trae 16px de margen; Figma pone 21px hasta las tarjetas */
+  padding-top: 0;
+}
+.personas-groups::-webkit-scrollbar {
+  display: none;
+}
+.persona-group {
+  flex: 0 0 10.3125rem; /* 165px */
+  height: 13.75rem; /* 220px: 188 de foto + 8 + etiqueta */
+}
+.persona-group__photo {
+  height: 11.75rem; /* 188px */
+  border-radius: 0.909rem; /* 14.54px */
+  overflow: hidden;
+}
+.persona-group__photo img,
+.persona-item__photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.persona-group__name,
+.persona-item__name {
+  margin: 0.75rem 0 0; /* 12px */
+  font-size: var(--font-size-label-small);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-black);
+  line-height: normal;
+}
+.persona-group__name {
+  white-space: nowrap;
+  margin-top: 0.5rem; /* 8px */
+  color: var(--color-primary-blue-dark);
+}
+/* El recorte vertical de la foto del museo (Figma: 156 % de alto, −27,7 %).
+   Solo dentro de la tarjeta de grupo: en el detalle la <img> clonada no lleva
+   la clase (se limita al selector .persona-group), así que sus zonas siguen
+   calculadas sobre el recorte centrado de siempre. */
+.persona-group .persona-group__img--museo {
+  object-position: 50% 49.3%;
+}
+
+/* "Personas" a 410px: la fila de grupos acaba en ~386px. */
+.personas-section-title {
+  margin-top: 3.125rem; /* 438px: 50px bajo las tarjetas (168 + 220) */
+  margin-bottom: 0.75rem;
+}
+[data-screen="personas"] .section-title {
+  margin-bottom: 0.75rem; /* 12px hasta las tarjetas (Figma: título 131, tarjetas 168) */
+}
+
+/* Círculos de 116px, hueco 9px horizontal y 12px vertical; empiezan en x=22
+   (692:2114). 3 × 116 + 2 × 9 = 366px, algo más que el ancho útil (353px):
+   es como está en Figma, el tercer círculo termina a 5px del borde. */
+.personas-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 7.25rem); /* 116px */
+  column-gap: 0.5625rem; /* 9px */
+  row-gap: 0.75rem;
+  margin-left: 0.125rem; /* 22px de x, tras los 20px del padding */
+}
+.persona-item__photo {
+  width: 7.25rem;
+  height: 7.25rem;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #d9d9d9;
+}
+.persona-item__name {
+  margin-top: 0.5rem; /* 8px */
+  color: var(--color-primary-blue-dark);
+}
+
+/* Filas 1-2 (versión actual de Figma): círculos de 112px repartidos a ancho
+   de página (353px), nombres de 16px que envuelven al ancho del círculo. */
+.personas-grid--lg {
+  grid-template-columns: repeat(3, 7rem); /* 112px */
+  justify-content: space-between;
+  margin-left: 0;
+  margin-bottom: 0.75rem;
+}
+.personas-grid--lg .persona-item__photo {
+  width: 7rem;
+  height: 7rem;
+}
+.personas-grid--lg .persona-item {
+  width: 7rem;
+  align-self: start;
+}
+/* Filas 3-4: el estilo anterior (116px, nombres en negrita de 15,48px), tal cual Figma. */
+.persona-item--sm .persona-item__name {
+  font-size: 0.9675rem; /* 15.48px */
+  font-weight: var(--font-weight-bold);
+  color: var(--color-black);
+}
+
+/* Flechas flotantes: avanzar grupos (64px, x=309, y=387) — el bajar es .albumes-more. */
+.personas-next {
+  position: absolute;
+  left: 19.3125rem; /* 309px */
+  top: 24.1875rem; /* 387px */
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background: var(--color-primary-blue-lighter);
+  border: 1px solid var(--color-primary-blue-light);
+  box-shadow: 2px 4px 16px 0 rgba(221, 221, 225, 0.3), 2px 4px 4px 0 #e9e9ee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+.personas-next img {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+/* .persona-item ahora es un <button> (abre las fotos de esa persona): quitar
+   el aspecto de botón nativo. */
+.persona-item {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* .photo-card (para que tocar el grupo abra el detalle) trae sombra y radio
+   propios — aquí manda el radio de Figma y no lleva sombra. */
+.persona-group__photo.photo-card {
+  box-shadow: none;
+  border-radius: 0.909rem; /* 14.54px */
+}
+
+/* ---- Persona (692:2188) y sus cuadrículas (692:2241 / vídeos) ---- */
+/* Título con ">" que abre la cuadrícula completa: 20px negrita + chevron de 19px. */
+.persona-section-link {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem; /* 2px */
+  margin: 0 0 0.75rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--font-size-title-large);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-black);
+  cursor: pointer;
+}
+.persona-section-link img {
+  width: 1.1875rem;
+  height: 1.1875rem;
+}
+/* Segunda flecha (Vídeos): x=309, y=695, medio tapada por el footer, como Figma. */
+.personas-next--2 {
+  top: 43.4375rem; /* 695px */
+}
+/* Cuadrículas de Imágenes / Vídeos: el título va a 131px (sin chevron) y la
+   cuadrícula a 168px. */
+[data-screen="persona-imagenes"] .screen-content,
+[data-screen="persona-videos"] .screen-content {
+  padding-top: 8.1875rem; /* 131px */
+}
+[data-screen="persona-imagenes"] .section-title,
+[data-screen="persona-videos"] .section-title {
+  margin-bottom: 0.75rem;
+}
+
+/* ---- Selección de persona: pregunta por voz (765:6044) ----
+   Vive dentro de la pantalla de detalle, sobre la foto (con su contorno
+   azul, que se ve difuminado detrás del velo). */
+.persona-ask {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.persona-ask.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.persona-ask .onboarding-overlay {
+  z-index: 0;
+}
+.persona-ask__bubble {
+  position: absolute;
+  left: 1.25rem;
+  width: 13.0625rem; /* 209px */
+  height: 5.625rem; /* 90px */
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0 1.09375rem; /* texto de 174px, x=17,5 como en Figma */
+  display: flex;
+  align-items: center;
+  background: var(--color-white);
+  color: var(--color-primary-blue-dark);
+  font-size: var(--font-size-label-medium);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.25;
+  z-index: 1;
+}
+.persona-ask__bubble--1 {
+  top: 9rem; /* 144px */
+  border-radius: 2rem;
+}
+.persona-ask__bubble--2 {
+  top: 15.375rem; /* 246px */
+  border-radius: 2rem 2rem 0 2rem;
+}
+/* Pose "quita el interrogante" ya rotada (−50,99°) por código a partir del asset
+   de Figma; caja de 383,67×372,08 con el centro en (355,8; 497,0). */
+.persona-ask__pollito {
+  position: absolute;
+  left: 10.25rem; /* 164px */
+  top: 19.4375rem; /* 311px */
+  width: 23.9792rem; /* 383.67px */
+  height: 23.255rem; /* 372.08px */
+  max-width: none;
+  pointer-events: none;
+  z-index: 1;
+}
+.persona-ask__mic {
+  position: absolute;
+  left: 7.375rem; /* 118px */
+  top: 34.75rem; /* 556px */
+  width: 9.875rem; /* 158px */
+  height: 9.875rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  z-index: 1;
+  cursor: pointer;
+}
+.persona-ask__mic img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* Escuchando: el anillo late mientras "oye" el nombre. */
+.persona-ask__mic.is-listening {
+  animation: persona-mic-pulse 0.9s ease-in-out infinite;
+}
+@keyframes persona-mic-pulse {
+  50% { transform: scale(1.08); }
+}
+.persona-ask__cancel {
+  position: absolute;
+  left: 1.25rem;
+  top: 46.625rem; /* 746px, como los botones de las pantallas */
+  height: 4.25rem;
+  width: calc(100% - 2 * var(--space-page-margin));
+  z-index: 1;
+}
+/* Confirmación (¿Quieres ver más fotos de …?): mismo modal que "Ayúdanos", sin foto ni cuerpo. */
+.persona-confirm {
+  z-index: 55;
+}
+.persona-section-link.personas-section-title {
+  margin-top: 3.125rem; /* 442px: 50px bajo la primera fila (172 + 220) */
+}
+
+/* En Personas la flecha → vive dentro de .screen-content (se desplaza con la lista):
+   su top se mide desde el borde superior del contenido, que sigue siendo 387px. */
+[data-screen="personas"] .screen-content > .personas-next {
+  z-index: 1; /* por debajo de la cabecera y su difuminado (.top-fade, 6) al hacer scroll */
+}
+
+/* ---- Crear felicitación · elegir estilo (733:2997) ---- */
+[data-screen="felicitacion-estilo"] .screen-content {
+  padding-top: 8.4375rem; /* 135px */
+  padding-bottom: 8.75rem;
+}
+.felicitacion-pregunta {
+  margin: 0 0 1rem; /* 16px */
+  width: 17.1875rem; /* 275px: envuelve en dos líneas */
+  font-size: var(--font-size-title-large);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-black);
+}
+.felicitacion-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem; /* 12px */
+}
+.felicitacion-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 7.8125rem; /* 125px */
+  padding: 0;
+  overflow: hidden;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  background: var(--color-primary-blue-lighter);
+  border: 0.5px solid var(--color-primary-blue-light);
+  /* esquina inferior izquierda más redondeada, como en Figma */
+  border-radius: 0.75rem 0.75rem 0.75rem 1rem;
+}
+.felicitacion-card__img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 8.375rem; /* 134px, se recorta por abajo con el borde de la tarjeta */
+  width: auto;
+  max-width: none;
+}
+.felicitacion-card--w131 .felicitacion-card__img { left: 1rem; } /* 16px de padding a la izquierda */
+.felicitacion-card__title,
+.felicitacion-card__text {
+  position: absolute;
+  left: 10.1094rem; /* 161.75px */
+  color: var(--color-primary-blue-dark);
+  line-height: 1.1;
+}
+.felicitacion-card__title {
+  top: 2.3594rem; /* 37.75px */
+  font-size: 1rem;
+  font-weight: var(--font-weight-bold);
+  white-space: nowrap;
+}
+.felicitacion-card__text {
+  top: 3.8594rem; /* 61.75px */
+  width: 10.5rem; /* ~166px */
+  font-size: 0.875rem; /* 14px */
+  font-weight: var(--font-weight-regular);
+}
+
+/* Tarjeta elegida (759:5047): borde azul de 2px en vez del fino; el texto sube 0,75px como en Figma. */
+.felicitacion-card.is-selected {
+  border: 2px solid var(--color-primary-blue);
+}
+.felicitacion-card.is-selected .felicitacion-card__title {
+  left: 10.0625rem; /* 161px */
+  top: 2.3125rem; /* 37px */
+}
+.felicitacion-card.is-selected .felicitacion-card__text {
+  left: 10.0625rem;
+  top: 3.8125rem; /* 61px */
+}
+/* "Continuar": botón suave con la flecha azul a la derecha (padding 32/28). */
+.felicitacion-continuar {
+  padding-left: 2rem;
+  padding-right: 1.75rem;
+  color: var(--color-primary-blue-dark);
+}
+.felicitacion-continuar[hidden] {
+  display: none;
+}
+
+/* ---- Crear felicitación · loader (759:5110) ---- */
+.felicitacion-cargando {
+  background: var(--color-white);
+}
+.felicitacion-cargando__pollito {
+  position: absolute;
+  left: 3.6875rem; /* 59px */
+  top: 11.875rem; /* 190px */
+  width: 17.25rem; /* 276px */
+  height: 23.0625rem; /* 369px */
+  max-width: none;
+  animation: felicitacion-pintando 2.4s ease-in-out infinite;
+}
+@keyframes felicitacion-pintando {
+  50% { transform: translateY(-0.375rem); }
+}
+.felicitacion-cargando__texto {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 29.875rem; /* 478px */
+  width: 17.1875rem; /* 275px */
+  margin: 0;
+  text-align: center;
+  font-size: var(--font-size-label-large); /* 20px */
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary-blue);
+}
+@media (prefers-reduced-motion: reduce) {
+  .felicitacion-cargando__pollito { animation: none; }
+}
+
+/* ---- Felicitación generada (763:5138) ---- */
+.felicitacion-generada__frame {
+  position: absolute;
+  left: 0;
+  top: 11.75rem; /* 188px */
+  width: 100%;
+  height: 29.4375rem; /* 471px */
+  box-shadow: 2px 4px 4px 0 rgba(159, 172, 186, 0.25), 2px 4px 12px 0 rgba(116, 135, 154, 0.5);
+  overflow: hidden;
+}
+.felicitacion-generada__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: var(--color-gray-3);
+}
+
+.share-toast {
+  position: absolute;
+  left: 1.25rem;
+  right: 1.25rem;
+  top: 8rem;
+  z-index: 60;
+  padding: 0.75rem 1rem;
+  border-radius: 1rem;
+  background: var(--color-primary-blue-dark);
+  color: var(--color-white);
+  font-size: var(--font-size-label-medium);
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.share-toast.is-visible { opacity: 1; }
+
+/* Respuesta que "oye" la app (757:4072): burbuja azul clara con puntos suspensivos, esquina inferior izquierda recta. */
+.persona-ask__reply {
+  position: absolute;
+  left: 1.4375rem; /* 23px */
+  top: 23.5rem; /* 376px */
+  width: 13.0625rem; /* 209px */
+  min-height: 3.9375rem; /* 63px con los puntos suspensivos; el texto largo (avisos) crece hasta los 90px de los demás bocadillos */
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0.5rem 1.4375rem; /* texto de 167px */
+  display: flex;
+  align-items: center;
+  background: var(--color-primary-blue-light);
+  color: var(--color-primary-blue-dark);
+  font-size: var(--font-size-label-medium);
+  border-radius: 2rem 2rem 2rem 0;
+  z-index: 1;
+}
+.persona-ask__reply[hidden] { display: none; }
+
+/* Confirmar el nombre del álbum (captura de 757:4223): la respuesta pasa arriba con el nombre "oído". */
+[data-album-ask].is-confirming .persona-ask__bubble--1,
+[data-album-ask].is-confirming .persona-ask__bubble--2,
+[data-album-ask].is-confirming .persona-ask__mic {
+  display: none;
+}
+[data-album-ask].is-confirming .persona-ask__reply {
+  top: 9rem; /* 144px */
+  height: 3.9375rem; /* 63px (Frame 389) */
+  padding: 0 1.9375rem 0 1.3125rem; /* texto a x=21 */
+  font-size: var(--font-size-label-medium);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.persona-ask__bubble--confirm {
+  top: 15.4375rem; /* 247px */
+  left: 1.4375rem;
+  height: 5.625rem;
+  border-radius: 2rem 2rem 0 2rem;
+}
+.persona-ask__crear {
+  position: absolute;
+  left: 1.25rem;
+  top: 41.125rem; /* 658px */
+  width: calc(100% - 2 * var(--space-page-margin));
+  height: 4.0625rem; /* 65px */
+  z-index: 1;
+}
+.persona-ask__bubble--confirm[hidden],
+.persona-ask__crear[hidden] { display: none; }
+
+/* ---- Álbum nuevo, vacío (746:3458) y su onboarding (765:5185) ---- */
+[data-screen="album-nuevo"] .screen-content {
+  padding-top: 8.4375rem; /* 135px */
+}
+[data-screen="album-nuevo"] .screen-content {
+  padding-bottom: 8.75rem;
+}
+.ob-album-nuevo .onboarding-highlight {
+  left: 1.3125rem; top: 8.4375rem; width: 10.5rem; /* 21, 135, 168 */
+  filter: none;
+}
+.ob-album-nuevo .onboarding-highlight .album-grid__add-wrap {
+  width: 10.5rem;
+}
+.ob-album-nuevo .onboarding-tooltip {
+  left: 2.0625rem; top: 24.4375rem; width: 13.5rem; height: 4.375rem; /* 33, 391, 216×70 */
+  padding: 0 1.15625rem; /* texto de 179px */
+  border-radius: var(--radius-bubble) var(--radius-bubble) 0 var(--radius-bubble);
+}
+.ob-album-nuevo .onboarding-pollito {
+  left: 9.125rem; top: 28.1875rem; width: 16.125rem; height: 19.25rem; /* 146, 451, 258×308 */
+}
+.ob-album-nuevo .onboarding-cta {
+  top: 46rem; /* 736px */
+  height: 4.0625rem; /* 65px */
+}
+
+/* ---- Ayuda del pollito · Figma "Ayuda 1" (594:7343) y "Ayuda 2" (594:7395) ----
+   Ayuda 1: bocadillo blanco de Nidi, pollito, micrófono grande y Cancelar.
+   Ayuda 2 (`--respuesta`): tu frase en un bocadillo lila arriba, la respuesta de Nidi debajo y Gracias. */
+.ayuda-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 70;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.ayuda-layer.is-visible { opacity: 1; pointer-events: auto; }
+.ayuda-layer .onboarding-overlay { z-index: 0; }
+.ayuda-layer__bubble {
+  position: absolute;
+  width: 13.0625rem; /* 209px */
+  min-height: 5.625rem; /* 90px */
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0.5rem 1.3125rem; /* texto de 167px */
+  display: flex;
+  align-items: center;
+  color: var(--color-primary-blue-dark);
+  font-size: var(--font-size-label-medium);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.25;
+  z-index: 1;
+}
+.ayuda-layer__bubble[hidden] { display: none; }
+/* Nidi: blanco, esquina inferior derecha recta. En la primera pantalla va en 20,234. */
+.ayuda-layer__bubble--nidi {
+  left: 1.25rem;
+  top: 14.625rem; /* 234px */
+  background: var(--color-white);
+  border-radius: 2rem 2rem 0 2rem;
+}
+/* Tú: lila, esquina inferior izquierda recta (20,133). */
+.ayuda-layer__bubble--tu {
+  left: 1.25rem;
+  top: 8.3125rem; /* 133px */
+  background: var(--color-primary-blue-light);
+  border-radius: 2rem 2rem 2rem 0;
+}
+.ayuda-layer--respuesta .ayuda-layer__bubble--nidi {
+  left: 3.1875rem; /* 51px */
+  top: 15.6875rem; /* 251px */
+}
+/* Pose de Nidi "quita el interrogante" (la misma que al preguntar un nombre): centro en (365; 488). */
+.ayuda-layer__pollito {
+  position: absolute;
+  left: 10.8125rem; /* 173px */
+  top: 18.9375rem; /* 303px */
+  width: 23.9792rem;
+  height: 23.255rem;
+  max-width: none;
+  pointer-events: none;
+  z-index: 1;
+}
+.ayuda-layer__mic {
+  position: absolute;
+  left: 7.375rem; /* 118px */
+  top: 34.75rem; /* 556px */
+  width: 9.875rem; /* 158px */
+  height: 9.875rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  z-index: 1;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+.ayuda-layer__mic img { display: block; width: 100%; height: 100%; }
+.ayuda-layer__mic.is-listening { animation: persona-mic-pulse 0.9s ease-in-out infinite; } /* late: habla tú */
+.ayuda-layer__mic.is-nidi { opacity: 0.55; } /* habla Nidi: espera */
+.ayuda-layer__close {
+  position: absolute;
+  left: 1.25rem;
+  top: 46rem; /* 736px */
+  width: calc(100% - 2 * var(--space-page-margin));
+  height: 4.25rem; /* 68px */
+  z-index: 1;
+}
+
+.share-toast--buscando { top: 8rem; }
+
+/* Avisos cortos (Foto eliminada · Deshacer, Álbum creado): bajo la cabecera, sobre el contenido. */
+.nido-toast {
+  position: absolute;
+  left: 1.25rem;
+  right: 1.25rem;
+  top: 46.6875rem; /* 747px: encima de los botones de abajo, como en Figma (803:7122) */
+  z-index: 65;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  box-sizing: border-box;
+  padding: 1.25rem; /* 20px */
+  border-radius: 1.25rem; /* 20px */
+  background: var(--color-primary-blue-dark);
+  color: var(--color-white);
+  font-size: 1rem; /* 16px */
+  font-weight: var(--font-weight-regular);
+  line-height: normal;
+  box-shadow: 2px 4px 16px rgba(30, 42, 107, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(0.5rem);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.nido-toast.is-visible { opacity: 1; pointer-events: auto; transform: none; }
+/* "Deshacer": texto en negrita y subrayado (no un botón); el área de toque es mayor que el texto sin cambiar la altura del aviso. */
+.nido-toast button {
+  margin: -0.75rem -0.5rem;
+  padding: 0.75rem 0.5rem;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: var(--font-weight-bold);
+  text-decoration: underline;
+  text-underline-position: from-font;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.personas-vacio {
+  margin: 1rem 0 0;
+  padding: 0 0.25rem;
+  max-width: 21rem;
+  font-size: var(--font-size-label-medium);
+  color: var(--color-primary-blue-dark);
+  line-height: 1.35;
+}
+
+/* ---- Conversación con el asistente: pastilla para terminar cuando la capa de ayuda se cierra ---- */
+.agente-pill {
+  position: absolute;
+  left: 50%;
+  bottom: 6.5rem;
+  transform: translateX(-50%);
+  z-index: 80;
+  display: none;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.875rem 1.25rem;
+  border: 0;
+  border-radius: 999px;
+  background: #1f2a44;
+  color: #fff;
+  font-family: inherit;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+.agente-pill.is-visible { display: inline-flex; }
+.agente-pill__dot { width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #5ad17a; animation: persona-mic-pulse 0.9s ease-in-out infinite; }
+

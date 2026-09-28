@@ -1,0 +1,1666 @@
+<title>Nido</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* ==========================================================================
+   NIDO · Tokens
+   Extraídos con Figma MCP del archivo de wireframes (O9nhqFGKGybgtrG9uhGW6P).
+   Los valores marcados [FIGMA] vienen literalmente de las variables del archivo.
+   Los marcados [A11Y] los añade el prototipo por accesibilidad; van explicados
+   en el README.
+   ========================================================================== */
+
+:root {
+  /* --- Color [FIGMA] ---------------------------------------------------- */
+  --c-blue:        #516dff;   /* Color/Primary/Blue */
+  --c-blue-light:  #c4ceff;   /* Color/Primary/Blue light */
+  --c-blue-dark:   #2d3c8c;   /* Color/Primary/Blue dark */
+  --c-black:       #1a1d2c;   /* Color/Black */
+  --c-white:       #ffffff;   /* Color/White */
+  --c-gray-1:      #9799a2;   /* Color/Grays/Gray 1 */
+  --c-gray-3:      #d0d1d7;   /* Color/Grays/Gray 3 */
+
+  /* Derivados del prototipo */
+  --c-blue-soft:   #eef1ff;
+  --c-scrim:       rgba(0, 0, 0, 0.45);
+  --c-shadow:      0 -4px 12px rgba(0, 0, 0, 0.08);
+
+  /* --- Tipografía ------------------------------------------------------- */
+  /* Una sola escalera: 16 · 18 · 20 · 24 · 28 · 32 · 36 · 40.
+     Cada modo sube un peldaño. Es el modelo de tabla de Dynamic Type (iOS),
+     no un multiplicador: el texto pequeño crece más que el grande, igual que
+     hace el escalado no lineal de Android 14. Así el titular sigue siendo un
+     titular en los tres modos, en vez de aplanarse justo en el modo que usa
+     quien peor ve.
+     El modo Normal son los valores de los wireframes (s 18 · m 20 · xl 28).
+     Los px de los comentarios son a tamaño de sistema por defecto: si la
+     persona ya tiene la letra grande en su móvil, todo esto sale mayor. */
+  --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --fs-xs:  1rem;      /* 16 */
+  --fs-s:   1.125rem;  /* 18 */
+  --fs-m:   1.25rem;   /* 20 */
+  --fs-lg:  1.5rem;    /* 24 */
+  --fs-xl:  1.75rem;   /* 28 */
+  --fs-2xl: 2rem;      /* 32 */
+
+  /* Interlineado: el tamaño solo no hace legible un texto. */
+  --lh-tight: 1.2;   /* titulares */
+  --lh-body:  1.45;  /* cuerpo y párrafos */
+
+  /* --- Radios [FIGMA] --------------------------------------------------- */
+  --r-pill:  32px;
+  --r-card:  20px;
+  --r-modal: 28px;
+
+  /* --- Espaciado -------------------------------------------------------- */
+  --gutter: 24px;     /* margen lateral de todas las pantallas [FIGMA] */
+  --gap:    12px;
+
+  /* --- Zonas de toque [A11Y] -------------------------------------------- */
+  /* Mínimo de Apple: 44pt. Mínimo de Material: 48dp. Aquí 64px porque la
+     evidencia (Rogers et al.) dice que la experiencia previa NO mejora la
+     precisión motora en mayores: el objetivo grande no es para novatos, es
+     para todos. */
+  --tap-min:  calc(var(--fs-m) * 3.2);   /* 64 · 77 · 90 */
+  --tap-big:  calc(var(--fs-m) * 3.6);   /* 72 · 86 · 101 */
+
+  --dur: 220ms;
+}
+
+/* Escalones de tamaño de letra.
+   El control de la demo (y "Tu perfil" dentro de la app) cambia data-text en
+   <html>. Ojo en la app real: este ajuste debe SUMARSE al del sistema
+   operativo, no sustituirlo — en código, sp en Android y Dynamic Type en iOS. */
+/* 100%, NO 16px. Fijar píxeles aquí anularía el tamaño de letra que la
+   persona ya tenga puesto en su navegador o en su sistema. Con 100%, el
+   ajuste del sistema entra como base y el de la app se suma encima. */
+html { font-size: 100%; }
+
+html[data-text="grande"] {
+  --fs-xs:  1.125rem;  /* 18 */
+  --fs-s:   1.25rem;   /* 20 */
+  --fs-m:   1.5rem;    /* 24 */
+  --fs-lg:  1.75rem;   /* 28 */
+  --fs-xl:  2rem;      /* 32 */
+  --fs-2xl: 2.25rem;   /* 36 */
+}
+
+html[data-text="enorme"] {
+  --fs-xs:  1.25rem;   /* 20 */
+  --fs-s:   1.5rem;    /* 24 */
+  --fs-m:   1.75rem;   /* 28 */
+  --fs-lg:  2rem;      /* 32 */
+  --fs-xl:  2.25rem;   /* 36 */
+  --fs-2xl: 2.5rem;    /* 40 */
+}
+
+/* Alto contraste [A11Y] — equivalente a "Aumentar contraste" (iOS) /
+   "Texto de alto contraste" (Android). No inventa una paleta nueva: oscurece
+   la existente hasta pasar AAA sobre blanco. */
+html[data-contrast="alto"] {
+  --c-blue:    #2b3fd6;
+  --c-gray-1:  #4a4d59;
+  --c-gray-3:  #7c7f8b;
+  --c-blue-dark: #1b2668;
+}
+
+
+/* ==========================================================================
+   NIDO · Base + banco de pruebas (el móvil y el panel de la demo)
+   Todo lo que hay FUERA del marco del móvil es andamiaje de prototipo:
+   no forma parte de la app.
+   ========================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  color: var(--c-black);
+  background: #e9ebf2;
+  -webkit-font-smoothing: antialiased;
+}
+
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+
+/* Foco visible siempre: nadie debería perder de vista dónde está. */
+:focus-visible {
+  outline: 3px solid var(--c-blue);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* --- Banco de pruebas ----------------------------------------------------- */
+
+.stage {
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 24px;
+  min-height: 100vh;
+}
+
+.device {
+  position: relative;
+  width: 393px;
+  height: 852px;
+  flex: 0 0 auto;
+  background: var(--c-white);
+  border-radius: 44px;
+  border: 10px solid #10121c;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(16, 18, 28, 0.28);
+}
+
+.device__viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--c-white);
+}
+
+/* --- Panel de la demo (NO es parte de la app) ----------------------------- */
+
+.demo {
+  width: 330px;
+  flex: 0 0 auto;
+  background: var(--c-white);
+  border-radius: 20px;
+  padding: 20px;
+  font-size: 14px;
+  line-height: 1.45;
+  box-shadow: 0 8px 24px rgba(16, 18, 28, 0.08);
+}
+
+.demo h1 { font-size: 20px; margin: 0 0 4px; }
+.demo h2 {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-gray-1);
+  margin: 22px 0 8px;
+}
+.demo p  { margin: 0 0 12px; color: #4a4d59; }
+.demo__note { font-size: 12.5px; color: var(--c-gray-1); }
+
+.demo__seg { display: flex; gap: 6px; flex-wrap: wrap; }
+.demo__seg button {
+  flex: 1 1 auto;
+  min-width: 64px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: #f1f2f7;
+  color: #4a4d59;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background var(--dur), color var(--dur);
+}
+.demo__seg button[aria-pressed="true"] { background: var(--c-blue); color: #fff; }
+
+.demo__list { list-style: none; margin: 0; padding: 0; }
+.demo__list button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  color: #35384a;
+}
+.demo__list button:hover  { background: #f1f2f7; }
+.demo__list button[aria-current="true"] { background: var(--c-blue-soft); color: var(--c-blue-dark); font-weight: 600; }
+.demo__list .is-extra::after {
+  content: "+";
+  float: right;
+  color: var(--c-blue);
+  font-weight: 700;
+}
+
+@media (max-width: 820px) {
+  .stage { flex-direction: column; align-items: center; padding: 16px; }
+  .demo  { width: 100%; max-width: 393px; order: 2; }
+  .device {
+    width: 100%;
+    max-width: 393px;
+    height: min(852px, 88vh);
+    order: 1;
+  }
+}
+
+
+/* ==========================================================================
+   NIDO · Componentes de la app
+   ========================================================================== */
+
+/* --- Pantalla -------------------------------------------------------------
+   Estructura fija en TODAS las pantallas: cabecera, cuerpo con scroll y un
+   pie que no se mueve. El pie siempre existe: es la garantía de "nunca un
+   callejón sin salida" y de que la salida está siempre en el mismo sitio,
+   como el botón Atrás de Acceso Asistido de iOS.
+   -------------------------------------------------------------------------- */
+
+.screen {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  background: var(--c-white);
+}
+.screen.is-active { display: flex; }
+
+.screen__head {
+  flex: 0 0 auto;
+  padding: 48px var(--gutter) 0;
+}
+.screen__body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 var(--gutter) 20px;
+}
+.screen__foot {
+  flex: 0 0 auto;
+  padding: 16px var(--gutter) 28px;
+  background: var(--c-white);
+  box-shadow: var(--c-shadow);
+}
+.screen--plain .screen__foot { box-shadow: none; }
+
+/* --- Textos --------------------------------------------------------------- */
+
+.title    { font-size: var(--fs-xl); font-weight: 700; line-height: var(--lh-tight); margin: 0 0 12px; }
+.subtitle { font-size: var(--fs-s);  font-weight: 400; line-height: var(--lh-body); color: var(--c-gray-1); margin: 0 0 20px; }
+.section  { font-size: var(--fs-m);  font-weight: 600; margin: 28px 0 12px; }
+.section:first-child { margin-top: 8px; }
+.caption  { font-size: var(--fs-s);  color: var(--c-gray-1); margin: 8px 0 0; }
+.center   { text-align: center; }
+
+/* --- Botones -------------------------------------------------------------- */
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: 14px 20px;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-m);
+  font-weight: 600;
+  line-height: var(--lh-tight);
+  text-align: center;
+  transition: transform var(--dur), background var(--dur);
+}
+.btn:active { transform: scale(0.98); }
+
+.btn--primary   { background: var(--c-blue); color: var(--c-white); }
+.btn--secondary { background: var(--c-white); color: var(--c-black); border: 1.5px solid var(--c-gray-3); }
+.btn--soft      { background: var(--c-blue-light); color: var(--c-blue-dark); }
+.btn--ghost     { background: none; color: var(--c-gray-1); font-weight: 500; min-height: 56px; }
+.btn--ghost:hover { color: var(--c-black); }
+
+.btn + .btn { margin-top: 12px; }
+.btn .ico { width: 22px; height: 22px; flex: 0 0 auto; }
+
+/* Botón circular de la cabecera (volver / perfil) */
+.iconbtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  border-radius: 50%;
+  background: var(--c-white);
+  border: 1.5px solid var(--c-gray-3);
+  flex: 0 0 auto;
+}
+.iconbtn--filled { background: var(--c-blue-light); border-color: transparent; }
+.iconbtn .ico { width: 28px; height: 28px; }
+
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.topbar .title { margin: 0; }
+
+/* --- Segmentado Fotos / Álbumes [FIGMA 274:7] ----------------------------- */
+
+.segmented {
+  display: inline-flex;
+  padding: 2.5px;
+  border-radius: var(--r-pill);
+  border: 1.5px solid var(--c-gray-3);
+  background: var(--c-white);
+  margin: 20px 0 4px;
+}
+.segmented button {
+  min-width: 112px;
+  min-height: 56px;
+  padding: 0 18px;
+  border-radius: 28px;
+  font-size: var(--fs-m);
+  font-weight: 500;
+  color: var(--c-gray-1);
+  transition: background var(--dur), color var(--dur);
+}
+.segmented button[aria-selected="true"] {
+  background: var(--c-blue);
+  color: var(--c-white);
+  font-weight: 600;
+}
+
+/* --- Colección de momentos: dos presentaciones ----------------------------
+   CUADRÍCULA y FILAS son las dos disposiciones de Acceso Asistido (iOS).
+   Es el mismo contenido y las mismas acciones; cambia la densidad.
+   -------------------------------------------------------------------------- */
+
+.coll { list-style: none; margin: 0; padding: 0; }
+
+/* Cuadrícula */
+[data-view="cuadricula"] .coll { display: grid; gap: 9px; grid-template-columns: repeat(3, 1fr); }
+[data-view="cuadricula"] .coll--2 { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+[data-view="cuadricula"] .coll__btn { display: block; width: 100%; text-align: left; }
+[data-view="cuadricula"] .coll__thumb { width: 100%; aspect-ratio: 1; border-radius: var(--r-card); }
+[data-view="cuadricula"] .coll__label { display: block; font-size: var(--fs-s); color: var(--c-gray-1); margin-top: 6px; }
+[data-view="cuadricula"] .coll__meta  { display: none; }
+
+/* Filas */
+[data-view="filas"] .coll { display: flex; flex-direction: column; gap: 10px; }
+[data-view="filas"] .coll__btn {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-height: var(--tap-big);
+  padding: 10px 14px 10px 10px;
+  border-radius: var(--r-card);
+  background: var(--c-white);
+  border: 1.5px solid var(--c-gray-3);
+  text-align: left;
+}
+[data-view="filas"] .coll__thumb { width: 72px; height: 72px; border-radius: 16px; flex: 0 0 auto; }
+[data-view="filas"] .coll__label { font-size: var(--fs-m); font-weight: 600; }
+[data-view="filas"] .coll__meta  { display: block; font-size: var(--fs-s); color: var(--c-gray-1); }
+[data-view="filas"] .coll__btn > span:nth-child(2) { flex: 1 1 auto; min-width: 0; }
+
+.coll__btn:active { transform: scale(0.99); }
+
+/* Miniatura generada (no hay fotos reales en los wireframes) */
+.thumb {
+  display: block;
+  background: var(--c-blue-light);
+  background-size: cover;
+  background-position: center;
+}
+
+/* --- Personas ------------------------------------------------------------- */
+
+.people { display: flex; gap: 24px; list-style: none; margin: 0; padding: 4px 0 0; flex-wrap: wrap; }
+.people__btn { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 92px; }
+.avatar {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: var(--c-blue-light);
+  display: flex; align-items: center; justify-content: center;
+  font-size: var(--fs-m); font-weight: 700; color: var(--c-blue-dark);
+  overflow: hidden;
+}
+.avatar--xl { width: 140px; height: 140px; font-size: calc(var(--fs-2xl) * 1.5); border-radius: 50%; }
+.avatar--unknown { background: var(--c-blue-soft); border: 2px dashed var(--c-gray-3); color: var(--c-gray-1); }
+.people__name { font-size: var(--fs-s); text-align: center; }
+
+/* Sugerencias de parentesco [FIGMA 276:14..21] */
+.chips { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 12px 0 0; }
+.chip {
+  min-height: var(--tap-big);
+  border-radius: var(--r-card);
+  border: 1.5px solid var(--c-gray-3);
+  background: var(--c-white);
+  font-size: var(--fs-m);
+  font-weight: 600;
+  padding: 12px;
+  transition: background var(--dur), border-color var(--dur);
+}
+.chip[aria-pressed="true"] { background: var(--c-blue-light); border-color: var(--c-blue); color: var(--c-blue-dark); }
+
+/* --- Micrófono [FIGMA 277:10 / 278:4] ------------------------------------- */
+
+.mic { display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 8px 0 4px; }
+.mic__hint {
+  line-height: var(--lh-body);
+  display: flex; align-items: center; justify-content: center;
+  width: 280px; min-height: 72px; padding: 12px 20px;
+  border-radius: var(--r-card);
+  background: var(--c-blue-light);
+  color: var(--c-blue-dark);
+  font-size: var(--fs-m); font-weight: 600; text-align: center;
+}
+.mic__btn { position: relative; width: 160px; height: 160px; display: grid; place-items: center; }
+.mic__ring {
+  position: absolute; border-radius: 50%; background: var(--c-blue);
+  opacity: 0.16; inset: 0;
+}
+.mic__ring--2 { inset: 24px; opacity: 0.28; }
+.mic__core {
+  position: relative;
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: var(--c-blue);
+  display: grid; place-items: center;
+}
+.mic__core .ico { width: 28px; height: 28px; }
+.mic.is-listening .mic__ring   { animation: pulse 1.8s ease-out infinite; }
+.mic.is-listening .mic__ring--2{ animation: pulse 1.8s ease-out infinite 0.4s; }
+@keyframes pulse {
+  0%   { transform: scale(0.86); opacity: 0.30; }
+  70%  { transform: scale(1.10); opacity: 0.06; }
+  100% { transform: scale(1.10); opacity: 0; }
+}
+
+.transcript {
+  line-height: var(--lh-body);
+  margin: 16px 0 0;
+  padding: 16px;
+  border-radius: var(--r-card);
+  background: var(--c-blue-soft);
+  font-size: var(--fs-m);
+  min-height: 64px;
+}
+.transcript em { color: var(--c-gray-1); font-style: normal; }
+
+/* --- Teclado numérico [FIGMA 272:18..39] ----------------------------------- */
+
+.phonefield {
+  display: flex; align-items: center; justify-content: center;
+  min-height: var(--tap-min);
+  border-radius: var(--r-pill);
+  border: 1.5px solid var(--c-gray-3);
+  font-size: var(--fs-lg); font-weight: 600;
+  letter-spacing: 0.06em;
+  margin-bottom: 24px;
+}
+.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px 15px; }
+.keypad button {
+  min-height: var(--tap-min);
+  border-radius: var(--r-card);
+  background: var(--c-white);
+  border: 1.5px solid var(--c-gray-3);
+  font-size: var(--fs-xl);
+  font-weight: 500;
+}
+.keypad button:active { background: var(--c-blue-soft); }
+.keypad .key--empty { visibility: hidden; }
+
+/* Código SMS autorrellenado [FIGMA 272:48..55] */
+.code { display: flex; gap: 16px; justify-content: center; margin: 28px 0 24px; }
+.code span {
+  width: 72px; height: 84px;
+  border-radius: var(--r-card);
+  border: 1.5px solid var(--c-gray-3);
+  display: grid; place-items: center;
+  font-size: calc(var(--fs-2xl) * 1.2); font-weight: 600;
+  color: var(--c-gray-3);
+  transition: color var(--dur), border-color var(--dur), background var(--dur);
+}
+.code span.is-filled { color: var(--c-black); border-color: var(--c-blue); background: var(--c-blue-soft); }
+
+.spinner {
+  width: 48px; height: 48px; margin: 8px auto 0;
+  border: 4px solid var(--c-blue-light);
+  border-top-color: var(--c-blue);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* --- Modal de permisos [FIGMA 272:85] ------------------------------------- */
+
+.sheet {
+  position: absolute; inset: 0;
+  background: var(--c-scrim);
+  display: none;
+  align-items: center;
+  padding: 0 var(--gutter);
+  z-index: 20;
+}
+.sheet.is-open { display: flex; }
+.sheet__card {
+  width: 100%;
+  background: var(--c-white);
+  border-radius: var(--r-modal);
+  padding: 36px 28px;
+  display: flex; flex-direction: column; align-items: center; gap: 20px;
+  text-align: center;
+}
+.sheet__icon {
+  width: 88px; height: 88px; border-radius: 50%;
+  background: var(--c-blue-light);
+  display: grid; place-items: center;
+}
+.sheet__icon .ico { width: 40px; height: 40px; }
+.sheet__text { font-size: var(--fs-m); font-weight: 600; line-height: var(--lh-body); margin: 0; }
+
+/* --- Modo visita ---------------------------------------------------------- */
+
+.visit { position: absolute; inset: 0; background: #000; }
+.visit__photo { position: absolute; inset: 0; background-size: cover; background-position: center; }
+.visit__bar {
+  position: absolute; left: 0; right: 0;
+  min-height: 160px;
+  padding: 48px var(--gutter) 24px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.66), rgba(0,0,0,0));
+  color: #fff;
+  display: flex; align-items: center; gap: 16px;
+  transition: opacity var(--dur);
+}
+.visit__bar--bottom {
+  top: auto; bottom: 0;
+  background: linear-gradient(0deg, rgba(0,0,0,0.66), rgba(0,0,0,0));
+  padding: 24px var(--gutter) 40px;
+  justify-content: space-between;
+  flex-direction: column;
+}
+.visit__bar--top { top: 0; }
+.visit.is-idle .visit__bar { opacity: 0; pointer-events: none; }
+.visit__title { font-size: var(--fs-m); font-weight: 600; }
+.visit__nav { display: flex; justify-content: space-between; width: 100%; }
+.visit .iconbtn { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.5); color: #fff; }
+.visit__hint { font-size: var(--fs-s); opacity: 0.85; text-align: center; }
+
+/* Salir del modo visita: pulsación mantenida con anillo de progreso.
+   Equivale al triple clic + código de Acceso Guiado: salir tiene que ser
+   deliberado, pero sin exigir memoria ni precisión. */
+.holdout { position: relative; display: flex; align-items: center; gap: 12px; }
+.holdout__ring {
+  position: absolute; inset: -6px;
+  border-radius: 50%;
+  background: conic-gradient(#fff calc(var(--p, 0) * 1%), transparent 0);
+  opacity: 0.9;
+  pointer-events: none;
+  width: calc(var(--tap-min) + 12px);
+  height: calc(var(--tap-min) + 12px);
+  mask: radial-gradient(circle, transparent 62%, #000 64%);
+  -webkit-mask: radial-gradient(circle, transparent 62%, #000 64%);
+}
+
+/* --- Ajustes (perfil) ----------------------------------------------------- */
+
+.setting { padding: 18px 0; border-bottom: 1.5px solid var(--c-gray-3); }
+.setting:last-of-type { border-bottom: 0; }
+.setting__label { font-size: var(--fs-m); font-weight: 600; display: block; margin-bottom: 4px; }
+.setting__help  { font-size: var(--fs-s); color: var(--c-gray-1); margin: 0 0 14px; }
+.choice { display: flex; gap: 10px; }
+.choice button {
+  flex: 1 1 0;
+  min-height: var(--tap-min);
+  border-radius: var(--r-card);
+  border: 1.5px solid var(--c-gray-3);
+  background: var(--c-white);
+  font-size: var(--fs-m); font-weight: 600;
+}
+.choice button[aria-pressed="true"] { background: var(--c-blue); border-color: var(--c-blue); color: #fff; }
+.choice--text button:nth-child(1) { font-size: var(--fs-s); }
+.choice--text button:nth-child(2) { font-size: var(--fs-m); }
+.choice--text button:nth-child(3) { font-size: var(--fs-lg); }
+
+/* --- Utilidades ----------------------------------------------------------- */
+
+.stack > * + * { margin-top: 12px; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.brand { font-size: var(--fs-xl); font-weight: 700; }
+
+</style>
+
+
+<!-- ===================== Iconos ===================== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="i-back"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></g>
+    <g id="i-user"><circle cx="12" cy="8.5" r="3.6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4.8 20c1.3-3.6 4-5.4 7.2-5.4S17.9 16.4 19.2 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></g>
+    <g id="i-spark"><path d="M12 3.2 13.7 9l5.8 1.7-5.8 1.7L12 18.2 10.3 12.4 4.5 10.7 10.3 9z" fill="currentColor"/></g>
+    <g id="i-mic"><rect x="9" y="2.6" width="6" height="11.4" rx="3" fill="currentColor"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></g>
+    <g id="i-image"><rect x="3" y="5" width="18" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8.6" cy="10" r="1.7" fill="currentColor"/><path d="m4.4 17.4 4.9-4.4 3.5 3 2.7-2.3 4.1 3.7" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></g>
+    <g id="i-camera"><path d="M4 8h3.2l1.4-2h6.8l1.4 2H20a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="13.4" r="3.6" fill="none" stroke="currentColor" stroke-width="2"/></g>
+    <g id="i-search"><circle cx="11" cy="11" r="6.4" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="m16 16 4.4 4.4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></g>
+    <g id="i-play"><path d="M8 5.5 19 12 8 18.5z" fill="currentColor"/></g>
+    <g id="i-prev"><path d="M14.5 5 7.5 12l7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g>
+    <g id="i-next"><path d="M9.5 5 16.5 12l-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g>
+    <g id="i-close"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></g>
+    <g id="i-eye"><path d="M2.6 12S6.4 5.6 12 5.6 21.4 12 21.4 12 17.6 18.4 12 18.4 2.6 12 2.6 12z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="currentColor"/></g>
+    <g id="i-nest"><path d="M3.5 13.5c0-3.6 3.8-6.4 8.5-6.4s8.5 2.8 8.5 6.4c0 2.3-2.2 3.6-8.5 3.6s-8.5-1.3-8.5-3.6z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="9.4" cy="12.6" r="1.8" fill="currentColor"/><circle cx="14.6" cy="12.6" r="1.8" fill="currentColor"/></g>
+    <g id="i-cloud"><path d="M7 18.5a4 4 0 0 1-.3-8 5.4 5.4 0 0 1 10.4 1.2A3.6 3.6 0 0 1 17 18.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></g>
+  </defs>
+</svg>
+
+<div class="stage">
+
+  <!-- ===================== EL MÓVIL ===================== -->
+  <div class="device">
+    <div class="device__viewport" id="viewport">
+
+      <!-- 01 · Bienvenida -->
+      <section class="screen screen--plain" data-screen="bienvenida" aria-label="Bienvenida">
+        <div class="screen__body" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">
+          <div class="sheet__icon" style="width:120px;height:120px;margin-bottom:28px">
+            <svg class="ico" width="56" height="56" viewBox="0 0 24 24" style="color:var(--c-blue-dark)"><use href="#i-nest"/></svg>
+          </div>
+          <p class="brand" style="margin:0 0 8px">Nido</p>
+          <p class="subtitle" style="margin:0">Tus recuerdos, siempre contigo</p>
+        </div>
+        <div class="screen__foot">
+          <button class="btn btn--primary" data-go="telefono">Entrar</button>
+        </div>
+      </section>
+
+      <!-- 02 · Tu número de teléfono -->
+      <section class="screen" data-screen="telefono" aria-label="Tu número de teléfono">
+        <div class="screen__head">
+          <button class="iconbtn" data-back aria-label="Volver"><svg class="ico" viewBox="0 0 24 24"><use href="#i-back"/></svg></button>
+        </div>
+        <div class="screen__body">
+          <h1 class="title" style="margin-top:28px">¿Cuál es tu número?</h1>
+          <p class="subtitle">Te enviaremos un código para confirmarlo</p>
+          <p class="phonefield" id="phone-field" aria-live="polite">6 12 · 345 · 678</p>
+          <div class="keypad" id="keypad" role="group" aria-label="Teclado numérico"></div>
+        </div>
+        <div class="screen__foot">
+          <button class="btn btn--primary" data-go="codigo">Continuar</button>
+        </div>
+      </section>
+
+      <!-- 03 · Código de confirmación -->
+      <section class="screen" data-screen="codigo" aria-label="Código de confirmación">
+        <div class="screen__head">
+          <button class="iconbtn" data-back aria-label="Volver"><svg class="ico" viewBox="0 0 24 24"><use href="#i-back"/></svg></button>
+        </div>
+        <div class="screen__body">
+          <h1 class="title" style="margin-top:28px">Te hemos enviado un código</h1>
+          <p class="subtitle" id="code-status">Rellenando automáticamente…</p>
+          <div class="code" id="code-boxes" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+          </div>
+          <div class="spinner" id="code-spinner"></div>
+          <p class="caption center" style="margin-top:28px">Continuando a tu perfil…</p>
+        </div>
+        <div class="screen__foot">
+          <button class="btn btn--ghost" data-back>No me llega el código</button>
+        </div>
+      </section>
+
+      <!-- 04 · Tu foto y tu nombre -->
+      <section class="screen" data-screen="perfil-foto" aria-label="Tu foto y tu nombre">
+        <div class="screen__head">
+          <button class="iconbtn" data-back aria-label="Volver"><svg class="ico" viewBox="0 0 24 24"><use href="#i-back"/></svg></button>
+        </div>
+        <div class="screen__body center">
+          <h1 class="title" style="margin-top:28px;text-align:left">¿Cómo te llamamos?</h1>
+          <p class="subtitle" style="text-align:left">Hazte una foto y dinos tu nombre en voz alta</p>
+          <div class="avatar avatar--xl" style="width:180px;height:180px;margin:20px auto 32px">
+            <svg width="64" height="64" viewBox="0 0 24 24" style="color:var(--c-blue-dark)"><use href="#i-user"/></svg>
+          </div>
+          <button class="btn btn--secondary" data-go="copia">
+            Hacerme una foto
+            <svg class="ico" viewBox="0 0 24 24"><use href="#i-camera"/></svg>
+          </button>
+        </div>
+        <div class="screen__foot">
+          <button class="btn btn--ghost" data-go="copia">Ahora no</button>
+        </div>
+      </section>
+
+      <!-- 05 · Copia de seguridad -->
+      <section class="screen" data-screen="copia" aria-label="Copia de seguridad">
+        <div class="screen__head">
+          <button class="iconbtn" data-back aria-label="Volver"><svg class="ico" viewBox="0 0 24 24"><use href="#i-back"/></svg></button>
+        </div>
+        <div class="screen__body">
+          <h1 class="title" style="margin-top:28px">Guarda una copia de seguridad</h1>
+          <p class="subtitle">Así nunca perderás tus fotos aunque cambies de teléfono</p>
+          <button class="btn btn--secondary" style="justify-content:flex-start;margin-top:28px" data-go="home" data-permisos>
+            <svg class="ico" viewBox="0 0 24 24" style="width:32px;height:32px"><use href="#i-cloud"/></svg>
+            Usar mi cuenta de Google
+          </button>
+          <button class="btn btn--secondary" style="justify-content:flex-start" data-go="home" data-permisos>
+            <svg class="ico" viewBox="0 0 24 24" style="width:32px;height:32px"><use href="#i-cloud"/></svg>
+            Usar mi cuenta de Apple
+          </button>
+        </div>
+        <div class="screen__foot">
+          <button class="btn btn--ghost" data-go="home" data-permisos>Ahora no</button>
+        </div>
+      </section>
+
+      <!-- 07 · Home -->
+      <section class="screen" data-screen="home" aria-label="Inicio">
+        <div class="screen__head">
+          <div class="topbar">
+            <h1 class="brand">Nido</h1>
+            <button class="iconbtn iconbtn--filled" data-go="ajustes" aria-label="Tu perfil y ajustes">
+              <svg class="ico" viewBox="0 0 24 24" style="color:var(--c-blue-dark)"><use href="#i-user"/></svg>
+            </button>
+          </div>
+          <div class="segmented" role="tablist" aria-label="Fotos o álbumes">
+            <button role="tab" id="tab-fotos" aria-selected="true" data-tab="fotos">Fotos</button>
+            <button role="tab" id="tab-albumes" aria-selected="false" data-tab="albumes">Álbumes</button>
+          </div>
+        </div>
+        <div class="screen__body" id="home-body"></div>
+        <div class="screen__foot">
+          <div style="display:flex;gap:12px">
+            <button class="btn btn--primary" data-go="crear" style="flex:1 1 auto">
+              Crear con IA
+              <svg class="ico" viewBox="0 0 24 24" style="width:20px;height:20px"><use href="#i-spark"/></svg>
+            </button>
+            <button class="iconbtn" data-go="buscar" aria-label="Buscar por voz" style="width:var(--tap-min)">
+              <svg class="ico" viewBox="0 0 24 24"><use href="#i-search"/></svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 08 · Álbum -->
+      <section class="screen" data-screen="album" aria-label="Álbum">
+        <div class="screen__head">
+          <button class="iconbtn" data-back aria-label="Volver"><svg class="ico" viewBox="0 0 24 24"><use href="#i-back"/></svg></button>
+        </div>
+        <div class="screen__body">
+          <h1 class="title" id="album-title" style="margin-top:28px">Viaje a la playa 2023</h1>
+          <ul class="coll" id="album-grid"></ul>
+          <div class="stack" style="margin-top:32px">
+            <button class="btn btn--secondary" data-voz="nombrar-album">Nombrar álbum</button>
+            <button class="btn btn--secondary" data-go="visita" data-visita-source="album">
+              Ver en modo visita
+              <svg class="ico" viewBox="0 0 24 24"><use href="#i-eye"/></svg>
+            </button>
+            <button class="btn btn--secondary" data-confirm="Generar un vídeo con las 9 fotos de este álbum">
+              Generar vídeo del álbum
+              <svg class="ico" viewBox="0 0 24 24" style="width:20px;height:20px"><use href="#i-spark"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="screen__foot">
+          <button class="btn btn--secondary" data-go="home">Salir</button>
+        </div>
+      </section>
+
+      <!-- 09 · Foto -->
+      <section class="screen" data-screen="foto" aria-label="Foto">
+        <div class="screen__head">
+          <button class="iconbtn" data-back aria-label="Volver"><svg class="ico" viewBox="0 0 24 24"><use href="#i-back"/></svg></button>
+        </div>
+        <div class="screen__body">
+          <div class="thumb" id="foto-big" style="height:420px;border-radius:var(--r-card);margin-top:20px"></div>
+          <h2 class="section">Personas en esta foto</h2>
+          <ul class="people" id="foto-people"></ul>
+          <button class="btn btn--secondary" style="margin-top:28px" data-confirm="Generar un vídeo a partir de esta foto">
+            Generar vídeo de esta foto
+            <svg class="ico" viewBox="0 0 24 24" style="width:20px;height:20px"><use href="#i-spark"/></svg>
+          </button>
+          <button class="btn btn--secondary" data-go="visita" data-visita-source="foto">
+            Ver en modo visita
+            <svg class="ico" viewBox="0 0 24 24"><use href="#i-eye"/></svg>
+          </button>
+        </div>
+        <div class="screen__foot">
+          <button class="btn btn--secondary" data-go="home">Salir</button>
+        </div>
+      </section>
+
+      <!-- 10 · Persona no identificada -->
+      <section class="screen" data-screen="persona-nueva" aria-label="Persona no identificada">
+        <div class="screen__head">
+          <button class="iconbtn" data-back aria-label="Volver"><svg class="ico" viewBox="0 0 24 24"><use href="#i-back"/></svg></button>
+        </div>
+        <div class="screen__body">
+          <div class="thumb" style="height:260px;border-radius:var(--r-card);margin-top:20px;display:grid;place-items:center">
+            <span class="avatar avatar--unknown" style="width:100px;height:100px;background:rgba(255,255,255,.75)">
+              <svg width="44" height="44" viewBox="0 0 24 24"><use href="#i-user"/></svg>
+            </span>
+          </div>
+          <h1 class="title" style="margin-top:24px">¿Quién es esta persona?</h1>
+          <button class="btn btn--secondary" data-voz="nombrar-persona">
+            Nombrar persona por voz
+            <svg class="ico" viewBox="0 0 24 24"><use href="#i-mic"/></svg>
+          </button>
+          <h2 class="section">¿Quizás es…?</h2>
+          <div class="chips" role="group" aria-label="Sugerencias de parentesco">
+            <button class="chip" aria-pressed="false">Tu nieta</button>
+            <button class="chip" aria-pressed="false">Tu hijo</button>
+            <button class="chip" aria-pressed="false">Tu amiga</button>
+            <button class="chip" aria-pressed="false">Tu vecino</button>
+          </div>
+          <button class="btn btn--ghost" style="margin-top:16px" data-back>No es de mi círculo cercano / da igual</button>
+        </div>
+        <div class="screen__foot">
+          <button class="btn btn--primary" id="persona-confirmar" data-go="persona">Confirmar</button>
+        </div>
+      </section>
+
+      <!-- 11 · Persona identificada -->
+      <section class="screen" data-screen="persona" aria-label="Persona identificada">
+        <div class="screen__head">
+          <button class="iconbtn" data-back aria-label="Volver"><svg class="ico" viewBox="0 0 24 24"><use href="#i-back"/></svg></button>
+        </div>
+        <div class="screen__body center">
+          <div class="avatar avatar--xl" id="persona-avatar" style="margin:8px auto 20px">L</div>
+          <p style="font-size:calc(var(--fs-2xl) * 1.1);font-weight:700;margin:0" id="persona-nombre">Lucía</p>
+          <p class="subtitle" style="margin:6px 0 0" id="persona-rel">Tu nieta</p>
+          <h2 class="section" style="text-align:left" id="persona-seccion">Fotos de Lucía</h2>
+          <ul class="coll" id="persona-grid"></ul>
+        </div>
+        <div class="screen__foot">
+          <button class="btn btn--secondary" data-go="home">Salir</button>
+        </div>
+      </section>
+
+      <!-- 12 · Crear con IA -->
+      <section class="screen" data-screen="crear" aria-label="Crear con IA">
+        <div class="screen__head">
+          <button class="iconbtn" data-back aria-label="Volver"><svg class="ico" viewBox="0 0 24 24"><use href="#i-back"/></svg></button>
+        </div>
+        <div class="screen__body">
+          <h1 class="title" style="margin-top:28px">¿Creamos juntos?</h1>
+          <h2 class="section">Tus últimas creaciones</h2>
+          <ul class="coll coll--2" id="crear-grid"></ul>
+          <div class="mic" id="mic-crear" style="margin-top:32px">
+            <p class="mic__hint" id="crear-hint">Aprieta y dime qué quieres crear</p>
+            <button class="mic__btn" data-mic="crear" aria-label="Aprieta y dime qué quieres crear">
+              <span class="mic__ring"></span><span class="mic__ring mic__ring--2"></span>
+              <span class="mic__core"><svg class="ico" viewBox="0 0 24 24" style="color:#fff"><use href="#i-mic"/></svg></span>
+            </button>
+          </div>
+          <p class="transcript" id="crear-transcript" aria-live="polite"><em>Aquí aparecerá lo que digas.</em></p>
+        </div>
+        <div class="screen__foot">
+          <button class="btn btn--secondary" data-go="home">Salir</button>
+        </div>
+      </section>
+
+      <!-- 15 · Buscar por voz -->
+      <section class="screen" data-screen="buscar" aria-label="Buscar">
+        <div class="screen__head">
+          <button class="iconbtn" data-back aria-label="Volver"><svg class="ico" viewBox="0 0 24 24"><use href="#i-back"/></svg></button>
+        </div>
+        <div class="screen__body">
+          <h1 class="title" style="margin-top:28px">¿Qué quieres ver?</h1>
+          <h2 class="section">Personas</h2>
+          <ul class="people" id="buscar-people"></ul>
+          <div class="mic" id="mic-buscar" style="margin-top:28px">
+            <p class="mic__hint" id="buscar-hint">Aprieta y dime qué quieres buscar</p>
+            <button class="mic__btn" data-mic="buscar" aria-label="Aprieta y dime qué quieres buscar">
+              <span class="mic__ring"></span><span class="mic__ring mic__ring--2"></span>
+              <span class="mic__core"><svg class="ico" viewBox="0 0 24 24" style="color:#fff"><use href="#i-mic"/></svg></span>
+            </button>
+          </div>
+          <p class="transcript" id="buscar-transcript" aria-live="polite"><em>Aquí aparecerá lo que digas.</em></p>
+          <h2 class="section">Último buscado</h2>
+          <ul class="coll coll--2" id="buscar-grid"></ul>
+        </div>
+        <div class="screen__foot">
+          <button class="btn btn--secondary" data-go="home">Salir</button>
+        </div>
+      </section>
+
+      <!-- Perfil / Ajustes -->
+      <section class="screen" data-screen="ajustes" aria-label="Tu perfil">
+        <div class="screen__head">
+          <button class="iconbtn" data-back aria-label="Volver"><svg class="ico" viewBox="0 0 24 24"><use href="#i-back"/></svg></button>
+        </div>
+        <div class="screen__body">
+          <h1 class="title" style="margin-top:28px">Tu perfil</h1>
+
+          <div class="setting">
+            <span class="setting__label">Cómo se ven tus fotos</span>
+            <p class="setting__help">En lista se ven más grandes y con su nombre. En cuadrícula caben más.</p>
+            <div class="choice" role="group">
+              <button data-set-view="filas" aria-pressed="false">En lista</button>
+              <button data-set-view="cuadricula" aria-pressed="true">En cuadrícula</button>
+            </div>
+          </div>
+
+          <div class="setting">
+            <span class="setting__label">Tamaño de la letra</span>
+            <p class="setting__help">Todo lo de la pantalla crece: también los botones.</p>
+            <div class="choice choice--text" role="group">
+              <button data-set-text="normal" aria-pressed="true">Normal</button>
+              <button data-set-text="grande" aria-pressed="false">Grande</button>
+              <button data-set-text="enorme" aria-pressed="false">Enorme</button>
+            </div>
+          </div>
+
+          <div class="setting">
+            <span class="setting__label">Modo visita</span>
+            <p class="setting__help">Pone las fotos a pantalla completa. Para dejar el móvil en la mesa y que nadie toque nada sin querer.</p>
+            <button class="btn btn--secondary" data-go="visita" data-visita-source="album">
+              Empezar modo visita
+              <svg class="ico" viewBox="0 0 24 24"><use href="#i-eye"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="screen__foot">
+          <button class="btn btn--secondary" data-go="home">Salir</button>
+        </div>
+      </section>
+
+      <!-- 13/14 · Modo visita -->
+      <section class="screen screen--plain" data-screen="visita" aria-label="Modo visita">
+        <div class="visit" id="visit" tabindex="0">
+          <div class="visit__photo" id="visit-photo"></div>
+          <div class="visit__bar visit__bar--top">
+            <div class="holdout">
+              <button class="iconbtn" id="visit-exit" aria-label="Mantén pulsado para salir del modo visita">
+                <svg class="ico" viewBox="0 0 24 24"><use href="#i-close"/></svg>
+                <span class="holdout__ring" id="visit-ring"></span>
+              </button>
+            </div>
+            <span class="visit__title" id="visit-title">Viaje a la playa · 2023</span>
+          </div>
+          <div class="visit__bar visit__bar--bottom">
+            <div class="visit__nav">
+              <button class="iconbtn" id="visit-prev" aria-label="Foto anterior"><svg class="ico" viewBox="0 0 24 24"><use href="#i-prev"/></svg></button>
+              <button class="iconbtn" id="visit-next" aria-label="Foto siguiente"><svg class="ico" viewBox="0 0 24 24"><use href="#i-next"/></svg></button>
+            </div>
+            <p class="visit__hint">Los controles se ocultan solos · mantén pulsada la X para salir</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 06 · Permisos (modal sobre Home) -->
+      <div class="sheet" id="sheet-permisos" role="dialog" aria-modal="true" aria-labelledby="permisos-text">
+        <div class="sheet__card">
+          <span class="sheet__icon"><svg class="ico" viewBox="0 0 24 24" style="color:var(--c-blue-dark)"><use href="#i-image"/></svg></span>
+          <p class="sheet__text" id="permisos-text">Danos acceso a tu galería y organizaremos tus momentos</p>
+          <button class="btn btn--primary" data-permisos-close>Permitir</button>
+          <button class="btn btn--ghost" data-permisos-info>Quiero saber más información</button>
+        </div>
+      </div>
+
+      <p class="sr-only" id="announcer" aria-live="polite"></p>
+    </div>
+  </div>
+
+  <!-- ===================== PANEL DE LA DEMO ===================== -->
+  <aside class="demo">
+    <h1>Nido · prototipo</h1>
+    <p class="demo__note">Estos controles son del prototipo, no de la app. Dentro del móvil, las mismas opciones viven en <strong>Tu perfil</strong>.</p>
+
+    <h2>Disposición</h2>
+    <div class="demo__seg" role="group" aria-label="Disposición">
+      <button data-set-view="filas" aria-pressed="false">Filas</button>
+      <button data-set-view="cuadricula" aria-pressed="true">Cuadrícula</button>
+    </div>
+    <p class="demo__note" style="margin-top:8px">Las dos disposiciones de Acceso Asistido (iOS): lista legible o cuadrícula visual.</p>
+
+    <h2>Tamaño de letra</h2>
+    <div class="demo__seg" role="group" aria-label="Tamaño de letra">
+      <button data-set-text="normal" aria-pressed="true">Normal</button>
+      <button data-set-text="grande" aria-pressed="false">Grande</button>
+      <button data-set-text="enorme" aria-pressed="false">Enorme</button>
+    </div>
+    <p class="demo__note" style="margin-top:8px">Simula el tamaño de letra del sistema. Crece la letra y también la zona de toque.</p>
+
+    <h2>Contraste</h2>
+    <div class="demo__seg" role="group" aria-label="Contraste">
+      <button data-set-contrast="normal" aria-pressed="true">Normal</button>
+      <button data-set-contrast="alto" aria-pressed="false">Alto</button>
+    </div>
+
+    <h2>Pantallas</h2>
+    <ul class="demo__list" id="demo-screens"></ul>
+    <p class="demo__note" style="margin-top:10px"><span style="color:var(--c-blue);font-weight:700">+</span> = pantalla que no está en los wireframes; la añade el prototipo (ver README).</p>
+  </aside>
+</div>
+
+<script>
+/* ==========================================================================
+   NIDO · Datos de ejemplo
+   Los wireframes no traen fotos: los recuadros azules son marcadores.
+   Aquí se generan "fotos" con degradados deterministas, para que cada
+   momento se distinga del de al lado sin depender de imágenes externas.
+   Los nombres y grupos son los que aparecen en los wireframes.
+   ========================================================================== */
+
+const NIDO = (() => {
+
+  /* Degradado determinista a partir de una semilla de texto. */
+  function photo(seed) {
+    let h = 0;
+    for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) % 360;
+    const h2 = (h + 42) % 360;
+    return `radial-gradient(120% 90% at 28% 18%, hsl(${h} 72% 84%) 0%, transparent 60%),
+            linear-gradient(150deg, hsl(${h} 58% 72%), hsl(${h2} 52% 58%))`;
+  }
+
+  const item = (label, meta) => ({ id: label, label, meta, bg: photo(label) });
+
+  const momentos = [
+    item('Playa 2023',   '9 fotos · agosto de 2023'),
+    item('Cumple Sofía', '14 fotos · mayo de 2024'),
+    item('Navidad',      '22 fotos · diciembre de 2024')
+  ];
+
+  const grupos = [
+    item('Familia García',   '186 fotos'),
+    item('Los nietos',       '94 fotos'),
+    item('Amigas del barrio','41 fotos')
+  ];
+
+  const personas = [
+    { id: 'lucia',  nombre: 'Lucía',       rel: 'Tu nieta', inicial: 'L', meta: '58 fotos' },
+    { id: 'mario',  nombre: 'Mario',       rel: 'Tu hijo',  inicial: 'M', meta: '73 fotos' },
+    { id: 'pilar',  nombre: 'Abuela Pilar',rel: 'Tú',       inicial: 'P', meta: '120 fotos' }
+  ];
+
+  const albumes = [
+    item('Viaje a la playa 2023', '9 fotos'),
+    item('Cumple de Sofía',       '14 fotos'),
+    item('Navidad 2024',          '22 fotos'),
+    item('Comida del domingo',    '11 fotos'),
+    item('Los nietos en el parque','17 fotos'),
+    item('Boda de Marta',         '63 fotos')
+  ];
+
+  const fotosAlbum = Array.from({ length: 9 }, (_, i) =>
+    item(`Playa · foto ${i + 1}`, 'Agosto de 2023'));
+
+  const fotosPersona = Array.from({ length: 9 }, (_, i) =>
+    item(`Lucía · foto ${i + 1}`, '2024'));
+
+  const creaciones = [
+    item('Vídeo de la playa', 'creado hace 2 días'),
+    item('Álbum de Navidad',  'creado en enero')
+  ];
+
+  /* Respuestas guionizadas del asistente. El prototipo no llama a ninguna
+     API: simula la escucha para poder enseñar el flujo sin conexión. */
+  const guiones = {
+    crear: [
+      'Un vídeo con las fotos de la playa',
+      'Un álbum con las fotos de Lucía',
+      'Una felicitación para el cumple de Sofía'
+    ],
+    buscar: [
+      'Las fotos de la Navidad pasada',
+      'Fotos de Lucía en la playa',
+      'Lo que subió Mario el domingo'
+    ],
+    'nombrar-persona': ['Es mi nieta Lucía', 'Es mi vecina Carmen', 'Es mi hijo Mario'],
+    'nombrar-album':   ['Verano en Denia', 'La comida del domingo', 'Los nietos en el parque']
+  };
+
+  return { photo, momentos, grupos, personas, albumes, fotosAlbum, fotosPersona, creaciones, guiones };
+})();
+
+
+/* ==========================================================================
+   NIDO · Prototipo — router, preferencias de accesibilidad y microflujos
+   Vanilla JS a propósito: el equipo es de diseño, no de programación, y
+   cualquiera tiene que poder abrir el archivo y leerlo.
+   ========================================================================== */
+
+(() => {
+  'use strict';
+
+  const $  = (s, c = document) => c.querySelector(s);
+  const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
+  const root = document.documentElement;
+
+  /* ---------------------------------------------------------------------- */
+  /* Mapa de pantallas. `extra: true` = no está en los wireframes.           */
+  /* ---------------------------------------------------------------------- */
+
+  const SCREENS = [
+    { id: 'bienvenida',    nombre: '01 · Bienvenida' },
+    { id: 'telefono',      nombre: '02 · Tu número' },
+    { id: 'codigo',        nombre: '03 · Código de confirmación' },
+    { id: 'perfil-foto',   nombre: '04 · Tu foto y tu nombre' },
+    { id: 'copia',         nombre: '05 · Copia de seguridad' },
+    { id: 'home',          nombre: '07 · Home (+ 06 permisos)' },
+    { id: 'album',         nombre: '08 · Álbum' },
+    { id: 'foto',          nombre: '09 · Foto' },
+    { id: 'persona-nueva', nombre: '10 · Persona no identificada' },
+    { id: 'persona',       nombre: '11 · Persona identificada' },
+    { id: 'crear',         nombre: '12 · Crear con IA' },
+    { id: 'visita',        nombre: '13/14 · Modo visita' },
+    { id: 'buscar',        nombre: 'Buscar por voz',  extra: true },
+    { id: 'ajustes',       nombre: 'Tu perfil / ajustes', extra: true }
+  ];
+
+  let stack = [];
+  let current = null;
+
+  function announce(msg) {
+    $('#announcer').textContent = String(msg).replace(/<[^>]+>/g, ' ').trim();
+  }
+
+  function go(id, { replace = false } = {}) {
+    if (id === current) return;
+    if (current && !replace) stack.push(current);
+    if (current === 'visita') stopVisita();
+
+    $$('.screen').forEach(s => s.classList.toggle('is-active', s.dataset.screen === id));
+    current = id;
+
+    const view = $(`.screen[data-screen="${id}"]`);
+    const body = view.querySelector('.screen__body');
+    if (body) body.scrollTop = 0;
+    // El foco va al principio de la pantalla: quien navega con lector de
+    // pantalla o con teclado no se queda en el botón que acaba de pulsar.
+    const target = view.querySelector('.title, .brand, [tabindex="0"]') || view;
+    target.setAttribute('tabindex', '-1');
+    target.focus({ preventScroll: true });
+
+    announce(SCREENS.find(s => s.id === id)?.nombre || id);
+    $$('#demo-screens button').forEach(b =>
+      b.setAttribute('aria-current', String(b.dataset.goto === id)));
+
+    if (id === 'codigo') runAutofill();
+    if (id === 'visita') startVisita();
+  }
+
+  function back() {
+    const prev = stack.pop();
+    go(prev || 'home', { replace: true });
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Preferencias de accesibilidad                                           */
+  /* Se guardan en el propio navegador: quien prueba el prototipo no tiene   */
+  /* que volver a ajustarlo en cada recarga.                                 */
+  /* ---------------------------------------------------------------------- */
+
+  const PREFS = ['view', 'text', 'contrast'];
+  // Valores por defecto en el propio JS: así el prototipo funciona aunque el
+  // <html> no traiga los data- puestos a mano (por ejemplo, publicado).
+  const DEFAULTS = { view: 'cuadricula', text: 'normal', contrast: 'normal' };
+
+  function setPref(key, value) {
+    root.dataset[key] = value;
+    try { localStorage.setItem('nido.' + key, value); } catch (e) { /* modo privado */ }
+    const attr = 'data-set-' + key;
+    $$(`[${attr}]`).forEach(b =>
+      b.setAttribute('aria-pressed', String(b.getAttribute(attr) === value)));
+    if (key === 'view') announce(value === 'filas' ? 'Fotos en lista' : 'Fotos en cuadrícula');
+  }
+
+  PREFS.forEach(k => {
+    let saved = null;
+    try { saved = localStorage.getItem('nido.' + k); } catch (e) { /* noop */ }
+    setPref(k, saved || root.dataset[k] || DEFAULTS[k]);
+  });
+
+  /* ---------------------------------------------------------------------- */
+  /* Colecciones                                                             */
+  /* ---------------------------------------------------------------------- */
+
+  function renderColl(ul, items, onPick) {
+    ul.innerHTML = '';
+    items.forEach(it => {
+      const li = document.createElement('li');
+      const btn = document.createElement('button');
+      btn.className = 'coll__btn';
+      btn.innerHTML =
+        `<span class="thumb coll__thumb" style="background-image:${it.bg}"></span>` +
+        `<span><span class="coll__label">${it.label}</span>` +
+        `<span class="coll__meta">${it.meta || ''}</span></span>`;
+      btn.addEventListener('click', () => onPick(it));
+      li.appendChild(btn);
+      ul.appendChild(li);
+    });
+  }
+
+  function renderPeople(ul, people, onPick, { addUnknown = false } = {}) {
+    ul.innerHTML = '';
+    people.forEach(p => {
+      const li = document.createElement('li');
+      const btn = document.createElement('button');
+      btn.className = 'people__btn';
+      btn.innerHTML = `<span class="avatar">${p.inicial}</span><span class="people__name">${p.nombre}</span>`;
+      btn.addEventListener('click', () => onPick(p));
+      li.appendChild(btn); ul.appendChild(li);
+    });
+    if (addUnknown) {
+      const li = document.createElement('li');
+      const btn = document.createElement('button');
+      btn.className = 'people__btn';
+      btn.innerHTML =
+        `<span class="avatar avatar--unknown"><svg width="30" height="30" viewBox="0 0 24 24"><use href="#i-user"/></svg></span>` +
+        `<span class="people__name">¿Quién es?</span>`;
+      btn.addEventListener('click', () => go('persona-nueva'));
+      li.appendChild(btn); ul.appendChild(li);
+    }
+  }
+
+  /* --- Home -------------------------------------------------------------- */
+
+  let tab = 'fotos';
+
+  function renderHome() {
+    const body = $('#home-body');
+    body.innerHTML = '';
+
+    if (tab === 'albumes') {
+      body.appendChild(sectionEl('Todos tus álbumes'));
+      const ul = collEl('coll coll--2');
+      renderColl(ul, NIDO.albumes, a => openAlbum(a));
+      body.appendChild(ul);
+      return;
+    }
+
+    const bloques = [
+      ['Hoy hace 2 años',       NIDO.momentos, a => openAlbum(a)],
+      ['Por grupos de personas', NIDO.grupos,   a => openAlbum(a)]
+    ];
+    bloques.forEach(([titulo, items, onPick]) => {
+      body.appendChild(sectionEl(titulo));
+      const ul = collEl('coll');
+      renderColl(ul, items, onPick);
+      body.appendChild(ul);
+    });
+
+    body.appendChild(sectionEl('Por persona'));
+    const ul = document.createElement('ul');
+    ul.className = 'people';
+    renderPeople(ul, NIDO.personas, p => openPersona(p), { addUnknown: true });
+    body.appendChild(ul);
+  }
+
+  const sectionEl = t => {
+    const h = document.createElement('h2'); h.className = 'section'; h.textContent = t; return h;
+  };
+  const collEl = cls => { const ul = document.createElement('ul'); ul.className = cls; return ul; };
+
+  /* --- Álbum, foto, persona --------------------------------------------- */
+
+  function openAlbum(a) {
+    $('#album-title').textContent = a.label;
+    renderColl($('#album-grid'), NIDO.fotosAlbum, f => openFoto(f));
+    go('album');
+  }
+
+  function openFoto(f) {
+    $('#foto-big').style.backgroundImage = f.bg;
+    renderPeople($('#foto-people'), NIDO.personas.slice(0, 2), p => openPersona(p), { addUnknown: true });
+    go('foto');
+  }
+
+  function openPersona(p) {
+    $('#persona-avatar').textContent = p.inicial;
+    $('#persona-nombre').textContent = p.nombre;
+    $('#persona-rel').textContent = p.rel;
+    $('#persona-seccion').textContent = 'Fotos de ' + p.nombre;
+    renderColl($('#persona-grid'), NIDO.fotosPersona, f => openFoto(f));
+    go('persona');
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Diálogo (permisos y confirmaciones)                                     */
+  /* ---------------------------------------------------------------------- */
+
+  const sheet = $('#sheet-permisos');
+  let sheetPrevFocus = null;
+
+  function openSheet({ icon = 'i-image', text, ok = 'Sí', ghost, onOk, onGhost }) {
+    sheetPrevFocus = document.activeElement;
+    sheet.querySelector('.sheet__card').innerHTML =
+      `<span class="sheet__icon"><svg class="ico" viewBox="0 0 24 24" style="color:var(--c-blue-dark)"><use href="#${icon}"/></svg></span>
+       <p class="sheet__text">${text}</p>
+       <button class="btn btn--primary" data-ok>${ok}</button>
+       ${ghost ? `<button class="btn btn--ghost" data-ghost>${ghost}</button>` : ''}`;
+    sheet.classList.add('is-open');
+    sheet.querySelector('[data-ok]').focus();
+    sheet.querySelector('[data-ok]').onclick = () => { closeSheet(); onOk && onOk(); };
+    const g = sheet.querySelector('[data-ghost]');
+    if (g) g.onclick = () => { closeSheet(); onGhost && onGhost(); };
+    announce(text);
+  }
+
+  function closeSheet() {
+    sheet.classList.remove('is-open');
+    if (sheetPrevFocus) sheetPrevFocus.focus();
+  }
+
+  // Atrapa el foco dentro del diálogo mientras está abierto.
+  sheet.addEventListener('keydown', e => {
+    if (e.key !== 'Tab') return;
+    const f = $$('button', sheet);
+    const i = f.indexOf(document.activeElement);
+    e.preventDefault();
+    f[(i + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+  });
+
+  function pedirPermisos() {
+    openSheet({
+      text: 'Danos acceso a tu galería y organizaremos tus momentos',
+      ok: 'Permitir',
+      ghost: 'Quiero saber más información',
+      onGhost: () => openSheet({
+        icon: 'i-image',
+        text: 'Solo miramos las fotos que ya tienes en el teléfono, para agruparlas por momentos y por personas. No se envían a ningún sitio.',
+        ok: 'Entendido',
+        onOk: pedirPermisos
+      })
+    });
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Teclado numérico y autorrelleno del SMS                                 */
+  /* ---------------------------------------------------------------------- */
+
+  const phone = { digits: '' };
+
+  function paintPhone() {
+    const d = phone.digits;
+    $('#phone-field').textContent = d.length
+      ? (d.match(/.{1,3}/g) || []).join(' · ')
+      : '6 12 · 345 · 678';
+  }
+
+  const keypad = $('#keypad');
+  ['1','2','3','4','5','6','7','8','9','','0','⌫'].forEach(k => {
+    const b = document.createElement('button');
+    b.textContent = k;
+    if (!k) { b.className = 'key--empty'; b.tabIndex = -1; b.setAttribute('aria-hidden','true'); }
+    b.addEventListener('click', () => {
+      if (k === '⌫') phone.digits = phone.digits.slice(0, -1);
+      else if (k && phone.digits.length < 9) phone.digits += k;
+      paintPhone();
+    });
+    if (k === '⌫') b.setAttribute('aria-label', 'Borrar');
+    keypad.appendChild(b);
+  });
+
+  let autofillTimers = [];
+  function runAutofill() {
+    // Reproduce el autorrelleno nativo del código SMS de iOS/Android:
+    // la persona mayor no teclea seis dígitos contrarreloj.
+    autofillTimers.forEach(clearTimeout);
+    autofillTimers = [];
+    const boxes = $$('#code-boxes span');
+    boxes.forEach(b => { b.textContent = ''; b.classList.remove('is-filled'); });
+    const code = '6294';
+    code.split('').forEach((n, i) => {
+      autofillTimers.push(setTimeout(() => {
+        boxes[i].textContent = n;
+        boxes[i].classList.add('is-filled');
+      }, 400 + i * 260));
+    });
+    autofillTimers.push(setTimeout(() => {
+      $('#code-status').textContent = 'Código correcto';
+      announce('Código correcto. Continuando a tu perfil.');
+    }, 1700));
+    autofillTimers.push(setTimeout(() => {
+      if (current === 'codigo') go('perfil-foto', { replace: true });
+    }, 2900));
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Voz                                                                     */
+  /* El prototipo simula la escucha. Si el navegador trae reconocimiento de  */
+  /* voz y la página se sirve por https/localhost, usa el real.              */
+  /* ---------------------------------------------------------------------- */
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  function listen(kind, onResult) {
+    const guion = NIDO.guiones[kind] || [];
+    const fake = guion[Math.floor(Math.random() * guion.length)] || '…';
+
+    if (!SR) return setTimeout(() => onResult(fake), 2000);
+
+    try {
+      const r = new SR();
+      r.lang = 'es-ES';
+      r.interimResults = false;
+      r.maxAlternatives = 1;
+      let done = false;
+      const finish = t => { if (!done) { done = true; onResult(t); } };
+      r.onresult = e => finish(e.results[0][0].transcript);
+      r.onerror = () => finish(fake);
+      r.onend  = () => finish(fake);
+      r.start();
+      setTimeout(() => { try { r.stop(); } catch (e) { /* noop */ } }, 6000);
+    } catch (e) {
+      setTimeout(() => onResult(fake), 2000);
+    }
+  }
+
+  function wireMic(btn) {
+    const kind = btn.dataset.mic;
+    const box  = $('#mic-' + kind) || btn.closest('.mic');
+    const hint = box.querySelector('.mic__hint');
+    const out  = $('#' + kind + '-transcript');
+    const original = hint ? hint.textContent : '';
+
+    btn.addEventListener('click', () => {
+      if (box.classList.contains('is-listening')) return;
+      box.classList.add('is-listening');
+      if (hint) hint.textContent = 'Te escucho…';
+      if (out) out.innerHTML = '<em>Escuchando…</em>';
+      announce('Te escucho');
+
+      listen(kind, texto => {
+        box.classList.remove('is-listening');
+        if (hint) hint.textContent = original;
+        if (out) out.textContent = '“' + texto + '”';
+        announce('Has dicho: ' + texto);
+        resolverVoz(kind, texto);
+      });
+    });
+  }
+
+  function resolverVoz(kind, texto) {
+    if (kind === 'crear') {
+      openSheet({
+        icon: 'i-spark',
+        text: `¿Preparo esto?<br><strong>${texto}</strong>`,
+        ok: 'Sí, prepáralo',
+        ghost: 'No, prefiero otra cosa',
+        onOk: () => openSheet({
+          icon: 'i-play', text: 'Listo. Te avisamos cuando esté.', ok: 'Vale',
+          onOk: () => go('home', { replace: true })
+        })
+      });
+    }
+    if (kind === 'buscar') {
+      openSheet({
+        icon: 'i-search',
+        text: `He encontrado fotos de<br><strong>${texto}</strong>`,
+        ok: 'Verlas',
+        ghost: 'Buscar otra cosa',
+        onOk: () => openAlbum(NIDO.momentos[0])
+      });
+    }
+    if (kind === 'nombrar-persona') {
+      $$('.chip').forEach(c => c.setAttribute('aria-pressed', 'false'));
+      announce('Persona nombrada: ' + texto);
+      go('persona');
+    }
+    if (kind === 'nombrar-album') {
+      $('#album-title').textContent = texto;
+    }
+  }
+
+  // Botones "por voz" que no son el micro grande.
+  $$('[data-voz]').forEach(btn => {
+    const kind = btn.dataset.voz;
+    btn.addEventListener('click', () => {
+      const label = btn.textContent.trim();
+      btn.textContent = 'Te escucho…';
+      announce('Te escucho');
+      listen(kind, texto => {
+        btn.textContent = label;
+        announce('Has dicho: ' + texto);
+        resolverVoz(kind, texto);
+      });
+    });
+  });
+
+  $$('[data-mic]').forEach(wireMic);
+
+  /* ---------------------------------------------------------------------- */
+  /* Modo visita (13 / 14)                                                   */
+  /* Equivalente de diseño al Acceso Guiado (iOS) y al anclaje de pantalla   */
+  /* (Android): una sola cosa a la vista, controles que se ocultan solos y   */
+  /* una salida deliberada que no se activa por un roce.                     */
+  /* ---------------------------------------------------------------------- */
+
+  const visit = $('#visit');
+  let vIndex = 0, vIdle = null, vHold = null, vRaf = null;
+
+  function paintVisita() {
+    const f = NIDO.fotosAlbum[vIndex];
+    $('#visit-photo').style.backgroundImage = f.bg;
+    $('#visit-title').textContent = `${f.label} · ${f.meta}`;
+  }
+
+  function wakeVisita() {
+    visit.classList.remove('is-idle');
+    clearTimeout(vIdle);
+    vIdle = setTimeout(() => visit.classList.add('is-idle'), 4000);
+  }
+
+  function startVisita() {
+    vIndex = 0;
+    paintVisita();
+    wakeVisita();
+    visit.focus();
+    announce('Modo visita. Mantén pulsada la equis para salir.');
+  }
+
+  function stopVisita() { clearTimeout(vIdle); cancelHold(); }
+
+  visit.addEventListener('pointerdown', wakeVisita);
+  visit.addEventListener('mousemove', wakeVisita);
+
+  $('#visit-prev').addEventListener('click', () => {
+    vIndex = (vIndex - 1 + NIDO.fotosAlbum.length) % NIDO.fotosAlbum.length; paintVisita(); wakeVisita();
+  });
+  $('#visit-next').addEventListener('click', () => {
+    vIndex = (vIndex + 1) % NIDO.fotosAlbum.length; paintVisita(); wakeVisita();
+  });
+
+  const HOLD_MS = 1200;
+  const ring = $('#visit-ring');
+
+  function startHold() {
+    cancelHold();
+    const t0 = performance.now();
+    const step = now => {
+      const p = Math.min(100, ((now - t0) / HOLD_MS) * 100);
+      ring.style.setProperty('--p', p);
+      if (p >= 100) { cancelHold(); back(); }
+      else vRaf = requestAnimationFrame(step);
+    };
+    vRaf = requestAnimationFrame(step);
+  }
+  function cancelHold() {
+    if (vRaf) cancelAnimationFrame(vRaf);
+    vRaf = null;
+    ring.style.setProperty('--p', 0);
+  }
+
+  const exitBtn = $('#visit-exit');
+  ['pointerdown'].forEach(e => exitBtn.addEventListener(e, ev => { ev.preventDefault(); startHold(); }));
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(e => exitBtn.addEventListener(e, cancelHold));
+  // Con teclado no se puede "mantener": Enter sale directamente.
+  exitBtn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); back(); } });
+
+  /* ---------------------------------------------------------------------- */
+  /* Cableado general                                                        */
+  /* ---------------------------------------------------------------------- */
+
+  document.addEventListener('click', e => {
+    const el = e.target.closest('[data-go], [data-back], [data-confirm], [data-set-view], [data-set-text], [data-set-contrast], [data-tab], .chip');
+    if (!el) return;
+
+    if (el.dataset.setView)     return setPref('view', el.dataset.setView);
+    if (el.dataset.setText)     return setPref('text', el.dataset.setText);
+    if (el.dataset.setContrast) return setPref('contrast', el.dataset.setContrast);
+
+    if (el.classList.contains('chip')) {
+      const on = el.getAttribute('aria-pressed') === 'true';
+      $$('.chip').forEach(c => c.setAttribute('aria-pressed', 'false'));
+      el.setAttribute('aria-pressed', String(!on));
+      return;
+    }
+
+    if (el.dataset.tab) {
+      tab = el.dataset.tab;
+      $$('[data-tab]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
+      renderHome();
+      return;
+    }
+
+    if (el.dataset.confirm !== undefined) {
+      return openSheet({
+        icon: 'i-spark',
+        text: el.dataset.confirm + '.<br>¿Lo hago?',
+        ok: 'Sí, hazlo',
+        ghost: 'Ahora no',
+        onOk: () => openSheet({ icon: 'i-play', text: 'Listo. Te avisamos cuando esté.', ok: 'Vale' })
+      });
+    }
+
+    if (el.dataset.back !== undefined) return back();
+
+    if (el.dataset.go) {
+      go(el.dataset.go);
+      if (el.dataset.permisos !== undefined) setTimeout(pedirPermisos, 450);
+    }
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      if (sheet.classList.contains('is-open')) closeSheet();
+      else if (current !== 'home' && current !== 'bienvenida') back();
+    }
+  });
+
+  /* Índice de pantallas del panel de la demo */
+  const list = $('#demo-screens');
+  SCREENS.forEach(s => {
+    const li = document.createElement('li');
+    const b = document.createElement('button');
+    b.textContent = s.nombre;
+    b.dataset.goto = s.id;
+    if (s.extra) b.classList.add('is-extra');
+    b.addEventListener('click', () => {
+      if (s.id === 'album')   return openAlbum(NIDO.momentos[0]);
+      if (s.id === 'foto')    return openFoto(NIDO.fotosAlbum[0]);
+      if (s.id === 'persona') return openPersona(NIDO.personas[0]);
+      go(s.id);
+    });
+    li.appendChild(b);
+    list.appendChild(li);
+  });
+
+  /* Arranque */
+  renderHome();
+  renderColl($('#crear-grid'), NIDO.creaciones, c => openSheet({
+    icon: 'i-play',
+    text: `<strong>${c.label}</strong><br>${c.meta}`,
+    ok: 'Verlo',
+    ghost: 'Ahora no',
+    onOk: () => go('visita')
+  }));
+  renderColl($('#buscar-grid'), NIDO.momentos.slice(0, 2), a => openAlbum(a));
+  renderPeople($('#buscar-people'), NIDO.personas, p => openPersona(p));
+  paintPhone();
+  go('bienvenida');
+})();
+
+</script>

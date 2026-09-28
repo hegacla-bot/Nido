@@ -1,0 +1,449 @@
+/*
+  Nido · v3 — Tour de bienvenida (4 pasos sobre Home)
+  Posiciones convertidas 1:1 desde las coordenadas reales de Figma (px ÷ 16 = rem)
+  para cada uno de los 4 frames "Home" con overlay de la sección UI PROTOTIPADO.
+*/
+
+.onboarding-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  background: rgba(41, 41, 41, 0.6); /* 759:4506 — antes 0.45 */
+}
+
+.onboarding-highlight {
+  position: absolute;
+  z-index: 31;
+  filter: var(--glow-onboarding-highlight);
+}
+
+.onboarding-tooltip {
+  position: absolute;
+  z-index: 31;
+  background: var(--color-white);
+  display: flex;
+  align-items: center;
+  padding: 0.8125rem 1.71875rem;
+  color: var(--color-primary-blue-dark);
+  font-size: var(--font-size-label-medium);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.25;
+}
+
+.onboarding-tooltip--tail-br {
+  border-radius: var(--radius-bubble) var(--radius-bubble) 0 var(--radius-bubble);
+}
+.onboarding-tooltip--tail-bl {
+  border-radius: var(--radius-bubble) var(--radius-bubble) var(--radius-bubble) 0;
+}
+
+.onboarding-pollito {
+  position: absolute;
+  z-index: 32; /* por encima del CTA "Siguiente": los pies pisan el botón */
+  pointer-events: none;
+}
+.onboarding-pollito__visual {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* Pivote de la animación (mascota.js) en los pies, no en el centro: así la
+     respiración/entrada crece hacia arriba desde donde pisa el botón, sin
+     despegar los pies de él. */
+  transform-origin: 50% 100%;
+}
+.onboarding-pollito--mirror .onboarding-pollito__visual {
+  transform: scaleX(-1);
+}
+
+.onboarding-blob {
+  position: absolute;
+  z-index: 29;
+  pointer-events: none;
+}
+
+.onboarding-cta {
+  position: absolute;
+  z-index: 31;
+  left: var(--space-page-margin);
+  top: 46.125rem; /* 738px */
+  width: calc(100% - 2 * var(--space-page-margin));
+}
+
+.onboarding-glow-title {
+  position: absolute;
+  z-index: 31;
+  left: var(--space-page-margin);
+  top: 15.75rem; /* 252px */
+  width: calc(100% - 2 * var(--space-page-margin));
+  font-size: var(--font-size-title-large);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-black);
+  text-shadow: 0px 0px 80px white, 0px 0px 12px white, 1px 1px 24px white;
+}
+
+/* ---- Paso 1 · destaca "Álbumes" (rediseño, 759:4445) ---- */
+.ob-step-1 .onboarding-highlight {
+  left: 1.25rem; top: 8.625rem; width: 6.6875rem; /* 20, 138, 107 */
+  filter: none; /* el resplandor blanco de antes ya no existe en el diseño */
+}
+/* Botón destacado: mismo tamaño que los de Home pero fondo #f5f5f8 y
+   sombra más marcada, así se lee por encima del velo. */
+.ob-step-1 .onboarding-highlight .btn--vertical {
+  background: #f5f5f8;
+  border: 0;
+  border-radius: 1.25rem;
+  padding: 0.75rem 1.25rem;
+  font-size: 1.125rem;
+  color: var(--color-primary-blue-dark);
+  box-shadow: 2px 4px 16px 0 rgba(123, 123, 135, 0.3), 2px 4px 4px 0 #868693;
+}
+.ob-step-1 .onboarding-tooltip {
+  left: 3.125rem; top: 23.8125rem; width: 12rem; height: 4.375rem; /* 50, 381, 192×70 */
+  padding: 0 1.5rem; /* texto de 144px */
+  border-radius: var(--radius-bubble) var(--radius-bubble) 0 var(--radius-bubble);
+}
+.ob-step-1 .onboarding-pollito {
+  left: 9.125rem; top: 28.1875rem; width: 16.125rem; height: 19.25rem; /* 146, 451, 258×308 */
+}
+
+/* ---- Paso 2 · destaca "Personas" (759:4520) ---- */
+.ob-step-2 .carousel {
+  padding-left: 1.25rem;
+  scroll-snap-type: none;
+}
+.ob-step-2 .onboarding-highlight {
+  left: 8.875rem; top: 8.9375rem; width: 6.6875rem; /* 142, 143, 107 */
+  filter: none;
+}
+.ob-step-2 .onboarding-highlight .btn--vertical {
+  background: #f5f5f8;
+  border: 0;
+  border-radius: 1.25rem;
+  padding: 0.75rem 1.25rem;
+  font-size: 1.125rem;
+  color: var(--color-primary-blue-dark);
+  box-shadow: 2px 4px 16px 0 rgba(123, 123, 135, 0.3), 2px 4px 4px 0 #868693;
+}
+.ob-step-2 .onboarding-tooltip {
+  left: 9.75rem; top: 23.8125rem; width: 13.5rem; height: 5.625rem; /* 156, 381, 216×90 */
+  padding: 0 1.71875rem; /* texto de 161px */
+  border-radius: var(--radius-bubble) var(--radius-bubble) var(--radius-bubble) 0;
+}
+.ob-step-2 .onboarding-pollito {
+  left: -1.875rem; top: 28.0625rem; width: 15.625rem; height: 19.5rem; /* -30, 449, 250×312 */
+}
+
+/* ---- Paso 3 · destaca "Yo" (759:4608) ---- */
+.ob-step-3 .carousel {
+  padding-left: 1.25rem;
+  scroll-snap-type: none;
+}
+.ob-step-3 .onboarding-highlight {
+  left: 16.625rem; top: 8.75rem; width: 6.6875rem; /* 266, 140, 107 */
+  filter: none;
+}
+.ob-step-3 .onboarding-highlight .btn--vertical {
+  background: #f5f5f8;
+  border: 0;
+  border-radius: 1.25rem;
+  padding: 0.75rem 1.25rem;
+  font-size: 1.125rem;
+  color: var(--color-primary-blue-dark);
+  box-shadow: 2px 4px 16px 0 rgba(123, 123, 135, 0.3), 2px 4px 4px 0 #868693;
+}
+.ob-step-3 .onboarding-tooltip {
+  left: 7.8125rem; top: 21.6875rem; width: 15.5rem; height: 5.625rem; /* 125, 347, 248×90 */
+  padding: 0 1.25rem; /* texto de 208px */
+  border-radius: var(--radius-bubble) var(--radius-bubble) var(--radius-bubble) 0;
+}
+.ob-step-3 .onboarding-pollito {
+  /* caja 262.65×345.6 con -0.52° de giro, tal cual Figma */
+  left: -0.095rem; top: 25.8709rem; width: 16.4158rem; height: 21.5997rem;
+  transform: rotate(-0.52deg);
+}
+
+/* ---- Paso 4 · destaca el título "Mis recuerdos" (759:4688) ---- */
+.ob-step-4 .carousel,
+.ob-step-5 .carousel {
+  padding-left: 1.25rem;
+  scroll-snap-type: none;
+}
+/* El título vuelve a dibujarse en blanco por encima del velo (sin botón
+   destacado en este paso). */
+.ob-step-4 .onboarding-glow-title {
+  left: 1.5rem; top: 15.75rem; /* 24, 252 */
+  width: 22.0625rem;
+  color: var(--color-white);
+  text-shadow: none;
+}
+.ob-step-4 .onboarding-tooltip {
+  left: 0.9375rem; top: 20rem; width: 13.5rem; height: 5.625rem; /* 15, 320, 216×90 */
+  padding: 0 1.21875rem; /* texto de 177px */
+  border-radius: var(--radius-bubble) var(--radius-bubble) 0 var(--radius-bubble);
+}
+.ob-step-4 .onboarding-pollito,
+.ob-step-5 .onboarding-pollito {
+  left: -1.875rem; top: 28.0625rem; width: 15.625rem; height: 19.5rem; /* -30, 449, 250×312 */
+}
+
+/* ---- Onboarding dentro de Álbumes (757:4368) ---- */
+.ob-albumes .onboarding-highlight {
+  left: 1.25rem; top: 8.4375rem; width: 22.0625rem; /* 20, 135, 353 */
+  filter: none;
+}
+.ob-albumes .onboarding-highlight .albumes-new-wrap {
+  width: 100%;
+}
+.ob-albumes .onboarding-highlight .albumes-new-btn {
+  padding: 1rem 2rem; /* 16px 32px, como Figma (aquí hay hueco de sobra) */
+}
+.ob-albumes .onboarding-tooltip {
+  left: 9.1875rem; top: 24.4375rem; width: 12.9375rem; height: 4.375rem; /* 147, 391, 207×70 */
+  padding: 0 1.25rem; /* texto de 167px */
+  border-radius: var(--radius-bubble) var(--radius-bubble) var(--radius-bubble) 0;
+}
+.ob-albumes .onboarding-pollito {
+  left: -1.875rem; top: 28.0625rem; width: 15.625rem; height: 19.5rem; /* -30, 449, 250×312 */
+}
+
+/* ---- Onboarding de Álbumes · paso 2 (765:5243) ---- */
+.ob-albumes-2 .onboarding-tooltip {
+  left: 9.75rem; top: 19.3125rem; width: 12.9375rem; height: 4.375rem; /* 156, 309, 207×70 */
+  padding: 0 1.25rem;
+  border-radius: var(--radius-bubble) var(--radius-bubble) var(--radius-bubble) 0;
+}
+.ob-albumes-2 .onboarding-pollito {
+  left: -1.875rem; top: 28.0625rem; width: 15.625rem; height: 19.5rem; /* -30, 449, 250×312 */
+}
+/* "Todas tus fotos ›" de la primera tarjeta, repetido en blanco sobre el velo */
+.onboarding-caption {
+  position: absolute;
+  z-index: 31;
+  left: 2.875rem; top: 26.4375rem; /* 46, 423 */
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  font-size: var(--font-size-label-medium);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-white);
+}
+.onboarding-caption img {
+  width: 1.1875rem;
+  height: 1.1875rem;
+}
+/* El fondo de este frame de Figma solo tiene "Álbum nuevo" (a ancho completo), sin "Buscar". */
+.ob-albumes-2 .albumes-search-btn {
+  display: none;
+}
+
+/* ---- Onboarding de la pantalla de detalle (765:5320) ----
+   Vive DENTRO de la pantalla de detalle (sobre la foto real), no es una
+   pantalla aparte; z-index por encima de las capas de persona (40) y de
+   eliminar foto (45). */
+.detalle-onboarding {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: none;
+}
+.detalle-onboarding.is-visible {
+  display: block;
+}
+.ob-detalle [data-detalle-step="1"] .onboarding-highlight {
+  left: 1.25rem; top: 8.4375rem; width: 14.375rem; /* 20, 135, 230 */
+  filter: none;
+}
+.ob-detalle [data-detalle-step="1"] .albumes-new-wrap {
+  width: 100%;
+}
+.ob-detalle [data-detalle-step="1"] .albumes-new-btn {
+  padding: 1rem 2rem;
+}
+.ob-detalle [data-detalle-step="1"] .onboarding-tooltip {
+  left: 1.625rem; top: 23rem; width: 14.9375rem; height: 5.1875rem; /* 26, 368, 239×83 */
+  padding: 0 1.625rem; /* texto de 187px */
+  border-radius: var(--radius-bubble) var(--radius-bubble) 0 var(--radius-bubble);
+}
+.ob-detalle [data-detalle-step="1"] .onboarding-pollito {
+  left: 9.125rem; top: 28.1875rem; width: 16.125rem; height: 19.25rem; /* 146, 451, 258×308 */
+}
+
+/* ---- Onboarding del detalle · paso 2 "Eliminar" (765:5385) ---- */
+.ob-detalle [data-detalle-step][hidden] {
+  display: none;
+}
+.ob-detalle [data-detalle-step="2"] .onboarding-highlight {
+  left: 16.625rem; top: 8.4375rem; width: 6.6875rem; height: 5.3125rem; /* 266, 135, 107×85 */
+  filter: none;
+}
+.ob-detalle [data-detalle-step="2"] .onboarding-highlight .albumes-search-btn {
+  width: 100%;
+  height: 100%;
+}
+.ob-detalle [data-detalle-step="2"] .onboarding-tooltip {
+  left: 8.1875rem; top: 22.5625rem; width: 14.9375rem; height: 4.4375rem; /* 131, 361, 239×71 */
+  padding: 0 1.1875rem; /* texto de 201px */
+  border-radius: var(--radius-bubble) var(--radius-bubble) var(--radius-bubble) 0;
+}
+.ob-detalle [data-detalle-step="2"] .onboarding-pollito {
+  left: -0.4375rem; top: 28.125rem; width: 16.125rem; height: 19.25rem; /* -7, 450, 258×308 */
+}
+
+/* Todo lo destacado avanza el paso al tocarlo (ver js/app.js); el pollito no bloqueaba nada antes. */
+.onboarding-tooltip,
+.onboarding-pollito,
+.onboarding-caption,
+.onboarding-glow-title,
+.onboarding-highlight {
+  cursor: pointer;
+}
+.screen.is-active .onboarding-pollito {
+  pointer-events: auto !important;
+}
+
+/* ---- Onboarding de Yo (765:5758) ---- */
+.ob-yo .onboarding-highlight {
+  left: 1.25rem; top: 8.4375rem; width: 14.375rem; height: 5.3125rem; /* 20, 135, 230×85 */
+  filter: none;
+}
+.ob-yo .onboarding-highlight .yo-docs-btn {
+  width: 100%;
+  height: 100%;
+  box-shadow: 2px 4px 16px 0 rgba(123, 123, 135, 0.3), 2px 4px 4px 0 #868693;
+}
+.ob-yo .onboarding-tooltip {
+  left: 6.3125rem; top: 22.0625rem; width: 17rem; height: 5.6875rem; /* 101, 353, 272×91 */
+  padding: 0 1.25rem; /* texto de 232px */
+  border-radius: var(--radius-bubble);
+  border-bottom-left-radius: 0;
+}
+.ob-yo .onboarding-pollito {
+  left: -1.875rem; top: 28.0625rem; width: 15.625rem; height: 19.5rem; /* -30, 449, 250×312 */
+}
+.ob-yo .onboarding-cta {
+  top: 46rem; /* 736px */
+}
+
+/* Yo · paso 2 "Ajustes" (765:5909) */
+.ob-yo [data-layer-step][hidden] { display: none; }
+.ob-yo [data-layer-step="2"] .onboarding-highlight {
+  left: 16.625rem; top: 8.4375rem; width: 6.6875rem; height: 5.3125rem; /* 266, 135, 107×85 */
+  filter: none;
+}
+.ob-yo [data-layer-step="2"] .onboarding-highlight .albumes-search-btn {
+  width: 100%;
+  height: 100%;
+  box-shadow: 2px 4px 16px 0 rgba(123, 123, 135, 0.3), 2px 4px 4px 0 #868693;
+}
+.ob-yo [data-layer-step="2"] .onboarding-tooltip {
+  left: 8.5rem; top: 23.3125rem; width: 13.5625rem; height: 4.3125rem; /* 136, 373, 217×69 */
+  padding: 0 1.625rem; /* texto de 165px */
+  border-radius: var(--radius-bubble);
+  border-bottom-left-radius: 0;
+}
+.ob-yo [data-layer-step="2"] .onboarding-pollito {
+  left: -0.4375rem; top: 28.125rem; width: 16.125rem; height: 19.25rem; /* -7, 450, 258×308 */
+}
+.ob-yo .onboarding-cta { height: 4.25rem; } /* 68px */
+
+/* ---- Paso 5 · el pollito es el botón de ayuda (sin frame de Figma: composición propia) ---- */
+.ob-step-5 .onboarding-help-avatar {
+  z-index: 33; /* por encima del velo (30) */
+  filter: none;
+}
+/* Misma composición que el resto de pasos (p. ej. Yo · 765:5758): pollito de frente abajo a la izquierda, señalando hacia arriba (al avatar), y el
+   bocadillo sobre él con la esquina inferior izquierda recta. */
+.ob-step-5 .onboarding-tooltip {
+  left: 6.3125rem; top: 22.0625rem; width: 17rem; height: 5.6875rem; /* 101, 353, 272×91 */
+  padding: 0 1.25rem;
+}
+
+/* =====================================================================
+   Posiciones EXACTAS del elemento destacado = las del botón real que hay debajo
+   (medidas con offsetLeft/Top/Width/Height sobre la pantalla real, no las de los frames de
+   Figma, que difieren 3-7px entre sí). Si se mueve un botón real, se actualiza aquí.
+   ===================================================================== */
+.ob-step-1 .onboarding-highlight { left: 1.25rem;    top: 8.4375rem; width: 6.6875rem; height: 5.375rem; }
+.ob-step-2 .onboarding-highlight { left: 8.9375rem;  top: 8.4375rem; width: 6.6875rem; height: 5.375rem; }
+.ob-step-3 .onboarding-highlight { left: 16.625rem;  top: 8.4375rem; width: 6.6875rem; height: 5.375rem; }
+.ob-step-1 .onboarding-highlight .btn--vertical,
+.ob-step-2 .onboarding-highlight .btn--vertical,
+.ob-step-3 .onboarding-highlight .btn--vertical {
+  width: 100%; height: 100%; box-sizing: border-box; border-radius: 1.25rem;
+}
+.ob-albumes .onboarding-highlight { left: 1.25rem; top: 8.4375rem; width: 22.0625rem; height: 5.625rem; }
+.ob-albumes .onboarding-highlight .albumes-new-wrap { height: 100%; box-sizing: border-box; }
+.ob-album-nuevo .onboarding-highlight { left: 1.25rem; top: 8.4375rem; width: 10.53rem; height: 10.53rem; }
+.ob-album-nuevo .onboarding-highlight .album-grid__add-wrap { width: 100%; height: 100%; box-sizing: border-box; }
+.ob-yo [data-layer-step="1"] .onboarding-highlight { left: 1.25rem;   top: 8.6875rem; width: 14.375rem; height: 5.375rem; }
+.ob-yo [data-layer-step="2"] .onboarding-highlight { left: 16.625rem; top: 8.6875rem; width: 6.6875rem; height: 5.375rem; }
+.ob-detalle [data-detalle-step="1"] .onboarding-highlight { left: 1.25rem;   top: 8.4375rem; width: 14.375rem; height: 5.625rem; }
+.ob-detalle [data-detalle-step="2"] .onboarding-highlight { left: 16.625rem; top: 8.4375rem; width: 6.6875rem; height: 5.625rem; }
+.ob-detalle [data-detalle-step="2"] .onboarding-highlight .albumes-search-btn { box-sizing: border-box; }
+
+/* =====================================================================
+   Botones de abajo de los onboardings = los de las pantallas reales (Volver / Compartir: y=746, 68px).
+   Antes 736-738 y 65-68px: se notaba el salto al pasar del onboarding a la pantalla.
+   ===================================================================== */
+.onboarding-cta,
+.ob-yo .onboarding-cta,
+.ob-album-nuevo .onboarding-cta {
+  top: 46.625rem; /* 746px */
+  height: 4.25rem; /* 68px */
+}
+
+/* =====================================================================
+   Efecto "aquí", versión limpia (como el halo del micrófono): sin líneas ni aros sueltos; el elemento
+   queda rodeado por dos bandas translúcidas y concéntricas (la de dentro más marcada) que "respiran"
+   despacio. Sigue la forma exacta del elemento (botón, texto o círculo del avatar).
+   ===================================================================== */
+.onboarding-highlight,
+.onboarding-help-avatar,
+.onboarding-caption,
+.onboarding-glow-title {
+  animation: onboarding-pulso 1.8s ease-in-out infinite;
+}
+.onboarding-highlight { border-radius: 1.25rem; }
+/* Los textos llevan un pelín de aire para que la banda no roce las letras (el margen negativo los deja donde estaban). */
+.onboarding-caption,
+.onboarding-glow-title {
+  border-radius: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  margin: -0.25rem -0.5rem;
+}
+.ob-step-4 .onboarding-glow-title { width: fit-content; }
+@keyframes onboarding-pulso {
+  0%, 100% { box-shadow: 0 0 0 6px  rgba(255, 255, 255, 0.34), 0 0 0 12px rgba(255, 255, 255, 0.16); }
+  50%      { box-shadow: 0 0 0 10px rgba(255, 255, 255, 0.40), 0 0 0 20px rgba(255, 255, 255, 0.08); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-highlight, .onboarding-help-avatar, .onboarding-caption, .onboarding-glow-title { animation: none;
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.3), 0 0 0 16px rgba(255, 255, 255, 0.12); }
+}
+
+/* ---- Onboarding de Personas (806:7232) ---- */
+.ob-personas__title {
+  position: absolute;
+  left: 1.25rem; top: 8.1875rem; width: 22.0625rem; /* 20, 131, 353 */
+  margin: 0;
+  z-index: 31;
+  font-size: var(--font-size-label-large);
+  font-weight: var(--font-weight-bold);
+  line-height: normal;
+  color: var(--color-white);
+}
+.ob-personas .onboarding-tooltip {
+  left: 0.9375rem; top: 20rem; width: 15.3125rem; height: 5.625rem; /* 15, 320, 245×90 */
+  padding: 0 1.125rem; /* texto de 209px */
+  border-radius: var(--radius-bubble) var(--radius-bubble) 0 var(--radius-bubble);
+}
+.ob-personas .onboarding-pollito {
+  left: 8.0625rem; top: 27.8125rem; width: 16.5rem; height: 20.625rem; /* 129, 445, 264×330 */
+}
+.ob-personas .onboarding-cta {
+  top: 46rem; /* 736px */
+  height: 4.25rem; /* 68px */
+}
