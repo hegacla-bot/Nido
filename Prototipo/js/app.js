@@ -92,6 +92,7 @@
         window.Mascota.enterOnboardingPollito(layer);
       }
       if (willBeActive && !wasActive && name === 'home' && window.NidoBiblioteca) window.NidoBiblioteca.cargar();
+      if (!willBeActive && wasActive && screen.dataset.screen === 'detalle-foto') detalleMedia.querySelectorAll('.detail-media__item--recopilacion').forEach((it) => recopilacionMarcha(it, false)); // se para al salir
       if (willBeActive !== wasActive && screen.dataset.screen === 'home' && window.NidoRecuerdosVideo) setTimeout(window.NidoRecuerdosVideo, 0); // al entrar o salir de Home: vídeos de recuerdos en marcha o en pausa
       if (willBeActive && !wasActive && name === 'personas' && !personasOnboardingSeen && !nidiHablando()) {
         personasOnboardingSeen = true;
@@ -133,15 +134,7 @@
 
   function openDetalle(clickedCard) {
     const originScreen = document.querySelector('.screen.is-active');
-    let cards = Array.from(originScreen.querySelectorAll('.photo-card'));
-    // Recopilación de Mis recuerdos: se abren SUS fotos, una a una (tarjetas sueltas, fuera de la pantalla: eliminar no quita nada).
-    if (clickedCard && clickedCard.classList.contains('photo-card--recopilacion')) {
-      cards = Array.from(clickedCard.querySelectorAll('.recopilacion img')).map((img) => {
-        const c = document.createElement('div'); c.className = 'photo-card';
-        const x = img.cloneNode(false); x.classList.remove('is-activa'); c.appendChild(x); return c;
-      });
-      clickedCard = cards[0];
-    }
+    const cards = Array.from(originScreen.querySelectorAll('.photo-card'));
     detalleCards = cards.filter((c) => c.querySelector('img, video'));
     const startIndex = Math.max(0, cards.indexOf(clickedCard));
 
@@ -155,6 +148,17 @@
 
       const item = document.createElement('div');
       item.className = 'detail-media__item';
+      // Recopilación de Mis recuerdos (28-sep): en grande también se mueve, como un vídeo (detalleVideoVisible la pone en marcha).
+      const recop = card.querySelector('.recopilacion');
+      if (recop) {
+        const x = recop.cloneNode(true);
+        x.classList.remove('en-marcha');
+        x.querySelectorAll('img').forEach((im, n) => im.classList.toggle('is-activa', n === 0));
+        item.classList.add('detail-media__item--recopilacion');
+        item.appendChild(x);
+        detalleMedia.appendChild(item);
+        return;
+      }
       const clone = source.cloneNode(true);
       clone.removeAttribute('id');
       if (clone.tagName === 'VIDEO') {
@@ -190,9 +194,10 @@
   let detalleVideoTimer = null;
   function detalleVideoVisible() {
     const i = Math.round(detalleMedia.scrollLeft / detalleMedia.clientWidth);
-    detalleMedia.querySelectorAll('.detail-media__item video').forEach((v, idx) => {
-      if (idx === i) { const p = v.play(); if (p && p.catch) p.catch(() => {}); }
-      else { v.pause(); v.currentTime = 0; }
+    detalleMedia.querySelectorAll('.detail-media__item').forEach((item, idx) => {
+      const v = item.querySelector('video');
+      if (v) { if (idx === i) { const p = v.play(); if (p && p.catch) p.catch(() => {}); } else { v.pause(); v.currentTime = 0; } }
+      if (item.querySelector('.recopilacion')) recopilacionMarcha(item, idx === i);
     });
   }
   detalleMedia.addEventListener('scroll', () => {

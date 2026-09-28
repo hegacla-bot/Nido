@@ -899,7 +899,8 @@ window.PersonaSelect = (function () {
     const items = media ? media.querySelectorAll('.detail-media__item') : [];
     if (!items.length) return null;
     const i = Math.min(items.length - 1, Math.max(0, Math.round(media.scrollLeft / media.clientWidth)));
-    return items[i].querySelector('img, video');
+    // En una recopilación, la foto que se ve ahora (la felicitación y Nidi usan esa, no la primera).
+    return items[i].querySelector('.recopilacion img.is-activa') || items[i].querySelector('img, video');
   }
 
   // El botón "Felicitación" navega a la pantalla de estilos (733:2997, data-nav) y aquí solo se
