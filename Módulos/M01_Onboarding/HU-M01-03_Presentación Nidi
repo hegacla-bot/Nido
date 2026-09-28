@@ -1,1 +1,19 @@
+# HU-M01-03 · Presentación Nidi
 
+**Historia de usuario**
+Como persona mayor, quiero saber que puedo hablar con alguien si algo no lo entiendo, para sentirme acompañada desde el principio.
+
+**Criterios de aceptación**
+- Se presenta a Nidi como el asistente al que se puede hablar en cualquier momento de la app.
+- Si la familia activó la voz clonada durante el alta, aquí es donde se escucha por primera vez, con un aviso claro de que es una IA que usa la voz de un familiar, no la persona real.
+- Se muestra un ejemplo simple de para qué sirve hablarle (por ejemplo, "pregúntame por unas fotos y te las busco").
+
+**Decisiones de diseño**
+- Nota ética obligatoria: la persona mayor debe saber siempre que habla con una IA, nunca dar a entender que es la persona real (consentimiento informado).
+- La voz es alternativa al teclado, no un añadido: aquí se refuerza que hablar es tan válido como tocar.
+
+**Wireframes**
+Pendientes.
+
+**Preguntas abiertas**
+- Si la familia no activó la voz clonada, ¿qué voz se usa aquí? (hoy, en el prototipo, la voz por defecto de ElevenLabs, sin clonar).
