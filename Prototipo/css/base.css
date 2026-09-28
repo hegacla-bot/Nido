@@ -206,6 +206,9 @@ p, h1, h2, h3 {
 /* Home indicator (barra inferior del gesto)                         */
 /* ---------------------------------------------------------------- */
 
+/* 28-sep: la barra del iPhone se quita de TODAS las pantallas (pedido). En un móvil de verdad ya la pone el sistema, y dibujada en
+   la app sobraba (en el ordenador, además, no pinta nada). Se deja la regla por si vuelve: basta con quitar este display: none. */
+.home-bar { display: none !important; }
 .home-bar {
   position: absolute;
   bottom: 0;
