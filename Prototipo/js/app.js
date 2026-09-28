@@ -299,7 +299,7 @@
   let registroCode = '';
   let registroSplashTimer = null;
   let registroNidiTimer = null;
-  const REGISTRO_NIDI_MS = 3500; // el saludo de Nidi no tiene botón: pasa solo (o al tocar)
+  const REGISTRO_NIDI_MS = 4500; // el saludo de Nidi no tiene botón: pasa solo a los 4,5 s (28-sep: antes 3,5) o al tocar la pantalla
   let registroAutofillTimers = [];
 
   function clearRegistroAutofillTimers() {
