@@ -93,6 +93,8 @@
         window.Mascota.enterOnboardingPollito(layer);
       }
       if (willBeActive && !wasActive && name === 'home' && window.NidoBiblioteca) window.NidoBiblioteca.cargar();
+      if (!willBeActive && wasActive && screen.dataset.screen === 'album-seleccionar') setTimeout(dejarDeElegirDeRecuerdo, 0); // vuelve a enseñar todas
+      if (willBeActive && !wasActive && screen.dataset.screen === 'detalle-foto') setTimeout(detalleVideoVisible, 0); // al volver: el recuerdo sigue
       if (!willBeActive && wasActive && screen.dataset.screen === 'detalle-foto') detalleMedia.querySelectorAll('.detail-media__item--recopilacion').forEach((it) => recopilacionMarcha(it, false)); // se para al salir
       if (willBeActive !== wasActive && screen.dataset.screen === 'home' && window.NidoRecuerdosVideo) setTimeout(window.NidoRecuerdosVideo, 0); // al entrar o salir de Home: vídeos de recuerdos en marcha o en pausa
       if (willBeActive && !wasActive && name === 'personas' && !personasOnboardingSeen && !nidiHablando()) {
@@ -547,6 +549,9 @@
     const icon = toggleBtn.querySelector('img');
 
     function updateState() {
+      // Sin nada que desplazar (p. ej. «¿Con qué foto?» con las 6 de un recuerdo) la flecha sobra (28-sep).
+      // (el contenido lleva 220px de aire abajo para que la flecha no tape fotos: si solo sobra eso, no hay nada más que ver)
+      toggleBtn.hidden = content.scrollHeight - content.clientHeight < 140;
       const scrolled = content.scrollTop > 4;
       icon.src = scrolled
         ? 'assets/icons/icon-arrow-narrow-up-blue.svg'
@@ -554,6 +559,8 @@
       toggleBtn.setAttribute('aria-label', scrolled ? 'Volver arriba' : 'Bajar');
     }
     content.addEventListener('scroll', updateState);
+    if ('ResizeObserver' in window) new ResizeObserver(() => updateState()).observe(content);
+    new MutationObserver(() => requestAnimationFrame(updateState)).observe(content, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
 
     toggleBtn.addEventListener('click', () => {
       const scrolled = content.scrollTop > 4;
@@ -732,6 +739,43 @@
     if (t) t.textContent = selectTarget === 'felicitacion' ? 'Elige una foto' : 'Elige las fotos a añadir';
     contarSeleccion();
   }
+  // Felicitación desde un recuerdo que es una recopilación (28-sep): como las fotos van pasando solas, en vez de coger «la que esté
+  // delante» se para y se pregunta «¿Con qué foto?» en la misma pantalla de elegir, mostrando SOLO las fotos de ese recuerdo y con la
+  // que se estaba viendo ya marcada (si era esa, basta con «Continuar»). «Volver» regresa al recuerdo.
+  let eligiendoDeRecuerdo = false;
+  function elegirFotoDeRecuerdo(item) {
+    const recop = item.querySelector('.recopilacion');
+    recopilacionMarcha(item, false);
+    const srcs = Array.from(recop.querySelectorAll('img')).map((i) => i.src);
+    const activa = (recop.querySelector('img.is-activa') || recop.querySelector('img')).src;
+    selectTarget = 'felicitacion';
+    eligiendoDeRecuerdo = true;
+    const grid = document.querySelector('[data-select-grid]');
+    grid.querySelectorAll('.photo-card').forEach((c) => {
+      const m = c.querySelector('img, video');
+      c.classList.toggle('fuera-recuerdo', !m || !srcs.includes(m.src));
+      c.classList.toggle('is-selected', !!m && m.src === activa);
+    });
+    modoSeleccion();
+    const t = document.querySelector('[data-screen="album-seleccionar"] .page-title');
+    if (t) t.textContent = '¿Con qué foto?';
+    showScreen('album-seleccionar');
+  }
+  function dejarDeElegirDeRecuerdo() {
+    if (!eligiendoDeRecuerdo) return;
+    eligiendoDeRecuerdo = false;
+    document.querySelectorAll('[data-select-grid] .fuera-recuerdo').forEach((c) => c.classList.remove('fuera-recuerdo'));
+  }
+  document.addEventListener('click', (event) => {
+    const b = event.target.closest('[data-screen="detalle-foto"] [data-persona-action="felicitacion"]');
+    if (!b) return;
+    const i = Math.max(0, Math.round(detalleMedia.scrollLeft / detalleMedia.clientWidth));
+    const item = detalleMedia.querySelectorAll('.detail-media__item')[i];
+    if (!item) return;
+    if (item.querySelector('.recopilacion')) { event.stopImmediatePropagation(); event.preventDefault(); elegirFotoDeRecuerdo(item); return; }
+    const v = item.querySelector('video'); if (v) v.pause(); // vídeo: la felicitación sale del fotograma que se ve, sin que avance
+  }, true);
+
   function abrirElegirFotoFelicitacion() {
     selectTarget = 'felicitacion';
     document.querySelectorAll('[data-select-grid] .is-selected').forEach((c) => c.classList.remove('is-selected'));
@@ -748,6 +792,7 @@
     if (event.target.closest('[data-select-add]') && selectTarget === 'felicitacion') {
       const el = document.querySelector('[data-select-grid] .is-selected img, [data-select-grid] .is-selected video');
       if (el) window.PersonaSelect.felicitacionConFoto(el);
+      if (eligiendoDeRecuerdo) window.felicitacionOrigin = 'detalle'; // «Volver» de los estilos y del resultado regresa al recuerdo
     }
     if (event.target.closest('[data-select-add]') && selectTarget === 'nuevo' && NidoAlbums.current) {
       const album = NidoAlbums.current;
@@ -2335,7 +2380,7 @@
       if (destination === 'persona-back') destination = personaReturn;
       if (destination === 'felicitacion-back') destination = window.felicitacionOrigin === 'yo' ? 'yo' : 'detalle-foto';
       if (destination === 'select-back') {
-        if (selectTarget === 'felicitacion') destination = pressable.hasAttribute('data-select-add') ? 'felicitacion-estilo' : 'yo';
+        if (selectTarget === 'felicitacion') destination = pressable.hasAttribute('data-select-add') ? 'felicitacion-estilo' : (eligiendoDeRecuerdo ? 'detalle-foto' : 'yo');
         else destination = selectTarget === 'nuevo' ? 'album-nuevo' : 'album-detalle';
       }
       // Volver desde las cuadrículas de Imágenes/Vídeos a la ficha de la persona, sin tocar a dónde vuelve ésta.

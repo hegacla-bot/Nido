@@ -402,3 +402,7 @@
   font-size: var(--font-size-label-small);
   font-weight: var(--font-weight-regular);
 }
+
+/* «¿Con qué foto?» desde un recuerdo (28-sep): solo las fotos de ese recuerdo. */
+[data-select-grid] .photo-card.fuera-recuerdo { display: none; }
+.albumes-more[hidden] { display: none; } /* sin nada que desplazar (app.js, data-scroll-toggle) */
