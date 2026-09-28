@@ -1,1 +1,17 @@
+# HU-M02-03 · Onboarding personas
 
+**Historia de usuario**
+Como persona mayor, quiero entender que tocando una cara encuentro a esa persona, para no tener que escribir ningún nombre.
+
+**Criterios de aceptación**
+- Se muestra, con un ejemplo real (una cara ya reconocida), cómo tocarla lleva a sus fotos.
+- Se explica que se puede nombrar por voz a alguien nuevo sin identificar, sin usar teclado.
+
+**Decisiones de diseño**
+- Aplicación directa del principio "solo toca" al buscador: sustituye cualquier campo de texto por reconocimiento facial más confirmación.
+
+**Wireframes**
+Pendientes.
+
+**Preguntas abiertas**
+- Ninguna por ahora.
