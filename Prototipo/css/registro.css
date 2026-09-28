@@ -150,13 +150,13 @@
   color: var(--color-primary-blue);
 }
 .registro-nidi-title {
-  top: 15.9375rem; /* 255px */
+  top: 16.5625rem; /* 265px: 10px más abajo, como en la exportación de Figma del 28-sep */
   width: 17.1875rem; /* 275px */
   font-size: 2rem; /* 32px */
   font-weight: var(--font-weight-bold);
 }
 .registro-nidi-subtitle {
-  top: 19.125rem; /* 306px: 51px bajo el título, como antes */
+  top: 19.75rem; /* 316px: 51px bajo el título */
   width: 14.375rem; /* 230px */
   font-size: var(--font-size-label-large); /* 20px */
   font-weight: var(--font-weight-regular);
