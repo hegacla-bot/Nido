@@ -73,8 +73,14 @@
       screen.classList.toggle('is-active', willBeActive);
 
       if (screen.classList.contains('screen--onboarding')) {
-        // Cada tutorial lleva una copia del recuerdo en vídeo: solo se reproduce el de la pantalla que se ve.
-        screen.querySelectorAll('video').forEach((v) => { if (willBeActive) { const p = v.play(); if (p && p.catch) p.catch(() => {}); } else v.pause(); });
+        // El tour enseña la Home y los Álbumes DE VERDAD (28-sep: salía la Home antigua con fotos de ejemplo): al entrar, se copian los
+        // recuerdos y álbumes reales (sincronizarCopiasTour) y, si la biblioteca aún no está en pantalla, se carga ya.
+        if (willBeActive && !wasActive) {
+          if (window.NidoBiblioteca) window.NidoBiblioteca.cargar();
+          sincronizarCopiasTour();
+        }
+        // Solo se reproduce el primer vídeo de la pantalla que se ve (un iPhone no aguanta varios a la vez).
+        screen.querySelectorAll('video').forEach((v, i) => { if (willBeActive && i === 0) { const p = v.play(); if (p && p.catch) p.catch(() => {}); } else v.pause(); });
         if (willBeActive && !wasActive) window.Mascota.enterOnboardingPollito(screen);
         if (!willBeActive && wasActive) window.Mascota.exitOnboardingPollito(screen);
       }
@@ -894,6 +900,32 @@
   }
   window.NidoRecuerdosVideo = videosRecuerdosAlDia;
 
+  // Copias del tour (onboarding-1…5 son una foto fija de Home; onboarding-albumes, de Álbumes): se rellenan con lo que hay de verdad.
+  // Los vídeos, en silencio y en bucle; las recopilaciones, quietas en su primera foto (van debajo del velo del tour).
+  function sincronizarCopiasTour() {
+    const homeReal = document.querySelector('[data-screen="home"] [data-carousel]');
+    if (homeReal && homeReal.querySelector('.photo-card')) {
+      document.querySelectorAll('.screen--onboarding .carousel').forEach((copia) => {
+        if (copia === homeReal) return;
+        copia.innerHTML = '';
+        homeReal.querySelectorAll(':scope > .photo-card').forEach((c) => {
+          const x = c.cloneNode(true);
+          x.querySelectorAll('.recopilacion').forEach((r) => r.classList.remove('en-marcha'));
+          x.querySelectorAll('video').forEach((v) => { v.muted = true; v.loop = true; v.playsInline = true; v.removeAttribute('autoplay'); v.preload = 'metadata'; });
+          copia.appendChild(x);
+        });
+        copia.scrollLeft = 0;
+      });
+    }
+    const albumesReal = document.querySelector('[data-screen="albumes"] .albumes-list');
+    if (albumesReal) {
+      document.querySelectorAll('[data-screen^="onboarding-albumes"] .albumes-list').forEach((copia) => {
+        copia.innerHTML = '';
+        albumesReal.querySelectorAll(':scope > .album-stack').forEach((a) => copia.appendChild(a.cloneNode(true)));
+      });
+    }
+  }
+
   // Título de un momento (varias fotos): fiesta si la hay, un día o un tramo de días («27–30 de enero de 2026»).
   function tituloMomento(fotos) {
     const ds = fotos.map((o) => o.d);
@@ -1000,6 +1032,7 @@
     if (ejemplo) carousel.insertBefore(ejemplo, carousel.children[1] || null); // vuelve en 2.ª posición
     carousel.scrollLeft = 0;
     vigilarVideosRecuerdos(carousel);
+    setTimeout(sincronizarCopiasTour, 0); // el tour enseña estos mismos recuerdos (y los álbumes, que se crean más abajo)
 
     // "Todas tus fotos": la cuadrícula completa (el botón "Añadir" se queda).
     const grid = document.querySelector('[data-screen="album-detalle"] .album-grid');
