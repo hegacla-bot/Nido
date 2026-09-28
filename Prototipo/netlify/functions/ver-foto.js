@@ -43,23 +43,27 @@ const SISTEMA =
   '- Si es un documento (un horario, un cartel, una entrada) y te preguntan un dato, léelo EXACTO tal como está escrito (horas, fechas, líneas, lugares) y, si hay varios, di los que respondan a la pregunta. Si el dato no aparece, dilo; no lo deduzcas. Si la imagen es pequeña o borrosa y no lees un número con total seguridad, di que no se lee bien y que conviene mirarlo en el papel, en vez de dar un número que podría estar mal.\n' +
   '- Tono amable y natural. No empieces con «En la imagen»; empieza directamente por lo que ves.';
 
-// Modo «clasificar» (27-sep): al SUBIR fotos, la app pregunta solo si cada una es un papel (DNI, horario…) para guardarla en
-// Mis documentos sin que la persona haga nada. Foto pequeña (512 px, sin EXIF), respuesta de una línea, nada se guarda.
+// Modo «clasificar» (27-sep): al SUBIR fotos, la app pregunta si cada una es un papel (DNI, horario…) para guardarla en Mis documentos
+// sin que la persona haga nada, y (28-sep) si se reconoce el lugar, para titular sus recuerdos («Venecia, enero de 2026»). Foto
+// pequeña (512 px, sin EXIF), respuesta de una línea, nada se guarda.
 const CLASIFICAR =
-  'Clasifica la imagen. Responde SOLO una línea con el formato TIPO|NOMBRE, sin nada más.\n' +
+  'Clasifica la imagen. Responde SOLO una línea con el formato TIPO|NOMBRE|LUGAR, sin nada más.\n' +
   'TIPO es uno de estos:\n' +
   '- identificativo: DNI, pasaporte, carné de conducir, tarjeta sanitaria, tarjeta de la seguridad social, tarjeta del banco.\n' +
   '- horario: horario de autobús, tren, metro, farmacia, centro de salud, misa, tienda; calendario de citas o de recogida.\n' +
   '- documento: cualquier otro papel o pantalla con texto que interese guardar: receta médica, cita del médico, carta, factura, recibo, entrada, cartel, instrucciones.\n' +
   '- foto: una foto normal (personas, paisajes, comida, animales, objetos, celebraciones), aunque salga algo de texto de fondo.\n' +
   'NOMBRE: 1 a 4 palabras en español que digan qué es, como «DNI», «Tarjeta sanitaria», «Horario de autobús», «Receta médica». Vacío si es foto.\n' +
-  'Si dudas, responde foto|';
+  'LUGAR: la ciudad o el sitio conocido donde se hizo la foto, SOLO si se reconoce con seguridad por lo que se ve (monumentos, canales, ' +
+  'paisajes o calles muy característicos): «Venecia», «París», «Sagrada Familia». Nunca lo deduzcas por las personas. Si no estás seguro, vacío.\n' +
+  'Si dudas del tipo, responde foto||';
 const TIPOS_DOC = ['identificativo', 'horario', 'documento', 'foto'];
 function leerClase(t) {
   const linea = String(t || '').split('\n').map((l) => l.trim()).find((l) => l.includes('|')) || '';
-  const [tipo, nombre] = linea.replace(/[*`«»"]/g, '').split('|').map((x) => (x || '').trim());
+  const [tipo, nombre, lugar] = linea.replace(/[*`«»"]/g, '').split('|').map((x) => (x || '').trim());
   const tp = TIPOS_DOC.includes((tipo || '').toLowerCase()) ? tipo.toLowerCase() : 'foto';
-  return { tipo: tp, nombre: tp === 'foto' ? '' : (nombre || '').slice(0, 40) };
+  const lg = (lugar || '').replace(/[.?¿]/g, '').trim();
+  return { tipo: tp, nombre: tp === 'foto' ? '' : (nombre || '').slice(0, 40), lugar: tp === 'foto' && lg && !/^(desconocido|ninguno|no|vac[ií]o)$/i.test(lg) ? lg.slice(0, 30) : '' };
 }
 
 function textoUsuario({ pregunta, personas, fecha, tipo }) {
@@ -109,7 +113,7 @@ async function conClaude(base64, datos, fin) {
     headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
     body: JSON.stringify({
       model: CLAUDE_MODELO,
-      max_tokens: 300,
+      max_tokens: datos._sistema ? 400 : 300,
       system: datos._sistema || SISTEMA,
       messages: [{ role: 'user', content: [
         { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
@@ -137,7 +141,8 @@ async function conGemini(base64, datos, fin) {
           body: JSON.stringify({
             systemInstruction: { parts: [{ text: datos._sistema || SISTEMA }] },
             contents: [{ parts: [{ text: datos._texto || textoUsuario(datos) }, { inline_data: { mime_type: 'image/jpeg', data: base64 } }] }],
-            generationConfig: { maxOutputTokens: 300 },
+            // Clasificar hace pensar más al modelo (≈760 «tokens» de razonamiento, 28-sep): con 300 se cortaba y no contestaba nada.
+            generationConfig: { maxOutputTokens: datos._sistema ? 2048 : 300 },
           }),
           signal: tope(fin),
         });

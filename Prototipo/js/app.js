@@ -64,6 +64,7 @@
 
   function showScreen(name) {
     requestAnimationFrame(() => document.querySelectorAll('.persona-fila__next').forEach(flechaFila)); // ya visible: se puede medir
+    requestAnimationFrame(() => { if (window.NidoAbrazarBurbujas) window.NidoAbrazarBurbujas(); }); // burbujas «hug»
     if (name !== currentScreen()) idlePantalla = null; // pantalla nueva: puede volver a ofrecerse ayuda si se queda quieta
     idleArmar(); // cambiar de pantalla (también por voz) cuenta como actividad
     if (window.NidoAgente && window.NidoAgente.activa && window.NidoAgenteContexto) setTimeout(() => { window.NidoAgente.contexto(window.NidoAgenteContexto('Ahora')); agenteAvisoFicha(); agentePista(); }, 400);
@@ -905,6 +906,33 @@
   }
   window.NidoRecuerdosVideo = videosRecuerdosAlDia;
 
+  // Burbujas «hug» (28-sep): cada burbuja se ajusta a su línea de texto más larga, con 16px a cada lado, sin hueco sobrante. El ancho
+  // del CSS (el de Figma) solo decide dónde se parten las líneas. Si la cola está abajo a la derecha (esquina recta), se mantiene su
+  // borde derecho para que siga apuntando al pollito (solo en el tour; en la ayuda las dos burbujas van alineadas a la izquierda). Las de la conversación con Nidi las coloca colocarPanel (que ya las abraza).
+  const BURBUJAS = '.onboarding-tooltip, .ayuda-layer__bubble, .persona-ask__bubble, .persona-ask__reply, .eliminar-foto-bubble';
+  function abrazarBurbuja(b) {
+    if (!b || b.hidden || b.closest('.ayuda-layer--nidi')) return;
+    b.style.width = ''; b.style.left = '';
+    const cs = getComputedStyle(b);
+    if (cs.display === 'none' || !b.offsetWidth) return;
+    const texto = b.querySelector('.ayuda-texto__in') || b;
+    const rg = document.createRange(); rg.selectNodeContents(texto);
+    const lineas = Array.from(rg.getClientRects()).filter((r) => r.width > 0);
+    if (!lineas.length) return;
+    const k = b.getBoundingClientRect().width / b.offsetWidth || 1; // la pantalla puede verse escalada
+    const ancho = (Math.max(...lineas.map((r) => r.right)) - Math.min(...lineas.map((r) => r.left))) / k;
+    const nuevo = Math.round((ancho + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth) + 0.3) * 10) / 10;
+    const antes = b.offsetWidth, izq = b.offsetLeft;
+    if (nuevo >= antes) return;
+    b.style.width = nuevo + 'px';
+    if (cs.position === 'absolute' && b.matches('.onboarding-tooltip') && parseFloat(cs.borderBottomRightRadius) === 0) b.style.left = (izq + antes - nuevo) + 'px';
+  }
+  function abrazarBurbujas() { document.querySelectorAll(BURBUJAS).forEach(abrazarBurbuja); }
+  window.NidoAbrazarBurbujas = abrazarBurbujas;
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => requestAnimationFrame(abrazarBurbujas));
+  // Tras cualquier toque (abre capas, cambia textos) y al cambiar de pantalla, se vuelven a ajustar (son pocas: es barato).
+  document.addEventListener('click', () => requestAnimationFrame(() => requestAnimationFrame(abrazarBurbujas)));
+
   // Copias del tour (onboarding-1…5 son una foto fija de Home; onboarding-albumes, de Álbumes): se rellenan con lo que hay de verdad.
   // Los vídeos, en silencio y en bucle; las recopilaciones, quietas en su primera foto (van debajo del velo del tour).
   function sincronizarCopiasTour() {
@@ -939,6 +967,12 @@
     if (ds.some((d) => (d.getMonth() === 0 && d.getDate() === 1) || (d.getMonth() === 11 && d.getDate() === 31))) {
       const d = ds.find((x) => x.getMonth() === 0 && x.getDate() === 1); return 'Año Nuevo ' + (d ? d.getFullYear() : nueva.getFullYear() + 1);
     }
+    // Lugar (28-sep): el sitio reconocible que más se repite, si sale en 2 fotos o más (o en la mitad) → «Venecia, enero de 2026».
+    // No hace falta que salga en todas: en un viaje muchas fotos son interiores o caras de cerca, sin nada que diga dónde.
+    const cuenta = {};
+    fotos.forEach((o) => { if (o.f && o.f.nidoLugar) cuenta[o.f.nidoLugar] = (cuenta[o.f.nidoLugar] || 0) + 1; });
+    const [lugar, veces] = Object.entries(cuenta).sort((a, b) => b[1] - a[1])[0] || [];
+    if (lugar && (veces >= 2 || veces * 2 >= fotos.length)) return lugar + ', ' + MESES[nueva.getMonth()] + ' de ' + nueva.getFullYear();
     const mismoDia = nueva.toDateString() === vieja.toDateString();
     if (mismoDia) return tituloRecuerdo(nueva);
     if (nueva.getMonth() === vieja.getMonth() && nueva.getFullYear() === vieja.getFullYear()) return vieja.getDate() + '–' + nueva.getDate() + ' de ' + MESES[nueva.getMonth()] + ' de ' + nueva.getFullYear();
@@ -1123,7 +1157,7 @@
       });
       if (!res.ok) return null;
       const j = await res.json();
-      return j && DOC_SECCION[j.tipo] ? j : null;
+      return j && (DOC_SECCION[j.tipo] || j.lugar) ? j : null;
     } catch (e) { return null; }
   }
   function ponerEnDocumentos(file, clase) {
@@ -1144,11 +1178,19 @@
   async function buscarDocumentos(nuevos) {
     const imgs = nuevos.filter((f) => f.type.startsWith('image/')).slice(0, 12);
     const docs = [];
+    let conLugar = 0;
     for (let i = 0; i < imgs.length; i += 3) { // de 3 en 3: rápido sin pasarse del límite por minuto del modelo gratuito
       const r = await Promise.all(imgs.slice(i, i + 3).map(clasificarArchivo));
-      r.forEach((clase, j) => { if (clase) docs.push({ file: imgs[i + j], clase }); });
+      r.forEach((clase, j) => {
+        if (!clase) return;
+        if (clase.lugar) { imgs[i + j].nidoLugar = clase.lugar; conLugar++; } // «Venecia»: titula sus recuerdos (tituloMomento)
+        if (DOC_SECCION[clase.tipo]) docs.push({ file: imgs[i + j], clase });
+      });
     }
-    if (!docs.length) return;
+    if (!docs.length) {
+      if (conLugar && window.NidoGaleria) await cargarGaleria(window.NidoGaleria.items.map((it) => it.file).filter(Boolean)); // títulos con lugar
+      return;
+    }
     docs.forEach((d) => { archivosDocumento.add(d.file); ponerEnDocumentos(d.file, d.clase); });
     const resto = (window.NidoGaleria ? window.NidoGaleria.items.map((it) => it.file) : []).filter((f) => f && !archivosDocumento.has(f));
     if (resto.length) await cargarGaleria(resto); // se rehace la galería sin los papeles (las caras ya analizadas no se repiten)
@@ -1171,6 +1213,7 @@
           const b = await (await fetch(m.src)).blob();
           const f = new File([b], m.src.split('/').pop(), { type: b.type || (m.tipo === 'video' ? 'video/mp4' : 'image/jpeg'), lastModified: new Date(m.fecha).getTime() });
           if (m.poster) f.nidoPoster = m.poster;
+          if (m.lugar) f.nidoLugar = m.lugar; // calculado una vez con el mismo modo «clasificar» (tools/lugares-biblioteca)
           return f;
         }));
       })();
@@ -1459,7 +1502,7 @@
     const layer = ayudaBuild();
     const ni = layer.querySelector('[data-ayuda-texto]');
     const inn = ni.querySelector('.ayuda-texto__in');
-    if (!layer.classList.contains('ayuda-layer--nidi')) { ni.style.top = ''; ni.style.width = ''; layer.querySelector('[data-ayuda-tu]').style.width = ''; if (inn) { inn.style.maxHeight = ''; inn.classList.remove('es-largo'); } return; }
+    if (!layer.classList.contains('ayuda-layer--nidi')) { ni.style.top = ''; ni.style.width = ''; layer.querySelector('[data-ayuda-tu]').style.width = ''; if (inn) { inn.style.maxHeight = ''; inn.classList.remove('es-largo'); } layer.querySelectorAll('.ayuda-layer__bubble').forEach(abrazarBurbuja); return; }
     const tu = layer.querySelector('[data-ayuda-tu]');
     const sug = layer.querySelector('[data-sugerencias]');
     // Ancho ajustado a la línea más larga (25-sep): con varias líneas, «fit-content» se queda en el ancho máximo y dejaba un hueco
@@ -1479,7 +1522,7 @@
     abrazar(tu, tu);
     abrazar(ni, inn || ni);
     const pad = parseFloat(getComputedStyle(ni).paddingTop) + parseFloat(getComputedStyle(ni).paddingBottom);
-    const top = !tu.hidden && layer.classList.contains('ayuda-layer--respuesta') ? tu.offsetTop + tu.offsetHeight + 12 : 111;
+    const top = !tu.hidden && layer.classList.contains('ayuda-layer--respuesta') ? tu.offsetTop + tu.offsetHeight + 12 : 100; // 100: bajo el logo (28-sep)
     ni.style.top = top + 'px';
     if (!inn) return;
     const limite = (sug && sug.offsetHeight ? sug.offsetTop : 536) - 12; // donde empiezan las sugerencias

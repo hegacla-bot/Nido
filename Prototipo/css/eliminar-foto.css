@@ -33,7 +33,7 @@
   /* tl/tr/bl 32px, br 0 — la esquina sin redondear apunta hacia el
      pollito, como el pico de una burbuja de diálogo. */
   border-radius: 2rem 2rem 0 2rem;
-  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
+  padding: var(--bubble-pad-y) var(--bubble-pad-x) var(--bubble-pad-b); /* 16 por los cuatro lados: todas las burbujas igual */
   display: flex;
   align-items: center;
   font-size: 1.125rem; /* 18px */

@@ -230,7 +230,7 @@
   width: 13.0625rem; /* 209px */
   box-sizing: border-box;
   margin: 0;
-  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
+  padding: var(--bubble-pad-y) var(--bubble-pad-x) var(--bubble-pad-b); /* 16 por los cuatro lados: todas las burbujas igual */
   display: flex;
   align-items: center;
   background: var(--color-white);
@@ -476,7 +476,7 @@
   width: 13.0625rem; /* 209px */
   box-sizing: border-box;
   margin: 0;
-  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
+  padding: var(--bubble-pad-y) var(--bubble-pad-x) var(--bubble-pad-b); /* 16 por los cuatro lados: todas las burbujas igual */
   display: flex;
   align-items: center;
   background: var(--color-primary-blue-light);
@@ -497,7 +497,7 @@
 }
 [data-album-ask].is-confirming .persona-ask__reply {
   height: auto;
-  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
+  padding: var(--bubble-pad-y) var(--bubble-pad-x) var(--bubble-pad-b); /* 16 por los cuatro lados: todas las burbujas igual */
   font-size: var(--font-size-label-medium);
   white-space: nowrap;
   overflow: hidden;
@@ -537,7 +537,7 @@
 }
 .ob-album-nuevo .onboarding-tooltip {
   left: 2.0625rem; top: 29.0312rem; width: 13.5rem; height: auto; /* 33, 391, 216×70 */
-  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
+  padding: var(--bubble-pad-y) var(--bubble-pad-x) var(--bubble-pad-b); /* 16 por los cuatro lados: todas las burbujas igual */
   border-radius: var(--radius-bubble) var(--radius-bubble) 0 var(--radius-bubble);
 }
 .ob-album-nuevo .onboarding-pollito {
@@ -566,7 +566,7 @@
   width: 13.0625rem; /* 209px */
   box-sizing: border-box;
   margin: 0;
-  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
+  padding: var(--bubble-pad-y) var(--bubble-pad-x) var(--bubble-pad-b); /* 16 por los cuatro lados: todas las burbujas igual */
   display: flex;
   align-items: center;
   color: var(--color-primary-blue-dark);
@@ -580,8 +580,8 @@
    primera pantalla: cuando hay respuesta (`--respuesta`) se oculta. */
 .ayuda-layer__bubble--hola {
   left: 1.25rem;
-  top: 6.9375rem; /* 111px: con alto = texto (2 líneas = 69px) el par sigue anclado al pollito como en Figma */
-  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
+  top: 6.25rem; /* 100px, justo bajo el logo (28-sep: con 16px de relleno las burbujas crecen y hacía falta sitio) */
+  padding: var(--bubble-pad-y) var(--bubble-pad-x) var(--bubble-pad-b); /* 16 por los cuatro lados: todas las burbujas igual */
   background: var(--color-white);
   border-radius: 2rem;
 }
@@ -603,8 +603,8 @@
 /* Nidi: blanco, esquina inferior derecha recta. En la primera pantalla va debajo del saludo, en 20,171 (814:13883). */
 .ayuda-layer__bubble--nidi {
   left: 1.25rem;
-  top: 12rem; /* 192px: su borde inferior sigue en 261px (Figma 814:13883), 12px bajo el saludo */
-  padding: var(--bubble-pad-y) var(--bubble-pad-x); /* 10 arriba y abajo, 16 a los lados: todas las burbujas igual */
+  top: 11.8125rem; /* 189px: 12px bajo el saludo (alto 77) */
+  padding: var(--bubble-pad-y) var(--bubble-pad-x) var(--bubble-pad-b); /* 16 por los cuatro lados: todas las burbujas igual */
   background: var(--color-white);
   border-radius: 2rem 2rem 0 2rem;
 }
@@ -623,10 +623,10 @@
    su giro de −4,97° ya aplicado; llega al borde derecho de la pantalla (que lo recorta, como en Figma). */
 .ayuda-layer__pollito {
   position: absolute;
-  left: 9.0625rem; /* 145px */
-  top: 17rem; /* 272px */
-  width: 15.5rem; /* 248px */
-  height: 16.375rem; /* 262px */
+  left: 9.8125rem; /* 157px: sigue saliéndose por la derecha, como en Figma */
+  top: 17.375rem; /* 278px: 12px bajo la burbuja de Nidi (28-sep) */
+  width: 14.75rem; /* 236px: un 5 % más pequeño, para dejar 21px hasta el micrófono */
+  height: 15.5625rem; /* 249px */
   max-width: none;
   pointer-events: none;
   z-index: 1;
@@ -882,7 +882,7 @@
 /* Con Nidi, el saludo fijo («¡Hola! ¿En qué te puedo ayudar?») sobra: Nidi ya saluda con su voz y su frase va en su bocadillo,
    que sube al sitio del saludo. */
 .ayuda-layer--nidi .ayuda-layer__bubble--hola { display: none; }
-.ayuda-layer--nidi:not(.ayuda-layer--respuesta) .ayuda-layer__bubble--nidi { top: 6.9375rem; }
+.ayuda-layer--nidi:not(.ayuda-layer--respuesta) .ayuda-layer__bubble--nidi { top: 6.25rem; }
 
 /* 25-sep: nombres centrados bajo su círculo (antes a la izquierda: con largos distintos la cuadrícula se veía torcida). */
 .persona-item__name {
