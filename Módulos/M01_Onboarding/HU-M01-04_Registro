@@ -1,1 +1,20 @@
+# HU-M01-04 · Registro
 
+**Historia de usuario**
+Como familiar, quiero dar de alta a mi familiar mayor e invitar al círculo, para que pueda empezar a usar la app sin fricción.
+
+**Criterios de aceptación**
+- El familiar introduce el número de teléfono de la persona mayor (se verifica después en su propio dispositivo, ver HU-M01-02_Log in).
+- El familiar completa sus propios datos (email, nombre) desde su cuenta ya verificada; la persona mayor nunca teclea credenciales.
+- El familiar puede invitar a más miembros del círculo en el mismo flujo.
+- Si quiere activar la voz clonada del asistente, graba el audio aquí mismo, en el mismo flujo, no en un paso aparte.
+
+**Decisiones de diseño**
+- Arquitectura ligera: la identidad es el número de teléfono verificado; el círculo familiar se forma por invitación explícita de alguien ya verificado, nunca de forma automática ni escaneando una agenda.
+- Este es el único punto de todo el producto donde alguien teclea datos "técnicos" (email, nombre), y es el familiar, nunca la persona mayor.
+
+**Wireframes**
+Pendientes.
+
+**Preguntas abiertas**
+- ¿Cuántos familiares mínimo hacen falta para considerar el círculo "completo" y empezar a activar el aviso por silencio?
