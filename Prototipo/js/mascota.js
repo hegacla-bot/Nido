@@ -24,9 +24,11 @@ window.Mascota = (function () {
     );
   }
 
-  function startIdle(el) {
+  // Respiración «de lado» (28-sep, a prueba en el paso 5 del tour: data-respira="lado"): se ensancha como una tripa que se hincha y
+  // apenas crece hacia arriba, así no se come el hueco con la burbuja. La normal crece un 3 % hacia arriba desde los pies.
+  function startIdle(el, deLado) {
     el.animate(
-      [{ transform: 'scale(1)' }, { transform: 'scale(1.03)' }],
+      deLado ? [{ transform: 'scale(1, 1)' }, { transform: 'scale(1.025, 1.008)' }] : [{ transform: 'scale(1)' }, { transform: 'scale(1.03)' }],
       { duration: 4200, easing: EASE_AMBIENT, iterations: Infinity, direction: 'alternate' }
     );
   }
@@ -38,7 +40,7 @@ window.Mascota = (function () {
 
     playEntrance(visual)
       .finished.then(() => {
-        if (!selfAnimating) startIdle(visual);
+        if (!selfAnimating) startIdle(visual, sectionEl.dataset.respira === 'lado');
       })
       .catch(() => {}); // se cancela si el usuario ya cambió de pantalla
   }
