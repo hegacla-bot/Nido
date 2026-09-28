@@ -195,6 +195,7 @@
   let detalleVideoTimer = null;
   function detalleVideoVisible() {
     const i = Math.round(detalleMedia.scrollLeft / detalleMedia.clientWidth);
+    if (window.PersonaCompartir) setTimeout(window.PersonaCompartir.preparar, 0); // «Compartir» listo para abrir el menú al tocar
     detalleMedia.querySelectorAll('.detail-media__item').forEach((item, idx) => {
       const v = item.querySelector('video');
       if (v) { if (idx === i) { const p = v.play(); if (p && p.catch) p.catch(() => {}); } else { v.pause(); v.currentTime = 0; } }

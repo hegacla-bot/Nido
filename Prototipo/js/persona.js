@@ -1102,6 +1102,45 @@ window.PersonaSelect = (function () {
     setTimeout(() => t.classList.remove('is-visible'), 12000);
   }
 
+  // ---- Compartir la foto (o el vídeo) que se ve en el detalle (28-sep: antes compartía la felicitación y, sin ella, no pasaba nada) ----
+  // Menú de compartir del sistema (WhatsApp, Mensajes, Mail…). Safari solo lo deja abrir justo al tocar, así que el archivo se prepara
+  // ANTES (prepararCompartirFoto, al abrir el detalle y al pasar de foto) y al tocar se abre sin esperar. Si el navegador no tiene ese
+  // menú (ordenador), se descarga el archivo y se dice cómo adjuntarlo.
+  let compartirListo = null; // { el, file }
+  async function archivoDe(el) {
+    const src = el.currentSrc || el.src;
+    const blob = await (await fetch(src)).blob();
+    const video = el.tagName === 'VIDEO';
+    const tipo = blob.type || (video ? 'video/mp4' : 'image/jpeg');
+    const ext = video ? (tipo.includes('quicktime') ? 'mov' : 'mp4') : (tipo.includes('png') ? 'png' : 'jpg');
+    return new File([blob], (video ? 'video-nido.' : 'foto-nido.') + ext, { type: tipo });
+  }
+  async function prepararCompartirFoto() {
+    const el = currentPhotoEl();
+    if (!el || (compartirListo && compartirListo.el === el)) return;
+    compartirListo = null;
+    try { const file = await archivoDe(el); if (currentPhotoEl() === el) compartirListo = { el, file }; } catch (e) { /* al tocar se intenta otra vez */ }
+  }
+  async function compartirFoto() {
+    const el = currentPhotoEl();
+    if (!el) return;
+    let file = compartirListo && compartirListo.el === el ? compartirListo.file : null;
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file] }); return; } catch (err) { if (err && err.name === 'AbortError') return; }
+    }
+    try {
+      if (!file) file = await archivoDe(el);
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file] }); return; }
+    } catch (err) { if (err && err.name === 'AbortError') return; }
+    try {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(file); a.download = file.name;
+      document.body.appendChild(a); a.click(); a.remove();
+      toastOn('detalle-foto', file.type.startsWith('video') ? 'Vídeo descargado. Adjúntalo en WhatsApp' : 'Foto descargada. Adjúntala en WhatsApp');
+    } catch (e) { toastOn('detalle-foto', 'No se ha podido compartir. Inténtalo otra vez.'); }
+  }
+  window.PersonaCompartir = { preparar: prepararCompartirFoto };
+
   async function shareToWhatsApp() {
     const wa = (withText = true) => window.open('https://wa.me/' + (withText ? '?text=' + encodeURIComponent(SHARE_TEXT) : ''), '_blank', 'noopener');
     let blob;
@@ -1332,7 +1371,8 @@ window.PersonaSelect = (function () {
         return;
       }
       if (event.target.closest('[data-persona-action="compartir-whatsapp"]')) {
-        shareToWhatsApp();
+        if (event.target.closest('[data-screen="detalle-foto"]') && !event.target.closest('.persona-select-layer')) compartirFoto(); // la foto que se ve
+        else shareToWhatsApp(); // la felicitación
         return;
       }
       if (event.target.closest('[data-persona-action="mic"]')) {
