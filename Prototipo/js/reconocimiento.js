@@ -15,7 +15,10 @@ window.Reconocimiento = (function () {
   const MODELS = 'assets/models';
   const MAX_SIDE = 800;        // se reduce la foto antes de analizarla: más rápido, y las caras siguen siendo grandes
   const MATCH_DIST = 0.55;     // distancia máxima entre huellas para decir "es la misma persona" (0,6 es el estándar; algo más estricto evita falsos positivos)
-  const STORE_KEY = 'nido-personas-v1';
+  // v2 (28-sep): se empieza de cero. Tras días de pruebas, las huellas guardadas en el navegador podían estar «contaminadas» (una cara
+  // equivocada que se reforzó y arrastró más errores: a Joaquín le salían fotos que no eran suyas).
+  const STORE_KEY = 'nido-personas-v2';
+  const REFUERZO_DIST = 0.42; // solo se aprende de una cara si se parece MUCHO a la persona (más estricto que MATCH_DIST)
   const BOX_W = 393, BOX_H = 390; // caja de .detail-media__item (object-fit: cover)
 
   let ready = null;
@@ -129,8 +132,13 @@ window.Reconocimiento = (function () {
   }
 
   // Cada vez que se reconoce una cara guardada se refuerza su huella (hasta 6), para reconocerla mejor con el tiempo.
+  // 28-sep: solo si la cara nueva está muy cerca de las que ya tiene (≤ REFUERZO_DIST). Antes aprendía de cualquier coincidencia (≤ 0,55):
+  // un parecido por poco se guardaba como «su» cara y a partir de ahí confundía cada vez a más gente.
   function reinforce(person, descriptor) {
-    if (person.descriptors.length < 6) { person.descriptors.push(descriptor); save(); }
+    if (person.descriptors.length >= 6) return;
+    const cerca = Math.min(...person.descriptors.map((d) => dist(d, descriptor)));
+    if (cerca > REFUERZO_DIST) return;
+    person.descriptors.push(descriptor); save();
   }
 
   // Personas de la biblioteca de ejemplo: nombre + huellas de sus caras. Si ya hay una guardada con esa cara (aunque sin nombre)
