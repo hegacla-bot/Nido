@@ -127,7 +127,15 @@
 
   function openDetalle(clickedCard) {
     const originScreen = document.querySelector('.screen.is-active');
-    const cards = Array.from(originScreen.querySelectorAll('.photo-card'));
+    let cards = Array.from(originScreen.querySelectorAll('.photo-card'));
+    // Recopilación de Mis recuerdos: se abren SUS fotos, una a una (tarjetas sueltas, fuera de la pantalla: eliminar no quita nada).
+    if (clickedCard && clickedCard.classList.contains('photo-card--recopilacion')) {
+      cards = Array.from(clickedCard.querySelectorAll('.recopilacion img')).map((img) => {
+        const c = document.createElement('div'); c.className = 'photo-card';
+        const x = img.cloneNode(false); x.classList.remove('is-activa'); c.appendChild(x); return c;
+      });
+      clickedCard = cards[0];
+    }
     detalleCards = cards.filter((c) => c.querySelector('img, video'));
     const startIndex = Math.max(0, cards.indexOf(clickedCard));
 
@@ -867,6 +875,7 @@
   const visiblesRecuerdos = new Set();
   function videosRecuerdosAlDia() {
     const enHome = currentScreen() === 'home';
+    document.querySelectorAll('[data-screen="home"] .carousel .photo-card--recopilacion').forEach((c) => recopilacionMarcha(c, enHome && visiblesRecuerdos.has(c)));
     document.querySelectorAll('[data-screen="home"] .carousel video').forEach((v) => {
       v.loop = true; v.muted = true; v.playsInline = true;
       v.autoplay = false; v.removeAttribute('autoplay'); // el de ejemplo lo traía del HTML y arrancaba solo aunque no se viera
@@ -878,12 +887,60 @@
     visiblesRecuerdos.clear();
     if (!('IntersectionObserver' in window)) return;
     recuerdosObs = new IntersectionObserver((entradas) => {
-      entradas.forEach((e) => { const v = e.target.querySelector('video'); if (!v) return; if (e.intersectionRatio >= 0.6) visiblesRecuerdos.add(v); else visiblesRecuerdos.delete(v); });
+      entradas.forEach((e) => { const v = e.target.querySelector('video') || e.target; if (e.intersectionRatio >= 0.6) visiblesRecuerdos.add(v); else visiblesRecuerdos.delete(v); });
       videosRecuerdosAlDia();
     }, { root: carousel, threshold: [0, 0.6, 1] });
-    carousel.querySelectorAll('.photo-card').forEach((c) => { if (c.querySelector('video')) recuerdosObs.observe(c); });
+    carousel.querySelectorAll('.photo-card').forEach((c) => { if (c.querySelector('video') || c.classList.contains('photo-card--recopilacion')) recuerdosObs.observe(c); });
   }
   window.NidoRecuerdosVideo = videosRecuerdosAlDia;
+
+  // Título de un momento (varias fotos): fiesta si la hay, un día o un tramo de días («27–30 de enero de 2026»).
+  function tituloMomento(fotos) {
+    const ds = fotos.map((o) => o.d);
+    const nueva = ds[0], vieja = ds[ds.length - 1];
+    if (ds.some((d) => d.getMonth() === 11 && (d.getDate() === 24 || d.getDate() === 25))) return 'Navidad de ' + ds.find((d) => d.getMonth() === 11).getFullYear();
+    if (ds.some((d) => (d.getMonth() === 0 && d.getDate() === 1) || (d.getMonth() === 11 && d.getDate() === 31))) {
+      const d = ds.find((x) => x.getMonth() === 0 && x.getDate() === 1); return 'Año Nuevo ' + (d ? d.getFullYear() : nueva.getFullYear() + 1);
+    }
+    const mismoDia = nueva.toDateString() === vieja.toDateString();
+    if (mismoDia) return tituloRecuerdo(nueva);
+    if (nueva.getMonth() === vieja.getMonth() && nueva.getFullYear() === vieja.getFullYear()) return vieja.getDate() + '–' + nueva.getDate() + ' de ' + MESES[nueva.getMonth()] + ' de ' + nueva.getFullYear();
+    return MESES[vieja.getMonth()] + '–' + MESES[nueva.getMonth()] + ' de ' + nueva.getFullYear();
+  }
+  // Tarjeta de recopilación: las fotos apiladas; se van mostrando con fundido y zoom lento (ver .recopilacion en components.css y
+  // videosRecuerdosAlDia, que la pone en marcha solo mientras se ve). Con una sola foto, solo el zoom.
+  function recopilacionCard(fotos, titulo) {
+    const card = document.createElement('div');
+    card.className = 'photo-card photo-card--tall photo-card--recopilacion';
+    const pila = document.createElement('div');
+    pila.className = 'recopilacion' + (fotos.length === 1 ? ' recopilacion--una' : '');
+    fotos.forEach((o, i) => {
+      let url = urlDeArchivo.get(o.f);
+      if (!url) { url = URL.createObjectURL(o.f); urlDeArchivo.set(o.f, url); }
+      const img = document.createElement('img');
+      img.src = url; img.alt = ''; img.decoding = 'async';
+      if (i === 0) img.classList.add('is-activa');
+      pila.appendChild(img);
+    });
+    card.appendChild(pila);
+    card.insertAdjacentHTML('beforeend', '<div class="photo-card__gradient"></div><div class="photo-card__caption"><span></span><img src="assets/icons/icon-chevron-right.svg" alt="" /></div>');
+    card.querySelector('.photo-card__caption span').textContent = titulo;
+    if (fotos.length > 1) card.setAttribute('aria-label', titulo + ': ' + fotos.length + ' fotos');
+    return card;
+  }
+  const RECOP_MS = 2800; // cada foto de una recopilación
+  function recopilacionMarcha(card, enMarcha) {
+    const pila = card.querySelector('.recopilacion');
+    if (!pila) return;
+    pila.classList.toggle('en-marcha', enMarcha);
+    if (!enMarcha || pila.children.length < 2 || matchMedia('(prefers-reduced-motion: reduce)').matches) { clearInterval(card._recop); card._recop = null; return; }
+    if (card._recop) return;
+    card._recop = setInterval(() => {
+      const imgs = pila.children, i = Array.from(imgs).findIndex((x) => x.classList.contains('is-activa'));
+      imgs[i].classList.remove('is-activa');
+      imgs[(i + 1) % imgs.length].classList.add('is-activa');
+    }, RECOP_MS);
+  }
 
   async function cargarGaleria(files) {
     files = files.filter((f) => /^(image|video)\//.test(f.type)).slice(0, MAX_GALLERY);
@@ -902,26 +959,42 @@
     const vEj = carousel.querySelector('video');
     const ejemplo = vEj ? vEj.closest('.photo-card').cloneNode(true) : null;
     carousel.innerHTML = '';
-    // "Mis recuerdos": hasta 4 vídeos y las fotos más recientes, alternados (vídeo, foto, vídeo, foto…).
+    // «Mis recuerdos» (28-sep): solo cosas en movimiento, 5 en total. El vídeo más reciente (en bucle), el de ejemplo (la boda
+    // animada, 2.º) y RECOPILACIONES: la app agrupa las fotos de un mismo momento (hasta 3 días entre una y otra, 3 fotos o más) y las
+    // pasa una tras otra con fundido y zoom lento (recopilacionCard). Se hace en el móvil, sin nube, y vale igual para las fotos que
+    // suba la persona. Si no hay momentos suficientes, los huecos se llenan con fotos sueltas con zoom lento. Pocos a propósito:
+    // deslizar en horizontal cuesta más a las personas mayores (NN/g, Rogers et al.) y una fila corta se ve entera y se termina.
     const todos = galleryMedia(files);
     todos.forEach((m, i) => fechaDe.set(m, orden[i].d));
-    const vids = todos.filter((m) => m.tagName === 'VIDEO').slice(0, 4);
-    const fots = todos.filter((m) => m.tagName === 'IMG');
-    // 5 recuerdos en total (28-sep): los 4 más recientes (vídeo, foto, vídeo, foto) + el de ejemplo, que entra en 2.º lugar. Pocos a
-    // propósito: deslizar en horizontal cuesta más a las personas mayores (NN/g, Rogers et al.) y una fila corta se ve entera y se
-    // termina; el resto de fotos sigue en Álbumes → Todas tus fotos y en Personas.
-    const MAX_RECUERDOS = ejemplo ? 4 : 5;
-    const recuerdos = [];
-    for (let i = 0; recuerdos.length < MAX_RECUERDOS && (i < vids.length || i < fots.length); i++) {
-      if (vids[i]) recuerdos.push(vids[i]);
-      if (fots[i] && recuerdos.length < MAX_RECUERDOS) recuerdos.push(fots[i]);
-    }
-    recuerdos.slice(0, MAX_RECUERDOS).forEach((media, i) => {
-      const card = template.cloneNode(false);
-      card.className = 'photo-card photo-card--tall';
-      card.appendChild(media);
-      card.insertAdjacentHTML('beforeend', '<div class="photo-card__gradient"></div><div class="photo-card__caption"><span>' +
-        tituloRecuerdo(fechaDe.get(media)) + '</span><img src="assets/icons/icon-chevron-right.svg" alt="" /></div>');
+    const vids = todos.filter((m) => m.tagName === 'VIDEO');
+    const MAX_RECUERDOS = 5;
+    const entradas = [];
+    const video = vids[0] || null;
+    const diaDe = (d) => d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+    const diaVideo = video ? diaDe(fechaDe.get(video)) : null;
+    const fotosOrd = orden.filter((o) => o.f.type.startsWith('image/')); // ya van de la más reciente a la más antigua
+    const momentos = [];
+    fotosOrd.forEach((o) => {
+      const cur = momentos[momentos.length - 1];
+      if (cur && cur.antigua - o.d <= 3 * 864e5) { cur.fotos.push(o); cur.antigua = o.d; } else momentos.push({ fotos: [o], antigua: o.d });
+    });
+    const plazas = MAX_RECUERDOS - (video ? 1 : 0) - (ejemplo ? 1 : 0);
+    const elegidos = momentos.filter((m) => m.fotos.length >= 3 && !m.fotos.some((o) => diaDe(o.d) === diaVideo)).slice(0, plazas);
+    // Huecos: fotos sueltas (las más recientes que no estén ya en un momento elegido), cada una con su zoom lento.
+    const usadas = new Set(elegidos.flatMap((m) => m.fotos.map((o) => o.f)));
+    fotosOrd.filter((o) => !usadas.has(o.f)).slice(0, Math.max(0, plazas - elegidos.length)).forEach((o) => elegidos.push({ fotos: [o], antigua: o.d }));
+    elegidos.sort((a, b) => b.fotos[0].d - a.fotos[0].d);
+    if (video) entradas.push({ video });
+    elegidos.forEach((m) => entradas.push({ momento: m }));
+    entradas.forEach((e) => {
+      let card;
+      if (e.video) {
+        card = template.cloneNode(false);
+        card.className = 'photo-card photo-card--tall';
+        card.appendChild(e.video);
+        card.insertAdjacentHTML('beforeend', '<div class="photo-card__gradient"></div><div class="photo-card__caption"><span>' +
+          tituloRecuerdo(fechaDe.get(e.video)) + '</span><img src="assets/icons/icon-chevron-right.svg" alt="" /></div>');
+      } else card = recopilacionCard(e.momento.fotos.slice(0, 6), tituloMomento(e.momento.fotos));
       carousel.appendChild(card);
     });
     if (ejemplo) carousel.insertBefore(ejemplo, carousel.children[1] || null); // vuelve en 2.ª posición

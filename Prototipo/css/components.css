@@ -708,3 +708,41 @@
 .top-fade.is-visible {
   opacity: 1;
 }
+
+/* ---- Recopilación de Mis recuerdos (28-sep): fotos de un mismo momento, una tras otra con fundido y zoom lento ----
+   Solo se mueve con .en-marcha (mientras se ve y Home está delante: app.js, videosRecuerdosAlDia). La foto que entra hace el zoom;
+   la que sale se desvanece sin volver hacia atrás (su tamaño se reinicia cuando ya es invisible). */
+.recopilacion {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.recopilacion img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: scale(1);
+  transition: opacity 0.9s ease, transform 0s linear 0.9s;
+}
+.recopilacion img.is-activa {
+  opacity: 1;
+}
+.recopilacion.en-marcha img.is-activa {
+  transform: scale(1.08);
+  transition: opacity 0.9s ease, transform 3.7s linear;
+}
+/* Una sola foto: solo el zoom, adelante y atrás. */
+.recopilacion--una.en-marcha img.is-activa {
+  animation: recopilacion-zoom 7s ease-in-out infinite alternate;
+  transition: none;
+}
+@keyframes recopilacion-zoom {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .recopilacion img, .recopilacion.en-marcha img.is-activa { transition: opacity 0.3s ease; transform: none; animation: none; }
+}
