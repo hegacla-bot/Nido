@@ -51,7 +51,7 @@
 }
 .registro-3 .registro-subtitle,
 .registro-5 .registro-subtitle {
-  top: 11.125rem;
+  top: 11.375rem; /* 182px: 12px bajo el título de una línea (28-sep: antes 8px) */
 }
 
 .registro-display {
@@ -303,7 +303,7 @@
   color: var(--color-primary-blue-dark);
 }
 .registro-2 .registro-subtitle {
-  top: 13.5rem; /* 216px */
+  top: 13.25rem; /* 212px: 12px bajo el título de dos líneas (28-sep: antes 16px). Título → subtítulo = 12 en todo el registro */
 }
 
 /* Caja del número: sin relleno, borde azul de 1px, cursor "|" parpadeante
@@ -372,7 +372,7 @@
   width: 18.5rem; /* rompe tras "tu nuevo", como Figma */
 }
 [data-screen="ajustes-telefono"] .registro-subtitle {
-  top: 13.9rem;
+  top: 13.275rem; /* 12px bajo el título, como en el registro (28-sep: antes 22px) */
 }
 
 /* ---- Intro · 3 pantallas antes del registro (919:2649 · 888:2644 · 888:2793) ----
