@@ -593,10 +593,12 @@
   bottom: calc(100% - 16.2125rem);
 }
 .ayuda-layer--inactividad .ayuda-layer__pollito {
-  left: 7.25rem; /* 116px */
+  /* 28-sep: un 10 % más pequeño y centrado sobre el micrófono (antes 241,5×256,5 en x=116, 40px a la derecha del eje). Así hay 38px
+     hasta el halo del micro (antes 12, casi lo tocaba), casi lo mismo que del micro a «Cancelar» (40); la burbuja sigue a 20px. */
+  left: 5.5188rem; /* 88.3px: centro en 196.5, el del micrófono */
   top: 17.46875rem; /* 279.5px */
-  width: 15.09375rem; /* 241.5px */
-  height: 16.03125rem; /* 256.5px */
+  width: 13.5844rem; /* 217.35px */
+  height: 14.4281rem; /* 230.85px */
 }
 /* Nidi: blanco, esquina inferior derecha recta. En la primera pantalla va debajo del saludo, en 20,171 (814:13883). */
 .ayuda-layer__bubble--nidi {
