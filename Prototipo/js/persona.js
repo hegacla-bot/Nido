@@ -1115,13 +1115,90 @@ window.PersonaSelect = (function () {
     const ext = video ? (tipo.includes('quicktime') ? 'mov' : 'mp4') : (tipo.includes('png') ? 'png' : 'jpg');
     return new File([blob], (video ? 'video-nido.' : 'foto-nido.') + ext, { type: tipo });
   }
+  // ---- Recopilación → vídeo de verdad (28-sep): al compartir un recuerdo que es una recopilación se manda un vídeo con todas sus fotos,
+  // con el mismo fundido y zoom que en pantalla. Se graba en el móvil (lienzo + MediaRecorder, sin nube) mientras se mira el recuerdo;
+  // tarda lo que dura el vídeo (~2,2 s por foto), por eso empieza al abrirlo y no al tocar «Compartir».
+  const VID_W = 720, VID_H = 960, VID_POR_FOTO = 2200, VID_FUNDIDO = 600;
+  const videosRecop = new WeakMap(); // .recopilacion → Promise<File>
+  const itemVisible = () => {
+    const media = document.getElementById('detalle-foto-media');
+    const items = media ? media.querySelectorAll('.detail-media__item') : [];
+    if (!items.length) return null;
+    return items[Math.min(items.length - 1, Math.max(0, Math.round(media.scrollLeft / media.clientWidth)))];
+  };
+  function formatoVideo() {
+    if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) return null;
+    return ['video/mp4;codecs=avc1.42E01E', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm'].find((t) => MediaRecorder.isTypeSupported(t)) || null;
+  }
+  function videoDeRecopilacion(recop) {
+    if (videosRecop.has(recop)) return videosRecop.get(recop);
+    const tipo = formatoVideo();
+    const fotos = Array.from(recop.querySelectorAll('img'));
+    if (!tipo || fotos.length < 2) return Promise.reject(new Error('sin_video'));
+    const prom = (async () => {
+      await Promise.all(fotos.map((im) => (im.complete ? null : im.decode().catch(() => {}))));
+      const c = document.createElement('canvas'); c.width = VID_W; c.height = VID_H;
+      const ctx = c.getContext('2d');
+      const pinta = (im, alfa, zoom) => {
+        const k = Math.max(VID_W / im.naturalWidth, VID_H / im.naturalHeight) * zoom;
+        const w = im.naturalWidth * k, h = im.naturalHeight * k;
+        ctx.globalAlpha = alfa; ctx.drawImage(im, (VID_W - w) / 2, (VID_H - h) / 2, w, h);
+      };
+      const total = fotos.length * VID_POR_FOTO;
+      const rec = new MediaRecorder(c.captureStream(30), { mimeType: tipo, videoBitsPerSecond: 2500000 });
+      const trozos = []; rec.ondataavailable = (e) => { if (e.data && e.data.size) trozos.push(e.data); };
+      const fin = new Promise((ok) => { rec.onstop = ok; });
+      rec.start(500);
+      const t0 = performance.now();
+      await new Promise((ok) => {
+        const paso = () => {
+          const t = performance.now() - t0;
+          if (t >= total) { ok(); return; }
+          const i = Math.floor(t / VID_POR_FOTO), dentro = t - i * VID_POR_FOTO;
+          ctx.globalAlpha = 1; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, VID_W, VID_H);
+          pinta(fotos[i], 1, 1 + 0.08 * (dentro / VID_POR_FOTO));
+          // fundido hacia la siguiente en los últimos 600 ms (la última no funde: el vídeo acaba en ella)
+          if (i + 1 < fotos.length && dentro > VID_POR_FOTO - VID_FUNDIDO) pinta(fotos[i + 1], (dentro - (VID_POR_FOTO - VID_FUNDIDO)) / VID_FUNDIDO, 1);
+          requestAnimationFrame(paso);
+        };
+        paso();
+      });
+      rec.stop(); await fin;
+      c.width = c.height = 0;
+      const mp4 = tipo.startsWith('video/mp4');
+      return new File(trozos, 'recuerdo-nido.' + (mp4 ? 'mp4' : 'webm'), { type: mp4 ? 'video/mp4' : 'video/webm' });
+    })();
+    videosRecop.set(recop, prom);
+    prom.catch(() => videosRecop.delete(recop));
+    return prom;
+  }
+  async function compartirRecopilacion(recop) {
+    const tipo = formatoVideo();
+    if (!tipo) return false; // sin grabador: se comparte la foto que se ve
+    const prom = videoDeRecopilacion(recop);
+    const listo = await Promise.race([prom.then((f) => f, () => null), new Promise((ok) => setTimeout(() => ok(undefined), 50))]);
+    if (listo === undefined) { toastOn('detalle-foto', 'Preparando el vídeo del recuerdo… Toca Compartir otra vez en unos segundos.'); return true; }
+    if (!listo) return false;
+    try {
+      if (navigator.canShare && navigator.canShare({ files: [listo] })) { await navigator.share({ files: [listo] }); return true; }
+    } catch (err) { if (err && err.name === 'AbortError') return true; }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(listo); a.download = listo.name;
+    document.body.appendChild(a); a.click(); a.remove();
+    toastOn('detalle-foto', 'Vídeo descargado. Adjúntalo en WhatsApp');
+    return true;
+  }
+
   async function prepararCompartirFoto() {
+    const it = itemVisible(); const recop = it && it.querySelector('.recopilacion');
+    if (recop && formatoVideo()) { videoDeRecopilacion(recop).catch(() => {}); return; } // recuerdo: se prepara su vídeo
     const el = currentPhotoEl();
     if (!el || (compartirListo && compartirListo.el === el)) return;
     compartirListo = null;
     try { const file = await archivoDe(el); if (currentPhotoEl() === el) compartirListo = { el, file }; } catch (e) { /* al tocar se intenta otra vez */ }
   }
   async function compartirFoto() {
+    const it = itemVisible(); const recop = it && it.querySelector('.recopilacion');
+    if (recop && await compartirRecopilacion(recop)) return;
     const el = currentPhotoEl();
     if (!el) return;
     let file = compartirListo && compartirListo.el === el ? compartirListo.file : null;
