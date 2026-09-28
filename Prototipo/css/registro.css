@@ -164,9 +164,9 @@
 .registro-nidi-pollito {
   /* nidi-saludando-v3.webp: contorno visible de la pose de Figma (765:5997), no la caja de 346×424. */
   position: absolute;
-  /* Centrado por su peso visual, no por su caja: las rayitas del saludo están a la izquierda y el centro de masa de la imagen cae al
-     54 % de su ancho; así el cuerpo queda en el centro de la pantalla (antes parecía ir a la derecha). */
-  left: 1.425rem; /* 22.8px */
+  /* Mismo hueco a los dos lados (28-sep, pedido): de las rayitas del saludo al borde izquierdo y del ala al derecho, 36px. La imagen
+     no tiene margen transparente (el dibujo llega a sus bordes), así que basta con centrar la caja: (393 − 321) / 2. */
+  left: 2.2656rem; /* 36.25px */
   top: 24.75rem; /* 396px: 40px bajo el subtítulo */
   width: 20.0625rem; /* 321px */
   height: 18.03125rem; /* 288.5px */
