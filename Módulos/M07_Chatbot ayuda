@@ -1,1 +1,20 @@
+# M07 · Chatbot ayuda
 
+**Historia de usuario**
+Como persona mayor, quiero que aparezca ayuda cuando me quedo bloqueada, para saber siempre qué hacer a continuación.
+
+**Criterios de aceptación**
+- El pollito aparece solo ante un bloqueo real: un empty state, inactividad prolongada, o si se le invoca directamente.
+- Al tocarlo, ofrece hasta tres opciones en forma de pills, con la más segura siempre primera: 1) Todos los álbumes (volver a casa), 2) Buscar, 3) Salir.
+- Nunca aparece de forma constante en cada pantalla; no es omnipresente.
+- Movimiento sutil en reposo (respiración, parpadeo), que se activa del todo solo al tocarlo.
+
+**Decisiones de diseño**
+- Reforzado directamente por el hallazgo de testing: el pollito transmite ternura y confianza, y cuando necesitan ayuda lo buscan activamente; se plantea potenciarlo añadiendo gifs para hacerlo más dinámico.
+- Estilo 3D tipo peluche, no un modelo 3D rotable (para que nadie lo gire sin querer y se despiste); poses predefinidas: saliendo del huevo, en reposo, feliz, señalando/guiando.
+
+**Wireframes**
+Pendientes. Ya existen clips de vídeo en el prototipo v3 (`pollito-huevo`, `pollito-fotos`, `pollito-loop`), pero los tres personajes son algo distintos entre sí; pendiente regenerar con una imagen de referencia única del mismo pollito.
+
+**Preguntas abiertas**
+- ¿Tras cuántos segundos exactos de inactividad aparece? (En el documento de conocimiento se apunta a unos 20 s, pendiente de confirmar).
