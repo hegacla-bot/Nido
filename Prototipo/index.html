@@ -28,7 +28,7 @@
   <link rel="stylesheet" href="css/base.css?v=16" />
   <link rel="stylesheet" href="css/components.css?v=56" />
   <link rel="stylesheet" href="css/bienvenida.css?v=4" />
-  <link rel="stylesheet" href="css/registro.css?v=19" />
+  <link rel="stylesheet" href="css/registro.css?v=22" />
   <link rel="stylesheet" href="css/albumes.css?v=16" />
   <link rel="stylesheet" href="css/persona.css?v=29" />
   <link rel="stylesheet" href="css/yo.css?v=7" />
@@ -294,7 +294,7 @@
     <!-- REGISTRO · saludo de Nidi (765:5974) — justo tras el huevo, antes del teléfono -->
     <!-- Sin botón: avanza sola al teléfono (registro-2), o al tocar en cualquier sitio. -->
     <!-- ============================================================ -->
-    <section class="screen screen--registro registro-nidi" data-screen="registro-nidi" data-nav="registro-2">
+    <section class="screen screen--registro registro-nidi" data-screen="registro-nidi" data-nav="intro-1">
       <div class="status-bar">
         <span class="status-bar__time">9:41</span>
         <div class="status-bar__levels">
@@ -312,6 +312,62 @@
       <p class="registro-nidi-subtitle">Estoy aquí para ayudarte en lo que necesites.</p>
       <img class="registro-nidi-pollito" src="assets/img/nidi-saludando-v3.webp" alt="Nidi, el pollito, saludando" />
 
+      <div class="home-bar"><span class="home-bar__pill"></span></div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- INTRO · 3 pantallas antes del registro (Clara, 919:2649 · 888:2644 · 888:2793). Van justo después de «Hola, soy Nidi»:  -->
+    <!-- Nidi nace, se presenta y enseña qué se puede hacer; luego el registro. La ilustración de arriba (móvil inclinado con    -->
+    <!-- brillos y sombras) sale de la exportación de Clara, con su barra de estado; título, texto, puntos y botón son HTML.       -->
+    <!-- ============================================================ -->
+    <section class="screen screen--intro" data-screen="intro-1">
+      <img class="intro-ilustracion" src="assets/img/intro-1.webp" alt="Un móvil con la pantalla Personas de Nido: grupos de personas y sus fotos" />
+      <div class="intro-hoja"></div>
+      <div class="intro-contenido">
+        <div class="intro-textos">
+          <h1 class="intro-titulo">Explora fotos</h1>
+          <p class="intro-texto">Todas tus fotos organizadas sin ningún esfuerzo. Solo tienes que entrar y explorar fotos de tus momentos o personas favoritas.</p>
+        </div>
+        <div class="intro-puntos" aria-label="Pantalla 1 de 3"><span class="is-activo"></span><span></span><span></span></div>
+        <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-trailing intro-cta" data-nav="intro-2">
+          Siguiente
+          <span class="btn__icon"><img src="assets/icons/icon-arrow-narrow-right.svg" alt="" /></span>
+        </button>
+      </div>
+      <div class="home-bar"><span class="home-bar__pill"></span></div>
+    </section>
+
+    <section class="screen screen--intro" data-screen="intro-2">
+      <img class="intro-ilustracion" src="assets/img/intro-2.webp" alt="Nidi saluda a una señora que sostiene su móvil: «¡Hola! Soy Nidi ¿Con qué necesitas ayuda?»" />
+      <div class="intro-hoja"></div>
+      <div class="intro-contenido">
+        <div class="intro-textos">
+          <h1 class="intro-titulo">Nidi siempre ahí</h1>
+          <p class="intro-texto">Siempre acompañado, puedes hablar con Nidi por voz y preguntarle cualquier duda.<br />Si lo prefieres, Nidi lo hace por ti.</p>
+        </div>
+        <div class="intro-puntos" aria-label="Pantalla 2 de 3"><span></span><span class="is-activo"></span><span></span></div>
+        <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-trailing intro-cta" data-nav="intro-3">
+          Siguiente
+          <span class="btn__icon"><img src="assets/icons/icon-arrow-narrow-right.svg" alt="" /></span>
+        </button>
+      </div>
+      <div class="home-bar"><span class="home-bar__pill"></span></div>
+    </section>
+
+    <section class="screen screen--intro" data-screen="intro-3">
+      <img class="intro-ilustracion" src="assets/img/intro-3.webp" alt="Un móvil con los tipos de felicitación de Nido y dos felicitaciones del pollito" />
+      <div class="intro-hoja"></div>
+      <div class="intro-contenido">
+        <div class="intro-textos">
+          <h1 class="intro-titulo">Crea felicitaciones</h1>
+          <p class="intro-texto">Crea felicitaciones a partir de fotos para compartir con tus seres queridos.</p>
+        </div>
+        <div class="intro-puntos" aria-label="Pantalla 3 de 3"><span></span><span></span><span class="is-activo"></span></div>
+        <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-trailing intro-cta" data-nav="registro-2">
+          Empezar
+          <span class="btn__icon"><img src="assets/icons/icon-arrow-narrow-right.svg" alt="" /></span>
+        </button>
+      </div>
       <div class="home-bar"><span class="home-bar__pill"></span></div>
     </section>
 
@@ -2291,6 +2347,6 @@
   <script src="js/agente.js?v=9"></script>
   <script src="js/agente-acciones.js?v=8"></script>
   <script src="js/editor-pollitos.js?v=5"></script>
-  <script src="js/app.js?v=96"></script>
+  <script src="js/app.js?v=97"></script>
 </body>
 </html>

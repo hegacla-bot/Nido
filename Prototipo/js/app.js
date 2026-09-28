@@ -372,7 +372,7 @@
 
   function enterRegistroNidi() {
     clearTimeout(registroNidiTimer);
-    registroNidiTimer = setTimeout(() => showScreen('registro-2'), REGISTRO_NIDI_MS);
+    registroNidiTimer = setTimeout(() => showScreen('intro-1'), REGISTRO_NIDI_MS); // luego las 3 pantallas de presentación y el registro (28-sep)
   }
 
   // Pantalla de carga (registro-4). «Permitir» abre el selector de fotos del sistema y a la vez entra aquí: la carga espera a que
@@ -1223,7 +1223,7 @@
   // avatar pero con un solo bocadillo y otra pose. Una vez por visita a cada pantalla; nunca durante el alta, el tour, una foto abierta
   // o cuando ya hay otra capa, aviso o conversación en marcha. Tocar el micrófono sigue como cualquier ayuda; Cancelar la cierra.
   const AYUDA_INACTIVIDAD = 'Llevas un rato aquí. Toca el micrófono si quieres que te ayude.';
-  const IDLE_SIN_AYUDA = /^(bienvenida|registro|onboarding|ajustes-codigo|ajustes-telefono|detalle-foto)/;
+  const IDLE_SIN_AYUDA = /^(bienvenida|intro|registro|onboarding|ajustes-codigo|ajustes-telefono|detalle-foto)/;
   const IDLE_CAPAS = '.ayuda-layer.is-visible, .persona-ask.is-visible, .persona-confirm.is-visible, .eliminar-foto-layer.is-visible, [data-modal].is-visible, [data-onboarding-layer].is-visible, .detalle-onboarding.is-visible, .ob-album-nuevo.is-visible, .nido-toast.is-visible';
   function ayudaInactividad() {
     const layer = ayudaBuild();

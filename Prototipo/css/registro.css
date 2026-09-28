@@ -374,3 +374,61 @@
 [data-screen="ajustes-telefono"] .registro-subtitle {
   top: 13.9rem;
 }
+
+/* ---- Intro · 3 pantallas antes del registro (919:2649 · 888:2644 · 888:2793) ----
+   Ilustración 393×600 (lleva su barra de estado) · hoja blanca desde top 554 con esquinas de 40px · contenido 361×230 en top 578,
+   repartido: textos (gap 24, título 20 bold, texto 18) · puntos 12px (gap 16) · botón 68px. */
+.screen--intro { background: var(--color-primary-blue-lighter); }
+.intro-ilustracion {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 24.5625rem;
+  height: 37.5rem;
+}
+.intro-hoja {
+  position: absolute;
+  top: 34.625rem;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--color-white);
+  border-radius: 2.5rem 2.5rem 0 0;
+}
+.intro-contenido {
+  position: absolute;
+  top: 36.125rem;
+  left: 1rem;
+  width: 22.5625rem;
+  height: 14.375rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+}
+.intro-textos {
+  height: 6.75rem; /* 108px fijos, como en Figma: los puntos quedan a la misma altura con 2 o 3 líneas de texto */
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  text-align: center;
+  color: var(--color-primary-blue-dark);
+}
+.intro-titulo {
+  font-size: var(--font-size-label-large);
+  font-weight: var(--font-weight-bold);
+}
+.intro-texto {
+  font-size: var(--font-size-label-medium);
+  font-weight: var(--font-weight-regular);
+}
+.intro-puntos { display: flex; gap: 1rem; }
+.intro-puntos span {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--color-primary-blue-light);
+}
+.intro-puntos span.is-activo { background: var(--color-primary-blue); }
+.intro-cta { width: 100%; height: 4.25rem; }
