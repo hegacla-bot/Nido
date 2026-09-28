@@ -1898,8 +1898,9 @@
   // Nidi decía «la app no sirve para eso» cuando le preguntaban el horario del autobús, que está aquí. Ahora sabe qué papeles hay
   // (NidoAgenteContexto) y abre el que se pida por su nombre o por lo que es («el bus», «el DNI»); para leer un dato, ver_foto.
   const DOCUMENTOS_VOZ = [
-    [/\b(bus|autobus|autobuses|guagua)\b/, 'Horario de autobús'],
-    [/\btren(es)?\b/, 'Horario de tren'],
+    [/\b(bus|autobus|autobuses|guagua|linea 2[134])\b/, 'Horario de autobús'],
+    [/\b(mapa|plano|paradas?|estaciones)\b/, 'Mapa del tranvía'], // antes que el horario: «el mapa del tranvía» es el mapa
+    [/\b(tranvia|tranvias|tram|tren|trenes|l4|linea 4|luceros)\b/, 'Horario del tranvía'],
     [/\b(dni|carne de identidad|carnet de identidad|documento de identidad)\b/, 'DNI'],
     [/\beuropea\b/, 'Tarjeta sanitaria europea'],
     [/\b(tarjeta sanitaria|tarjeta del medico|tarjeta de la seguridad social|sip)\b/, 'Tarjeta sanitaria'],
@@ -1911,12 +1912,12 @@
     return Array.from(document.querySelectorAll('[data-screen="mis-documentos"] .photo-card img'))
       .filter((i) => i.alt && !vistos.has(i.alt) && vistos.add(i.alt));
   };
-  // Qué documento pide la frase: por su nombre exacto («Horario de tren») o por lo que es. null si no habla de un papel.
+  // Qué documento pide la frase: por su nombre exacto («Horario del tranvía») o por lo que es. null si no habla de un papel.
   function documentoDe(t) {
     const docs = documentosEnPantalla();
     const exacto = docs.find((i) => t.includes(normV(i.alt)));
     if (exacto) return exacto;
-    if (!/\b(horario|horarios|hora|documento|documentos|papel|papeles|dni|carne|carnet|tarjeta|cartel|entrada|entradas|bus|autobus|tren|guagua)\b/.test(t)) return null;
+    if (!/\b(horario|horarios|hora|documento|documentos|papel|papeles|dni|carne|carnet|tarjeta|cartel|entrada|entradas|bus|autobus|tren|guagua|tranvia|tram|mapa|plano|paradas?)\b/.test(t)) return null;
     const hit = DOCUMENTOS_VOZ.find(([re]) => re.test(t));
     return hit ? docs.find((i) => i.alt === hit[1]) || null : null;
   }

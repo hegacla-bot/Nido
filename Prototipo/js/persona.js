@@ -1560,11 +1560,14 @@ window.PersonaSelect = (function () {
   }
 
   // La foto o el fotograma que se está viendo, listo para enviar: máx. 896 px y recomprimida en un canvas (eso quita el EXIF y el GPS).
-  const MAX_VER = 896;
+  // Los papeles de Mis documentos van con más detalle (1600 px): en un horario, a 896 px las horas salían borrosas (28-sep).
+  const MAX_VER = 896, MAX_VER_DOC = 1600;
+  const esDocumento = (el) => Array.from(document.querySelectorAll('[data-screen="mis-documentos"] .photo-card > img')).some((i) => i.src === el.src);
   async function reducirParaVer(el) {
     const w0 = el.videoWidth || el.naturalWidth, h0 = el.videoHeight || el.naturalHeight;
     if (!w0 || !h0) throw new Error('sin_datos');
-    const k = Math.min(1, MAX_VER / Math.max(w0, h0));
+    const lado = el.tagName === 'IMG' && esDocumento(el) ? MAX_VER_DOC : MAX_VER;
+    const k = Math.min(1, lado / Math.max(w0, h0));
     const c = document.createElement('canvas');
     c.width = Math.round(w0 * k);
     c.height = Math.round(h0 * k);
@@ -1573,7 +1576,7 @@ window.PersonaSelect = (function () {
     if (url.length < 3000 && el.tagName === 'IMG') { // Safari puede devolver el canvas en blanco: se lee el archivo y se vuelve a intentar
       const blob = await (await fetch(el.currentSrc || el.src)).blob();
       const bmp = await createImageBitmap(blob);
-      const k2 = Math.min(1, MAX_VER / Math.max(bmp.width, bmp.height));
+      const k2 = Math.min(1, lado / Math.max(bmp.width, bmp.height));
       c.width = Math.round(bmp.width * k2);
       c.height = Math.round(bmp.height * k2);
       c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
@@ -1605,7 +1608,8 @@ window.PersonaSelect = (function () {
     if (window.NidoNav.current() !== 'detalle-foto') return null;
     const el = currentPhotoEl();
     if (!el) return null;
-    const [imageBase64, personas] = await Promise.all([reducirParaVer(el), personasEnFoto(el)]);
+    // En un papel (DNI, tarjeta) no se buscan caras: no hace falta y así no arranca el reconocimiento solo por eso.
+    const [imageBase64, personas] = await Promise.all([reducirParaVer(el), el.tagName === 'IMG' && esDocumento(el) ? [] : personasEnFoto(el)]);
     return { imageBase64, tipo: el.tagName === 'VIDEO' ? 'video' : 'foto', personas, fecha: fechaDeFoto(el) };
   }
 
