@@ -595,7 +595,7 @@
 .ayuda-layer--inactividad .ayuda-layer__pollito {
   /* 28-sep: un 10 % más pequeño y centrado sobre el micrófono (antes 241,5×256,5 en x=116, 40px a la derecha del eje). Así hay 38px
      hasta el halo del micro (antes 12, casi lo tocaba), casi lo mismo que del micro a «Cancelar» (40); la burbuja sigue a 20px. */
-  left: 5.5188rem; /* 88.3px: centro en 196.5, el del micrófono */
+  left: 6.7688rem; /* 108.3px: 20px a la derecha del eje del micro, para que la esquina de la burbuja caiga sobre su cabeza (28-sep) */
   top: 17.46875rem; /* 279.5px */
   width: 13.5844rem; /* 217.35px */
   height: 14.4281rem; /* 230.85px */
