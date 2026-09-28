@@ -25,7 +25,7 @@
 .eliminar-foto-bubble {
   position: absolute;
   left: 1.25rem;
-  top: 8.9375rem; /* 143px: conserva su borde inferior (212px) con alto = texto */
+  top: 10.6875rem; /* 171px, como en Figma (28-sep): cerca del pollito, no flotando */
   width: 13.0625rem; /* 209px */
   box-sizing: border-box;
   margin: 0;
@@ -52,11 +52,13 @@
   /* 25-sep: la imagen ya no es la pose recortada con mucho margen transparente sino el pollito de cuerpo entero
      (pollito-pregunta-nombre.webp, 650×745); con la caja antigua (429×416) salía gigante y cortado. Entero, a la derecha, bajo la
      burbuja (acaba a 212px) y por encima de los botones (558px). Misma proporción que la imagen. */
+  /* 28-sep: pose pensativa (mano en la barbilla, pollito-onboarding-3-v4.webp: «¿seguro?») en vez de la sorprendida, que asustaba.
+     Como en Figma: a la derecha, unos 20px bajo la burbuja y con aire antes de los botones (no los pisa). */
   position: absolute;
-  left: 7.875rem; /* 126px */
-  top: 16.25rem; /* 260px: se apoya justo encima de «Eliminar foto» (558px), como en los onboardings */
-  width: 15.8125rem; /* 253px */
-  height: 18.125rem; /* 290px */
+  left: 11.875rem; /* 190px */
+  top: 16.8125rem; /* 269px: 21px bajo la burbuja, como en Figma */
+  width: 11rem; /* 176px */
+  height: 13.7917rem; /* 220.7px */
   object-fit: contain;
   max-width: none;
   pointer-events: none;
