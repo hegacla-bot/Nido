@@ -329,6 +329,7 @@
     renderRegistroCode(screen);
     const modal = screen.querySelector('[data-registro-modal]');
     if (modal) modal.classList.remove('is-visible');
+    registroModalPaso(screen, false); // siempre empieza por «Ayúdanos»
 
     clearRegistroAutofillTimers();
     REGISTRO_DEMO_CODE.split('').forEach((digit, i) => {
@@ -435,6 +436,18 @@
     }
   });
 
+  // «Quiero saber más» cambia «Ayúdanos» por la explicación de para qué es el acceso (919:2723), dentro del mismo velo.
+  function registroModalPaso(screen, mas) {
+    const ayuda = screen.querySelector('[data-registro-modal-ayuda]');
+    const info = screen.querySelector('[data-registro-modal-mas]');
+    if (ayuda) ayuda.hidden = mas;
+    if (info) info.hidden = !mas;
+  }
+  document.addEventListener('click', (event) => {
+    if (!event.target.closest('[data-registro-saber-mas]')) return;
+    registroModalPaso(event.target.closest('.screen'), true);
+  });
+
   document.addEventListener('click', (event) => {
     if (!event.target.closest('[data-registro-resend]')) return;
     const screen = event.target.closest('.screen');
@@ -442,6 +455,7 @@
     renderRegistroCode(screen);
     const modal = screen.querySelector('[data-registro-modal]');
     if (modal) modal.classList.remove('is-visible');
+    registroModalPaso(screen, false);
   });
 
   // Botones flotantes del carrusel de "Mis recuerdos" (Home, rediseño

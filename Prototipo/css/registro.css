@@ -272,6 +272,22 @@
   height: 4.0625rem; /* 65px, medida fija en Figma */
 }
 
+/* «Quiero saber más» (919:2723): sin foto, padding 20px; el título parte en dos líneas (236px) y el texto va a 290px. */
+.registro-modal--saber-mas {
+  padding: 1.25rem;
+  animation: registro-modal-entra 0.25s ease;
+}
+.registro-modal[hidden] { display: none; } /* .registro-modal es flex: sin esto, «hidden» no la ocultaría */
+.registro-modal-title--mas { max-width: 14.75rem; }
+.registro-modal-body--mas { max-width: 18.125rem; }
+@keyframes registro-modal-entra {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .registro-modal--saber-mas { animation: none; }
+}
+
 /* ---- registro-2 · teléfono, rediseño (590:6924) ----
    Fondo blanco, logo azul, teclado claro sin sombra y footer con degradado
    (.bottom-fade). Todo acotado a .registro-2: registro-3 (código) comparte

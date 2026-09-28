@@ -28,7 +28,7 @@
   <link rel="stylesheet" href="css/base.css?v=16" />
   <link rel="stylesheet" href="css/components.css?v=56" />
   <link rel="stylesheet" href="css/bienvenida.css?v=4" />
-  <link rel="stylesheet" href="css/registro.css?v=18" />
+  <link rel="stylesheet" href="css/registro.css?v=19" />
   <link rel="stylesheet" href="css/albumes.css?v=15" />
   <link rel="stylesheet" href="css/persona.css?v=29" />
   <link rel="stylesheet" href="css/yo.css?v=7" />
@@ -202,7 +202,7 @@
       </button>
 
       <div class="registro-modal-overlay" data-registro-modal>
-        <div class="registro-modal">
+        <div class="registro-modal" data-registro-modal-ayuda>
           <img class="registro-modal-photo" src="assets/img/registro-polaroid-photos-v2.webp" alt="" />
           <p class="registro-modal-title">Ayúdanos</p>
           <p class="registro-modal-body">Permite el acceso a tu galería y organizaremos todas tus fotos automáticamente.</p>
@@ -211,8 +211,23 @@
               <span class="btn__icon"><img src="assets/icons/icon-check.svg" alt="" /></span>
               Permitir
             </button>
-            <button class="btn btn--type3 btn--horizontal btn--lg" data-nav="registro-4">
+            <button class="btn btn--type3 btn--horizontal btn--lg" data-registro-saber-mas>
               Quiero saber más
+            </button>
+          </div>
+        </div>
+        <!-- «Quiero saber más» (919:2723): misma ventana, explica para qué es el acceso. «Más tarde» sigue sin elegir fotos
+             (se ven las de ejemplo), igual que antes hacía «Quiero saber más». -->
+        <div class="registro-modal registro-modal--saber-mas" data-registro-modal-mas hidden>
+          <p class="registro-modal-title registro-modal-title--mas">¿Para qué necesitamos el acceso?</p>
+          <p class="registro-modal-body registro-modal-body--mas">Para enseñarte tus recuerdos, Nido necesita ver las fotos de tu teléfono. Se quedan siempre donde están, nosotros solo las miramos, no las movemos ni las copiamos a ningún otro sitio.</p>
+          <div class="registro-modal-actions">
+            <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-wide" data-nav="registro-4" data-pick-gallery>
+              <span class="btn__icon"><img src="assets/icons/icon-check.svg" alt="" /></span>
+              Permitir
+            </button>
+            <button class="btn btn--type3 btn--horizontal btn--lg" data-nav="registro-4">
+              Más tarde
             </button>
           </div>
         </div>
@@ -2268,6 +2283,6 @@
   <script src="js/agente.js?v=9"></script>
   <script src="js/agente-acciones.js?v=8"></script>
   <script src="js/editor-pollitos.js?v=5"></script>
-  <script src="js/app.js?v=94"></script>
+  <script src="js/app.js?v=95"></script>
 </body>
 </html>
