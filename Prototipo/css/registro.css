@@ -423,12 +423,26 @@
   font-size: var(--font-size-label-medium);
   font-weight: var(--font-weight-regular);
 }
-.intro-puntos { display: flex; gap: 1rem; }
-.intro-puntos span {
+/* Los puntos se pueden tocar para ir a esa pantalla. Se ven de 12px separados 16, pero cada uno es un botón de 28×44 para que
+   sea fácil acertar; el margen negativo mantiene la altura de 12px del diseño (los puntos no se mueven). */
+.intro-puntos { display: flex; }
+.intro-punto {
+  width: 1.75rem;
+  height: 2.75rem;
+  margin: -1rem 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.intro-punto span {
   width: 0.75rem;
   height: 0.75rem;
   border-radius: 0.5rem;
   background: var(--color-primary-blue-light);
 }
-.intro-puntos span.is-activo { background: var(--color-primary-blue); }
+.intro-punto.is-activo span { background: var(--color-primary-blue); }
 .intro-cta { width: 100%; height: 4.25rem; }
