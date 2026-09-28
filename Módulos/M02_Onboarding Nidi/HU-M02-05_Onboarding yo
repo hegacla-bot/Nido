@@ -1,1 +1,17 @@
+# HU-M02-05 · Onboarding yo
 
+**Historia de usuario**
+Como persona mayor, quiero saber qué hay en la sección "Yo", para encontrar ajustes básicos si los necesito, sin miedo a tocar algo que no debo.
+
+**Criterios de aceptación**
+- Explica brevemente qué contiene: cerrar sesión, cambiar teléfono, mis documentos.
+- No destaca "eliminar cuenta" en este tour: existe como opción, pero no se promociona a alguien que se está iniciando.
+
+**Decisiones de diseño**
+- Coherente con "nunca te hacemos sentir tonto": esta sección se presenta como un lugar tranquilo, no como un panel de control técnico.
+
+**Wireframes**
+Pendientes.
+
+**Preguntas abiertas**
+- ¿Por qué no existe una HU-M02-04? Revisar si falta un módulo del tour (por ejemplo, el de Chatbot ayuda/pollito) o si simplemente no se numeró.
