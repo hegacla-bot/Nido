@@ -1,0 +1,369 @@
+/*
+  Nido · v3 — Selección de persona en una foto (pantalla de detalle)
+
+  Mantener pulsado sobre alguien en la foto: un contorno (polígono trazado a
+  mano sobre su silueta real, ver PERSON_ZONES en persona.js) se dibuja
+  durante la pulsación con stroke-dashoffset animado por WAAPI. Al
+  completarse, una copia de la foto recortada a esa misma silueta
+  (clip-path) se "despega" un poco con drop-shadow — igual que "levantar
+  sujeto" de iOS Fotos. A diferencia de la v1 de esta función, la foto NUNCA
+  se oscurece ni se difumina: ese gesto de iOS tampoco lo hace.
+*/
+
+.persona-silhouette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.persona-silhouette__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Halo — capa TRASERA: gruesa, azul de marca, muy desenfocada. Es esto lo
+   que de verdad vende "brillando"; sin esto, el núcleo de abajo solo se ve
+   como una línea blanca plana con un borde blando (comprobado — no basta
+   con apilar drop-shadow() sobre un único trazo fino, cada drop-shadow()
+   se calcula por separado a partir del mismo trazo fino y el resultado no
+   llega a fundirse en un halo real). */
+.persona-silhouette__halo {
+  fill: none;
+  stroke: var(--color-primary-blue);
+  /* Contorno de Figma (765:5999, Vector 2): trazo azul #516DFF de 5px con desenfoque
+     gaussiano de 3px, sin núcleo blanco. El viewBox mide 100 unidades = ~393px, así que
+     5px son ~1,27 unidades. */
+  stroke-width: 1.27;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  /* blur en unidades del viewBox (1 ud ≈ 3,9px): 0,76 ud ≈ 3px reales, el desenfoque de Figma */
+  filter: blur(0.76px);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.persona-silhouette.is-holding .persona-silhouette__halo,
+.persona-silhouette.is-selected .persona-silhouette__halo {
+  opacity: 1;
+}
+
+/* Núcleo — capa DELANTERA: fina, blanca, nítida. El "filamento" caliente
+   dentro del halo — el blanco es lo que de verdad se lee como luz, un azul
+   plano (aunque grueso) se lee como tinta de color, no como brillo. */
+.persona-silhouette__glow {
+  display: none; /* el núcleo blanco se quitó: Figma solo lleva el trazo azul */
+  fill: none;
+  stroke: var(--color-white);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  /* stroke-dasharray/dashoffset: persona.js los fija en px reales
+     (path.getTotalLength()) antes de animar, nunca con el atributo
+     pathLength normalizado.
+     Nada de vector-effect:non-scaling-stroke aquí a propósito: combinado
+     con el viewBox no-uniforme (preserveAspectRatio="none") rompía el
+     dasharray — Chrome dejaba de pintar un tramo entero del trazo (el arco
+     de la cabeza) aunque getComputedStyle dijera que estaba completo.
+     Comprobado con Chrome headless quitando una propiedad cada vez. El
+     lienzo es casi cuadrado (393×390) así que la distorsión del grosor de
+     línea sin non-scaling-stroke es <1%, imperceptible. */
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 1));
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+.persona-silhouette.is-holding .persona-silhouette__glow,
+.persona-silhouette.is-selected .persona-silhouette__glow {
+  opacity: 1;
+}
+
+.persona-silhouette__lift {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0;
+  transform: scale(1);
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.persona-silhouette.is-selected .persona-silhouette__lift {
+  /* Sin "levantar" la persona: en Figma (765:5999) solo hay contorno. */
+  opacity: 0;
+  transform: scale(1.045);
+  filter: drop-shadow(0 10px 18px rgba(20, 22, 35, 0.45));
+}
+
+/* Ya no hay un <button> por persona (el hit-test es punto-en-polígono sobre
+   el propio pointerdown, ver persona.js) — pero el long-press nativo de iOS
+   ("guardar imagen") hay que seguir evitándolo en toda la foto, no solo
+   donde antes estaba el botón. */
+.detail-media__item img,
+.detail-media__item video {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+/* ================================================================ */
+/* Menú del pollito — SIN velo: la foto se queda a su brillo normal,   */
+/* igual que la referencia de iOS. La tarjeta opaca ya da suficiente   */
+/* contraste por sí sola.                                              */
+/* ================================================================ */
+
+.persona-select-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.persona-select-layer.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.persona-select-panel {
+  position: absolute;
+  left: 50%;
+  bottom: 6.5rem;
+  width: 20.5rem;
+  transform: translateX(-50%) scale(0.96);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.3s ease;
+}
+.persona-select-layer.is-visible .persona-select-panel {
+  transform: translateX(-50%) scale(1);
+}
+
+.persona-select-panel__pollito {
+  width: 6.5rem;
+  height: 6.5rem;
+  object-fit: contain;
+  margin-bottom: -1.5rem;
+  z-index: 1;
+  filter: drop-shadow(0 6px 10px rgba(26, 29, 44, 0.25));
+}
+
+/* [hidden] tiene la misma especificidad que .persona-select-card y pierde
+   por venir antes en la hoja — sin esto se ven los 3 pasos a la vez. */
+.persona-select-card[hidden],
+.persona-create-result[hidden] {
+  display: none;
+}
+
+.persona-select-card {
+  background: var(--color-white);
+  border-radius: 1.75rem;
+  padding: 1.75rem 1.25rem 1.25rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: var(--shadow-card);
+}
+.persona-select-card__title {
+  font-size: var(--font-size-label-medium);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary-blue-dark);
+  text-align: center;
+}
+.persona-select-card__detail {
+  font-size: var(--font-size-label-small);
+  color: var(--color-gray-1);
+  text-align: center;
+  word-break: break-word;
+}
+.persona-select-card__detail:empty {
+  display: none;
+}
+.persona-select-card__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+.persona-select-card__actions .btn {
+  width: 100%;
+}
+
+/* Paso "estilo" — 6 opciones no caben como botones a toda anchura sin que
+   la tarjeta se vuelva enorme (ni tiene sentido el límite de 3 pills del
+   pollito aquí, esto es una pantalla de elegir, no el aviso de "te has
+   perdido" — ver SESSION-NOTES). Cuadrícula 2 columnas, botones más
+   compactos que --lg pero igual de anchos que .btn--horizontal normal, no
+   más pequeños que eso. */
+.persona-select-card__style-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  width: 100%;
+}
+.persona-style-btn {
+  flex-direction: row;
+  justify-content: center;
+  padding: 1rem 0.5rem;
+  font-size: var(--font-size-label-medium);
+  width: 100%;
+}
+
+/* Paso "cargando" — el pollito (ya visible encima de la tarjeta) hace de
+   indicador de carga con su propia respiración; aquí solo el texto, para no
+   duplicar animación. */
+.persona-select-card--loading {
+  padding: 2.25rem 1.25rem;
+}
+.persona-select-card--loading .persona-select-card__title {
+  animation: persona-loading-pulse 1.6s ease-in-out infinite;
+}
+@keyframes persona-loading-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+/* ================================================================ */
+/* Resultado — la imagen generada por IA, a toda anchura              */
+/* ================================================================ */
+
+/* inset:0 a propósito, no una caja flotante: sin esto se veían DOS barras
+   "Volver/Compartir" a la vez, la propia y la de detalle-foto asomando por
+   debajo — este paso sí tapa la pantalla entera (a diferencia del
+   menú/velo de selección, que deja ver la foto real). */
+.persona-create-result {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-app);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0 var(--space-page-margin);
+  opacity: 0;
+  transform: scale(0.98);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.persona-create-result.is-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+.persona-create-result__frame {
+  position: relative;
+}
+.persona-create-result__img {
+  width: 100%;
+  border-radius: 1.25rem;
+  box-shadow: var(--shadow-card);
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  background: var(--color-gray-3); /* hueco visible mientras carga la imagen final */
+  display: block;
+}
+/* El pie de foto es HTML real (nunca pedido a la IA, que no escribe bien
+   tildes/ñ ni evita que se solapen letras — comprobado con "cumpleaños").
+   Una tipografía DISTINTA por tipo de creación, no la misma Fredoka
+   arcoíris para las 6 — cada `--estilo` de abajo pega con su propia
+   ilustración (fiesta, elegante, navideña, nocturna de fin de año...) en
+   vez de una sola "genérica de fiesta" puesta en todas. Solo aquí; el
+   resto de Nido sigue en Atkinson Hyperlegible.
+   Reglas compartidas por las 5 (posición/tamaño base); color, fuente y
+   contorno cambian por variante más abajo. */
+.persona-create-result__caption {
+  position: absolute;
+  top: 0.5rem;
+  left: 1rem;
+  right: 1rem;
+  text-align: center;
+  font-size: 2.75rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-shadow: 0 4px 10px rgba(26, 29, 44, 0.35);
+}
+.persona-create-result__caption:empty {
+  display: none;
+}
+
+/* Cumpleaños / Amistad — misma familia divertida y redondeada (Fredoka),
+   solo cambia la paleta: arcoíris de fiesta vs. rosa/rojo de corazones. */
+.persona-create-result__caption--cumpleanos,
+.persona-create-result__caption--amistad {
+  font-family: 'Fredoka', var(--font-family);
+  -webkit-text-stroke: 1.5px #ffffff;
+  paint-order: stroke fill;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  -webkit-background-clip: text;
+  transform: rotate(-3deg);
+}
+.persona-create-result__caption--cumpleanos {
+  /* background-image, no «background»: el atajo devolvía background-clip a la caja entera y el arcoíris salía como un recuadro
+     detrás del texto en vez de dentro de las letras (visto el 25-sep). */
+  background-image: linear-gradient(90deg, #ff5f6d, #ffc371, #6ee7b7, #38bdf8, #a78bfa, #f472b6);
+}
+.persona-create-result__caption--amistad {
+  background-image: linear-gradient(90deg, #ff6b9d, #ff9770, #ffd670, #ff6b9d);
+  /* Contorno más grueso que cumpleaños (3px, no 1.5px): la IA a veces
+     dibuja su propia cinta/banda decorativa detrás (probado — salió un
+     fondo rosa/naranja casi igual que este degradado y el texto se
+     perdía) — más contorno blanco da margen de contraste aunque el fondo
+     que le toque en cada generación sea parecido en color al texto. */
+  -webkit-text-stroke: 3px #ffffff;
+}
+
+/* Libre («otra», 25-sep): el título lo dice la persona (santo, jubilación…), así que una letra que valga para todo:
+   Fredoka blanca con borde azul de Nido, legible sobre cualquier decoración que salga. */
+.persona-create-result__caption--otra {
+  font-family: 'Fredoka', var(--font-family);
+  color: #ffffff;
+  -webkit-text-stroke: 5px var(--color-primary-blue);
+  paint-order: stroke fill;
+  font-size: 2.5rem;
+  line-height: 1.1;
+  transform: rotate(-2deg);
+}
+
+/* Aniversario — elegante, no de fiesta: serif cursiva dorada, sin el
+   contorno grueso "de pegatina" (desentonaría con "romántico"). */
+.persona-create-result__caption--aniversario {
+  font-family: 'Playfair Display', var(--font-family);
+  font-style: italic;
+  font-weight: 700;
+  color: #f4d58d;
+  -webkit-text-stroke: 0.5px #7a4f1a;
+  text-shadow: 0 2px 6px rgba(26, 29, 44, 0.45), 0 0 18px rgba(244, 213, 141, 0.5);
+  transform: none;
+}
+
+/* Navidad — tipografía navideña de verdad (no genérica de fiesta), rojo y
+   verde clásicos con contorno blanco tipo "nieve". */
+.persona-create-result__caption--navidad {
+  font-family: 'Mountains of Christmas', var(--font-family);
+  font-size: 3.25rem;
+  color: #d6483a;
+  -webkit-text-stroke: 2px #ffffff;
+  paint-order: stroke fill;
+  text-shadow: 0 3px 0 #2f6b45, 0 4px 10px rgba(26, 29, 44, 0.4);
+  transform: rotate(-2deg);
+}
+
+/* Año Nuevo — display bold de neón/fuegos artificiales, dorado sobre el
+   cielo nocturno, con más brillo (varias sombras) que las demás. */
+.persona-create-result__caption--anonuevo {
+  font-family: 'Bungee', var(--font-family);
+  font-size: 2.25rem;
+  color: #ffd166;
+  -webkit-text-stroke: 1px #7a3ea1;
+  text-shadow: 0 0 10px rgba(255, 209, 102, 0.85), 0 0 22px rgba(167, 139, 250, 0.6),
+    0 3px 8px rgba(0, 0, 0, 0.45);
+  transform: rotate(-1.5deg);
+}
+.persona-create-result__actions {
+  display: flex;
+  gap: 1rem;
+}

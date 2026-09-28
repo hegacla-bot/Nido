@@ -1,0 +1,319 @@
+/* Nido · v3 — Base */
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background: #dcdfe8;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  font-family: inherit;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+p, h1, h2, h3 {
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------- */
+/* Lienzo — SIN marco de móvil. Reproduce el frame de Figma tal cual, */
+/* a tamaño real (393×852), y se escala como bloque para caber en     */
+/* pantallas más pequeñas. Nada de bordes redondeados ni sombra de    */
+/* dispositivo: eso no está en el diseño de Figma.                   */
+/* ---------------------------------------------------------------- */
+
+.screen-canvas-wrap {
+  /* Cabía por ancho, pero no se comprobaba el alto: en una ventana poco
+     alta (o con zoom de página) el lienzo de 852px se salía por debajo
+     de lo visible — botones inferiores (Entrar, Siguiente...) fuera de
+     la vista, sin scroll evidente. El tercer término de este min()
+     calcula el ancho máximo que deja caber también el alto disponible
+     (100vh menos el padding vertical del body, 2rem+2rem). */
+  width: min(393px, 100%, calc((100vh - 4rem) * 393 / 852));
+  aspect-ratio: 393 / 852;
+  position: relative;
+}
+
+.screen-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 393px;
+  height: 852px;
+  /* El factor de escala lo calcula js/app.js (mide el ancho real disponible
+     y lo aplica aquí) — es más fiable que encadenar cqw/calc(). */
+  transform: scale(var(--canvas-scale, 1));
+  transform-origin: top left;
+  background: var(--bg-app);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.screen {
+  position: absolute;
+  inset: 0;
+  /* Blanco puro, no --bg-app (lavanda) — confirmado contra
+     get_design_context en Home/Álbumes/Álbum-detalle/Álbum-seleccionar/Yo/
+     Detalle foto (los 6 fetch de esta sesión dan bg-white sin excepción).
+     El lavanda sigue siendo el correcto SOLO en las pantallas que aún no
+     han pasado por un rediseño (Personas, Mis documentos — overrides más
+     abajo) y en el flujo de registro con inputs (.screen--registro, que ya
+     lo pone aparte y gana por orden de cascada). */
+  background: var(--color-white);
+  opacity: 0;
+  pointer-events: none;
+  /* Transición deliberadamente lenta y suave: para alguien mayor, un cambio
+     de pantalla instantáneo no da tiempo a entender que su toque ha
+     funcionado ni a dónde le ha llevado. */
+  transition: opacity 0.45s ease, transform 0.45s ease;
+  transform: scale(0.98);
+}
+/* Red de seguridad: ningún hijo de una pantalla inactiva debe poder
+   recibir clics, pase lo que pase con su propio pointer-events (un
+   elemento con .is-visible u otra clase que fuerce pointer-events:auto
+   sigue siendo clicable aunque sea invisible por el opacity:0 del
+   padre — eso causó un bug real: un modal que se quedó con "is-visible"
+   pegado desde una prueba tapaba toda la pantalla, invisible pero
+   clicable, y desviaba la navegación). */
+.screen:not(.is-active) * {
+  pointer-events: none !important;
+}
+
+.screen.is-active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+/* Confirmación visual de que el toque se ha registrado, antes de que
+   empiece el cambio de pantalla (ver js/app.js). */
+.btn.is-pressed,
+.album-card.is-pressed,
+.avatar.is-pressed,
+.photo-card.is-pressed {
+  transform: scale(0.96);
+  transition: transform 0.15s ease;
+}
+
+.screen--onboarding {
+  background: var(--bg-onboarding);
+}
+
+/* ---------------------------------------------------------------- */
+/* Status bar (iOS) — icono de batería/wifi/cobertura reales de Figma */
+/* ---------------------------------------------------------------- */
+
+.status-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3.1875rem; /* 51px */
+  z-index: 20;
+  pointer-events: none;
+}
+
+/* A partir de aquí, todo son coordenadas absolutas calculadas 1:1 desde el
+   componente real "Status Bar" de Figma (node 364:6796, idéntico en las
+   10 pantallas) — no aproximadas con flex/gap. */
+
+.status-bar__time {
+  position: absolute;
+  left: 3.1875rem; /* 51px */
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif;
+  font-weight: 590;
+  font-size: var(--font-size-time);
+  color: var(--color-ios-black);
+  white-space: nowrap;
+}
+
+.status-bar__levels {
+  position: absolute;
+  left: 15.6242rem; /* 250px */
+  width: 8.9383rem; /* 143px */
+  top: -0.09375rem; /* -1.5px — el propio componente de Figma desborda así */
+  height: 3.375rem; /* 54px */
+}
+
+.status-bar__icon {
+  position: absolute;
+  display: block;
+}
+.status-bar__icon--cellular {
+  left: 2.0004rem; /* 32px */
+  top: 1.4708rem;
+  width: 1.2rem; /* 19.2px */
+}
+.status-bar__icon--wifi {
+  left: 3.6691rem; /* 58.7px */
+  top: 1.4772rem;
+  width: 1.07136rem; /* 17.14px */
+}
+
+.status-bar__battery {
+  position: absolute;
+  left: 5.1879rem; /* 83px */
+  top: 1.4374rem;
+  width: 1.5625rem; /* 25px */
+  height: 0.8127rem; /* 13px */
+  /* Medido a mano sobre una captura real: el gris del borde ronda el 7% de
+     la altura del icono, con 0.5px se quedaba demasiado fino. El color ya
+     estaba exacto — rgba(29,29,27,0.35) sobre el fondo da el mismo gris. */
+  border: 1px solid rgba(29, 29, 27, 0.35);
+  border-radius: 0.27rem;
+}
+.status-bar__battery-cap {
+  position: absolute;
+  left: 1.6247rem; /* relativo a .status-bar__battery */
+  top: 0.299rem;
+  width: 0.083rem; /* 1.33px */
+}
+.status-bar__battery-fill {
+  position: absolute;
+  /* A propósito más ajustado que el 2px medido en Figma — a petición del
+     usuario, para que se vea más llena. */
+  inset: 0.0625rem; /* 1px */
+  background: var(--color-ios-black);
+  border-radius: 0.15rem;
+}
+
+/* ---------------------------------------------------------------- */
+/* Home indicator (barra inferior del gesto)                         */
+/* ---------------------------------------------------------------- */
+
+.home-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2.125rem; /* 34px */
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 0.5rem;
+  z-index: 40;
+  pointer-events: none;
+}
+
+.home-bar__pill {
+  width: 9.625rem; /* 154px */
+  height: 0.3125rem;
+  border-radius: 100px;
+  background: #101c2b;
+}
+
+/* ---------------------------------------------------------------- */
+/* Avatar (pollito, arriba a la derecha en todas las pantallas)       */
+/* ---------------------------------------------------------------- */
+
+.avatar {
+  position: absolute;
+  top: 3.3125rem; /* 53px */
+  right: 1.25rem;
+  width: 4.375rem; /* 70px */
+  height: 4.375rem;
+  border-radius: 50%;
+  overflow: hidden;
+  z-index: 15;
+  border: none;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Anillo azul del rediseño de Home (594:7786) — solo se ha verificado ahí,
+   por eso es un modificador y no el estilo base de .avatar. Tamaño también
+   cambia: 64px en vez de 70px, así que se pisa top/width/height a la vez
+   para mantener el mismo centro vertical que el wordmark de la cabecera. */
+.avatar--ring {
+  top: 3.5rem; /* 56px */
+  width: 4rem; /* 64px */
+  height: 4rem;
+  border: 0; /* el anillo azul ya viene dentro de avatar-pollito.png (Figma "Ellipse 1"); antes: 3px #516dff en CSS */
+}
+
+/* ---------------------------------------------------------------- */
+/* Tipografía                                                         */
+/* ---------------------------------------------------------------- */
+
+.page-title {
+  position: absolute;
+  left: var(--space-page-margin);
+  top: 4.625rem; /* 74px */
+  font-size: var(--font-size-page-title);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary-blue);
+  margin: 0;
+  z-index: 16; /* por encima de .top-fade (6, components.css) — antes no
+    hacía falta porque nada competía con el título, pero .top-fade sí
+    necesita apilarse encima de .screen-content, y sin esto lo taparía */
+}
+
+.section-title {
+  font-size: var(--font-size-title-large);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-black);
+  margin: 0 0 var(--space-section-gap) 0;
+}
+
+/* ---------------------------------------------------------------- */
+/* Botón marcado por Nidi (herramienta «senalar»: «pulsa el que brilla») */
+/* ---------------------------------------------------------------- */
+.nido-senal {
+  animation: nido-senal-pulso 1.4s ease-in-out infinite;
+  /* Solo sombra: no se toca position ni z-index para no descolocar botones absolutos (avatar, «Volver»…). */
+}
+@keyframes nido-senal-pulso {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(81, 109, 255, 0.55), 0 0 0 10px rgba(81, 109, 255, 0.22); }
+  50%      { box-shadow: 0 0 0 7px rgba(81, 109, 255, 0.55), 0 0 0 18px rgba(81, 109, 255, 0.12); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nido-senal { animation: none; box-shadow: 0 0 0 6px rgba(81, 109, 255, 0.55), 0 0 0 12px rgba(81, 109, 255, 0.22); }
+}
+
+/* ---------------------------------------------------------------- */
+/* «Elegir fotos» que pone Nidi en «Todas tus fotos» (herramienta      */
+/* «subir_fotos», js/agente-acciones.js). Solo existe mientras dura la  */
+/* ayuda: al elegir fotos o salir de la pantalla se quita. Va justo     */
+/* encima de «Volver» (.bottom-action: 38px del borde + 68px de alto),  */
+/* con 12px de aire, mismo ancho y márgenes que él.                     */
+/* ---------------------------------------------------------------- */
+.nido-subir-fotos {
+  position: absolute;
+  left: var(--space-page-margin);
+  bottom: 7.375rem; /* 38 + 68 + 12 = 118px */
+  width: calc(100% - 2 * var(--space-page-margin));
+  z-index: 11; /* por encima del difuminado inferior y de la rejilla */
+}
+/* Mientras está, la flecha flotante de bajar (.albumes-more, 640px) sube para que no quede debajo del botón ni de su brillo. */
+.screen:has(> .nido-subir-fotos) .albumes-more {
+  top: 33.5rem; /* 536px: termina en 608, el brillo del botón empieza hacia 648 */
+}

@@ -1,0 +1,90 @@
+/*
+  Nido · v3 — Aviso "¿Quieres eliminar la foto del álbum?" (687:8416),
+  dentro de Detalle foto. Mismo velo oscuro+difuminado que el modal
+  "Ayúdanos" de Registro (rgba(41,41,41,0.6) + blur 6px), pero en vez de
+  una tarjeta centrada es el pollito señalando una burbuja de diálogo —
+  la foto de fondo se ve difuminada pero sigue ahí, no tapa la pantalla.
+*/
+
+.eliminar-foto-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 45;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  background: rgba(41, 41, 41, 0.6);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.eliminar-foto-layer.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.eliminar-foto-bubble {
+  position: absolute;
+  left: 1.25rem;
+  top: 8.9375rem; /* 143px: conserva su borde inferior (212px) con alto = texto */
+  width: 13.0625rem; /* 209px */
+  box-sizing: border-box;
+  margin: 0;
+  background: var(--color-white);
+  /* tl/tr/bl 32px, br 0 — la esquina sin redondear apunta hacia el
+     pollito, como el pico de una burbuja de diálogo. */
+  border-radius: 2rem 2rem 0 2rem;
+  padding: var(--bubble-pad-y) 1.3125rem; /* alto = texto + 24px, igual que el resto de burbujas de Nidi */
+  display: flex;
+  align-items: center;
+  font-size: 1.125rem; /* 18px */
+  line-height: 1.25;
+  color: var(--color-primary-blue-dark);
+}
+
+/* Pose "quita el interrogante" recortada+rotada por código (PIL, -63.91°,
+   igual criterio que registro-1-photo: más simple que reproducir en CSS
+   la caja rotada que exporta Figma) a partir del asset real descargado del
+   servidor de Figma Dev Mode, no una silueta genérica. */
+.eliminar-foto-pollito {
+  /* Pose "quita el interrogante" ya rotada (−50,99°) — la misma que la pregunta por voz; en la captura
+     de Figma (687:8416) el pollito asoma por la derecha con el pulgar hacia abajo-izquierda. La anterior
+     (rotada −63,91°) se veía boca abajo. Misma caja que en la pregunta, subida 168px. */
+  /* 25-sep: la imagen ya no es la pose recortada con mucho margen transparente sino el pollito de cuerpo entero
+     (pollito-pregunta-nombre.webp, 650×745); con la caja antigua (429×416) salía gigante y cortado. Entero, a la derecha, bajo la
+     burbuja (acaba a 212px) y por encima de los botones (558px). Misma proporción que la imagen. */
+  position: absolute;
+  left: 7.875rem; /* 126px */
+  top: 16.25rem; /* 260px: se apoya justo encima de «Eliminar foto» (558px), como en los onboardings */
+  width: 15.8125rem; /* 253px */
+  height: 18.125rem; /* 290px */
+  object-fit: contain;
+  max-width: none;
+  pointer-events: none;
+}
+
+.eliminar-foto-actions {
+  position: absolute;
+  left: var(--space-page-margin);
+  top: 34.875rem; /* 558px (759:4941) */
+  width: calc(100% - 2 * var(--space-page-margin));
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem; /* 12px */
+}
+.eliminar-foto-actions .btn {
+  width: 100%;
+  height: 4.25rem; /* 68px: los botones suaves salían de 52px */
+}
+.eliminar-foto-cancelar {
+  color: var(--color-error);
+}
+
+.eliminar-foto-volver {
+  position: absolute;
+  left: var(--space-page-margin);
+  /* Mismo y que el botón de abajo de las pantallas reales (ver la nota igual en
+     .ayuda-layer__close / onboarding.css) — antes 744px, 2px por encima de la cuenta. */
+  top: 46.625rem; /* 746px */
+  width: calc(100% - 2 * var(--space-page-margin));
+  height: 4.25rem; /* 68px */
+}
