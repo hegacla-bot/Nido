@@ -1,1 +1,23 @@
+# HU-M06-01 · Yo
 
+**Historia de usuario**
+Como persona mayor, quiero tener un sitio tranquilo donde ver mis datos básicos y resolver cosas puntuales (mi teléfono, mis documentos, salir de la app), para no depender de nadie si necesito algo simple.
+
+**Criterios de aceptación**
+- Incluye: cerrar sesión, cambiar teléfono, eliminar cuenta, Mis documentos.
+- "Eliminar cuenta" pide confirmación clara en dos pasos (nunca se borra con un solo toque accidental), y explica en una frase sencilla qué significa.
+- "Cambiar teléfono" sigue el mismo patrón de verificación que el alta: autocompletado de código SMS, sin teclear dígitos (ver HU-M01-02_Log in).
+- "Mis documentos" muestra solo lo que ya se guardó (por ejemplo, algo compartido por un familiar), sin pedir que la persona mayor suba o gestione archivos ella misma.
+- Ningún texto de esta sección usa la palabra "mayores" ni "modo simple".
+
+**Decisiones de diseño**
+- Coherente con "nunca te hacemos sentir tonto": esta sección se presenta como un lugar tranquilo de consulta, no como un panel de control técnico.
+- "Eliminar cuenta" es la acción más delicada de toda la app: por eso lleva doble confirmación, distinto del resto de la app (que evita fricción en todo lo demás).
+- Cambiar teléfono reutiliza la misma decisión de arquitectura que el alta (identidad = número verificado), no un flujo nuevo.
+
+**Wireframes**
+Pendientes.
+
+**Preguntas abiertas**
+- Al eliminar la cuenta, ¿qué pasa con las fotos que esa persona mayor recibió? ¿Se quedan en la galería nativa del teléfono, o desaparecen también de ahí?
+- ¿"Mis documentos" guarda algo más que lo compartido por la familia (por ejemplo, documentos oficiales), o es solo eso?
