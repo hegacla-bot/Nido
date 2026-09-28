@@ -372,3 +372,33 @@
 .screen[data-screen="persona-videos"] .screen-content {
   padding-bottom: 13.75rem; /* 220px */
 }
+
+/* ---- Álbum vacío (979:2967): pollito en el agujero (182×107, top 390) y, 20px debajo, título 18px y texto 16px a 263px ---- */
+.album-vacio {
+  position: absolute;
+  top: 24.375rem;
+  left: 1rem;
+  right: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  color: var(--color-primary-blue-dark);
+  pointer-events: none;
+}
+.album-vacio[hidden] { display: none; }
+.album-vacio__pollito {
+  width: 11.375rem;
+  height: 6.6875rem;
+  margin-bottom: 1.25rem;
+}
+.album-vacio__titulo {
+  font-size: var(--font-size-label-medium);
+  font-weight: var(--font-weight-bold);
+}
+.album-vacio__texto {
+  margin-top: 0.5rem;
+  max-width: 16.4375rem;
+  font-size: var(--font-size-label-small);
+  font-weight: var(--font-weight-regular);
+}

@@ -618,6 +618,7 @@
     if (!album) return;
     const screen = document.querySelector('[data-screen="album-nuevo"]');
     screen.querySelector('[data-album-title]').textContent = album.name;
+    screen.querySelector('[data-album-vacio]').hidden = album.photos.length > 0; // estado vacío (979:2967)
     const grid = screen.querySelector('.album-grid');
     // "Añadir" está en todos los álbumes menos en "Todas tus fotos" (esa es la galería del teléfono y se llena sola).
     const add = grid.querySelector(':scope > .album-grid__add-wrap');
