@@ -4059,3 +4059,4 @@ Feedback de la usuaria tras probar con voz: la pastilla pesaba; Nidi dijo que so
 - 28-sep · Intro: espaciado por cercanía — título→texto 12px, puntos anclados 24px sobre el botón (a 704px en las tres), texto→puntos 19px (3 líneas) / 42px (2 líneas); interlineado del texto 1.296.
 - 28-sep · Registro y Ajustes (teléfono/código): título → subtítulo = 12px en las cuatro pantallas (antes 16 / 8 / 22 / 8). El campo y el teclado siguen en el mismo sitio en teléfono y código (a propósito).
 - 28-sep · Ventanas (Ayúdanos, ¿Para qué…?, Cerrar sesión, Eliminar cuenta): título→texto 12px, texto→botones 24px, 24px arriba y abajo en todas (antes todo a 16 y «¿Para qué…?» con 20 de margen).
+- 28-sep · Huevo v6: suavizado que respeta bordes (bilateral) + deband + desenfoque leve (0,8) — quita las manchas de tono del GIF («demasiada sombra») sin dejarlo de plástico; 0,7 MB. Blanco puro medido en Chromium y WebKit.
