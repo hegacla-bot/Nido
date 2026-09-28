@@ -23,7 +23,7 @@ Al final está el mismo contenido en JSON, en el formato de *client tools* de El
 
 **Ajustes del panel**: Wait for response = activado · Response timeout = **10 s**.
 
-**Qué devuelve**: Un párrafo: «Ahora la persona está en la pantalla «detalle-foto». <frase de ayuda de esa pantalla> Tiene abierta la ficha de «Clara nieta» (9 fotos). Está dentro del álbum «Casa» (18). Tiene abierta una foto del 24 de diciembre de 2024: puedes mirarla con ver_foto. Personas que Nido conoce por su nombre: Clara nieta (9), Ana nieta (9)… Fichas de personas SIN nombre: 2. Álbumes creados por la persona: … Álbumes que pone Nido solo (se pueden abrir y copiar sus fotos, no cambiar): Navidad 2024 (4), …». Es el mismo texto que la app manda sola con `sendContextualUpdate` al empezar y en cada cambio de pantalla.
+**Qué devuelve**: Un párrafo: «Ahora la persona está en la pantalla «detalle-foto». <frase de ayuda de esa pantalla> Tiene abierta la ficha de «Clara nieta» (9 fotos). Está dentro del álbum «Casa» (18). Tiene abierta una foto del 24 de diciembre de 2024: puedes mirarla con ver_foto. Personas que Nido conoce por su nombre: Clara nieta (9), Ana nieta (9)… Fichas de personas SIN nombre: 2. Álbumes creados por la persona: … Álbumes que hizo Nido por fechas (se pueden cambiar igual que los suyos: añadir, quitar, pasar fotos y renombrar): Navidad 2024 (4), …». Es el mismo texto que la app manda sola con `sendContextualUpdate` al empezar y en cada cambio de pantalla.
 
 **Dónde está en el código**: `js/agente-acciones.js` → `verContexto()` → `window.NidoAgenteContexto('Ahora')` (`js/app.js`).
 
@@ -55,7 +55,7 @@ Al final está el mismo contenido en JSON, en el formato de *client tools* de El
 
 **Descripción para Nidi**
 
-> Crea álbumes, les añade fotos, pasa fotos de un álbum a otro, quita fotos de un álbum o le cambia el nombre, para que la persona no tenga que hacerlo a mano. Úsala solo cuando la persona lo pida. Antes de quitar TODAS las fotos de un álbum, confírmalo con ella. «Quitar» no borra la foto del teléfono: sigue en «Todas tus fotos». Los álbumes que pone Nido solo (por año, Navidad o verano) no se pueden cambiar; sí se pueden copiar sus fotos a un álbum de la persona. Si la herramienta dice que el álbum de destino no existe, pregúntale si quiere crearlo y, si dice que sí, repite la llamada con crear_si_no_existe=true. Usa el nombre del álbum tal como es (el contexto te da la lista): un nombre parecido no vale y te devolverá la lista para que preguntes. Cuenta con tus palabras la frase que devuelve: si empieza por «Hecho:» se ha hecho; si no, dice qué falta o qué preguntar.
+> Crea álbumes, les añade fotos, pasa fotos de un álbum a otro, quita fotos de un álbum o le cambia el nombre, para que la persona no tenga que hacerlo a mano. Úsala solo cuando la persona lo pida. Antes de quitar TODAS las fotos de un álbum, confírmalo con ella. «Quitar» no borra la foto del teléfono: sigue en «Todas tus fotos». Los álbumes que pone Nido solo (por año, Navidad o verano) se cambian igual que los suyos: añadir, quitar, pasar fotos y renombrar. Al pasar fotos DESDE uno de ellos se copian (siguen también allí, porque son de esa fecha). Si la herramienta dice que el álbum de destino no existe, pregúntale si quiere crearlo y, si dice que sí, repite la llamada con crear_si_no_existe=true. Usa el nombre del álbum tal como es (el contexto te da la lista): un nombre parecido no vale y te devolverá la lista para que preguntes. Cuenta con tus palabras la frase que devuelve: si empieza por «Hecho:» se ha hecho; si no, dice qué falta o qué preguntar.
 
 **Parámetros**
 
@@ -70,7 +70,7 @@ Al final está el mismo contenido en JSON, en el formato de *client tools* de El
 
 **Ajustes del panel**: Wait for response = activado · Response timeout = **10 s**.
 
-**Qué devuelve**: Una frase corta, verdadera y con números reales. Los nombres de álbum se buscan estrictos: el exacto o uno solo que lo contenga («cas» → «Casa»); «Casa de verano» ya no cae en «Casa». Renombrar a un nombre que ya existe se rechaza. Si se ha hecho empieza por «Hecho:»: «Hecho: he pasado 6 fotos de «Casa» a «Cumpleaños». Ahora «Casa» tiene 0 fotos y «Cumpleaños» tiene 6 fotos. Ya lo tiene abierto.» · «Hecho: he quitado 4 vídeos del álbum «Viaje», que ahora tiene 17 fotos. No he borrado ninguno: siguen en «Todas tus fotos».». Si no, el motivo y qué preguntar: álbum inexistente (con la lista), falta el criterio, criterio que no entiende («las de la playa»), no hay foto abierta, álbum automático, «Todas tus fotos», álbum vacío, ya estaban. Tras mover o quitar sale en pantalla un aviso con «Deshacer» durante 7 s.
+**Qué devuelve**: Una frase corta, verdadera y con números reales. Los nombres de álbum se buscan estrictos: el exacto o uno solo que lo contenga («cas» → «Casa»); «Casa de verano» ya no cae en «Casa». Renombrar a un nombre que ya existe se rechaza. Si se ha hecho empieza por «Hecho:»: «Hecho: he pasado 6 fotos de «Casa» a «Cumpleaños». Ahora «Casa» tiene 0 fotos y «Cumpleaños» tiene 6 fotos. Ya lo tiene abierto.» · «Hecho: he quitado 4 vídeos del álbum «Viaje», que ahora tiene 17 fotos. No he borrado ninguno: siguen en «Todas tus fotos».». Si no, el motivo y qué preguntar: álbum inexistente (con la lista), falta el criterio, criterio que no entiende («las de la playa»), no hay foto abierta, «Todas tus fotos», álbum vacío, ya estaban. Tras mover o quitar sale en pantalla un aviso con «Deshacer» durante 7 s.
 
 **Dónde está en el código**: `js/agente.js` (clientTools) → `hooks.gestionar(p)` → `gestionarAlbumes()` / `gestionarAlbumesSinRegistro()` en `js/app.js`.
 
@@ -104,7 +104,7 @@ Al final está el mismo contenido en JSON, en el formato de *client tools* de El
 
 **Descripción para Nidi**
 
-> Guarda al momento el nombre de la persona de la ficha abierta. Úsala solo con la ficha de esa persona abierta (el contexto dice «Tiene abierta la ficha…» o «Tiene abierta una ficha SIN NOMBRE»). En cuanto te diga el nombre (deletreado antes si era dudoso), llámala: se guarda y en pantalla sale «Guardado: … · Deshacer». Después díselo y compruébalo: «Ya lo he guardado como José. ¿Está bien?». Si te corrige, vuelve a llamarla con el nombre bueno: se cambia solo. Si no quería guardarlo, llama con deshacer=true. Si el nombre ya lo tiene otra ficha, o si uno de los dos es solo un nombre de pila que coincide con el otro («Ana» cuando ya existe «Ana nieta»), no lo guarda y te pide que preguntes cómo distinguirlas. Si la ficha ya tenía otro nombre de antes, no lo cambia salvo con sobrescribir=true, que solo se usa si ella lo confirma.
+> Guarda al momento el nombre de la persona de la ficha abierta. Úsala solo con la ficha de esa persona abierta (el contexto dice «Tiene abierta la ficha…» o «Tiene abierta una ficha SIN NOMBRE»). En cuanto te diga el nombre (deletreado antes si era dudoso), llámala: se guarda y en pantalla sale «Guardado: … · Deshacer». Después díselo y compruébalo: «Ya lo he guardado como José. ¿Está bien?». Si te corrige, vuelve a llamarla con el nombre bueno: se cambia solo. Si no quería guardarlo, llama con deshacer=true. Si el nombre ya lo tiene otra ficha, o si uno de los dos es solo un nombre de pila que coincide con el otro («Ana» cuando ya existe «Ana nieta»), no lo guarda y te pide que preguntes si es la misma persona: si dice que sí, repite con unir=true y las dos fichas se juntan en una (con «Deshacer» en pantalla); si es otra, pregúntale cómo distinguirlas. Si la ficha ya tenía otro nombre de antes, no lo cambia salvo con sobrescribir=true, que solo se usa si ella lo confirma.
 
 **Parámetros**
 
@@ -112,6 +112,7 @@ Al final está el mismo contenido en JSON, en el formato de *client tools* de El
 |---|---|---|---|
 | `nombre` | string | no | El nombre que ha dicho, con el parentesco detrás si lo dijo («Maite cuñada», «Clara nieta»). Si lo ha deletreado, puedes pasar las letras tal cual («J-O-S-É»): se juntan solas. Sin comas ni símbolos; máximo 40 letras. No hace falta con deshacer=true. |
 | `sobrescribir` | boolean | no | true solo si la ficha ya tenía otro nombre y la persona ha confirmado que quiere cambiarlo. |
+| `unir` | boolean | no | true solo si la herramienta te ha dicho que ya hay otra ficha con ese nombre y la persona confirma que es LA MISMA persona: junta las dos fichas en una. |
 | `deshacer` | boolean | no | true solo si no quería guardar el nombre que acabas de poner y no te da otro: lo quita y la ficha vuelve a como estaba. |
 
 **Ajustes del panel**: Wait for response = activado · Response timeout = **10 s**.
@@ -267,7 +268,7 @@ Cada objeto es un `tool_config` de tipo `client`. Por API se crean una a una (`P
   {
     "type": "client",
     "name": "gestionar_albumes",
-    "description": "Crea álbumes, les añade fotos, pasa fotos de un álbum a otro, quita fotos de un álbum o le cambia el nombre, para que la persona no tenga que hacerlo a mano. Úsala solo cuando la persona lo pida. Antes de quitar TODAS las fotos de un álbum, confírmalo con ella. «Quitar» no borra la foto del teléfono: sigue en «Todas tus fotos». Los álbumes que pone Nido solo (por año, Navidad o verano) no se pueden cambiar; sí se pueden copiar sus fotos a un álbum de la persona. Si la herramienta dice que el álbum de destino no existe, pregúntale si quiere crearlo y, si dice que sí, repite la llamada con crear_si_no_existe=true. Usa el nombre del álbum tal como es (el contexto te da la lista): un nombre parecido no vale y te devolverá la lista para que preguntes. Cuenta con tus palabras la frase que devuelve: si empieza por «Hecho:» se ha hecho; si no, dice qué falta o qué preguntar.",
+    "description": "Crea álbumes, les añade fotos, pasa fotos de un álbum a otro, quita fotos de un álbum o le cambia el nombre, para que la persona no tenga que hacerlo a mano. Úsala solo cuando la persona lo pida. Antes de quitar TODAS las fotos de un álbum, confírmalo con ella. «Quitar» no borra la foto del teléfono: sigue en «Todas tus fotos». Los álbumes que pone Nido solo (por año, Navidad o verano) se cambian igual que los suyos: añadir, quitar, pasar fotos y renombrar. Al pasar fotos DESDE uno de ellos se copian (siguen también allí, porque son de esa fecha). Si la herramienta dice que el álbum de destino no existe, pregúntale si quiere crearlo y, si dice que sí, repite la llamada con crear_si_no_existe=true. Usa el nombre del álbum tal como es (el contexto te da la lista): un nombre parecido no vale y te devolverá la lista para que preguntes. Cuenta con tus palabras la frase que devuelve: si empieza por «Hecho:» se ha hecho; si no, dice qué falta o qué preguntar.",
     "parameters": {
       "type": "object",
       "properties": {
@@ -338,7 +339,7 @@ Cada objeto es un `tool_config` de tipo `client`. Por API se crean una a una (`P
   {
     "type": "client",
     "name": "nombrar_persona",
-    "description": "Guarda al momento el nombre de la persona de la ficha abierta. Úsala solo con la ficha de esa persona abierta (el contexto dice «Tiene abierta la ficha…» o «Tiene abierta una ficha SIN NOMBRE»). En cuanto te diga el nombre (deletreado antes si era dudoso), llámala: se guarda y en pantalla sale «Guardado: … · Deshacer». Después díselo y compruébalo: «Ya lo he guardado como José. ¿Está bien?». Si te corrige, vuelve a llamarla con el nombre bueno: se cambia solo. Si no quería guardarlo, llama con deshacer=true. Si el nombre ya lo tiene otra ficha, o si uno de los dos es solo un nombre de pila que coincide con el otro («Ana» cuando ya existe «Ana nieta»), no lo guarda y te pide que preguntes cómo distinguirlas. Si la ficha ya tenía otro nombre de antes, no lo cambia salvo con sobrescribir=true, que solo se usa si ella lo confirma.",
+    "description": "Guarda al momento el nombre de la persona de la ficha abierta. Úsala solo con la ficha de esa persona abierta (el contexto dice «Tiene abierta la ficha…» o «Tiene abierta una ficha SIN NOMBRE»). En cuanto te diga el nombre (deletreado antes si era dudoso), llámala: se guarda y en pantalla sale «Guardado: … · Deshacer». Después díselo y compruébalo: «Ya lo he guardado como José. ¿Está bien?». Si te corrige, vuelve a llamarla con el nombre bueno: se cambia solo. Si no quería guardarlo, llama con deshacer=true. Si el nombre ya lo tiene otra ficha, o si uno de los dos es solo un nombre de pila que coincide con el otro («Ana» cuando ya existe «Ana nieta»), no lo guarda y te pide que preguntes si es la misma persona: si dice que sí, repite con unir=true y las dos fichas se juntan en una (con «Deshacer» en pantalla); si es otra, pregúntale cómo distinguirlas. Si la ficha ya tenía otro nombre de antes, no lo cambia salvo con sobrescribir=true, que solo se usa si ella lo confirma.",
     "parameters": {
       "type": "object",
       "properties": {
@@ -349,6 +350,10 @@ Cada objeto es un `tool_config` de tipo `client`. Por API se crean una a una (`P
         "sobrescribir": {
           "type": "boolean",
           "description": "true solo si la ficha ya tenía otro nombre y la persona ha confirmado que quiere cambiarlo."
+        },
+        "unir": {
+          "type": "boolean",
+          "description": "true solo si la herramienta te ha dicho que ya hay otra ficha con ese nombre y la persona confirma que es LA MISMA persona: junta las dos fichas en una."
         },
         "deshacer": {
           "type": "boolean",

@@ -189,7 +189,7 @@ window.NidoAgenteAcciones = (function () {
     if (!String(p.nombre || '').trim()) return 'Falta el nombre. Pregúntale cómo se llama y, si no lo oyes bien, que lo deletree.';
     // Se guarda al momento y Nidi lo lee en voz alta para que lo corrija si hace falta (ver guardarNombre en persona.js).
     if (ctx.cerrarAyuda) ctx.cerrarAyuda(); // que vea el nombre en la ficha y el aviso «Guardado: … · Deshacer»
-    const r = api.nombrarPersona({ nombre: p.nombre, sobrescribir: bool(p.sobrescribir), id: p.persona_id || undefined });
+    const r = api.nombrarPersona({ nombre: p.nombre, sobrescribir: bool(p.sobrescribir), unir: bool(p.unir), id: p.persona_id || undefined });
     return r.mensaje;
   }
 

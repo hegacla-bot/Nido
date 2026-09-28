@@ -33,7 +33,7 @@
   {
     "type": "client",
     "name": "gestionar_albumes",
-    "description": "Crea álbumes, les añade fotos, pasa fotos de un álbum a otro, quita fotos de un álbum o le cambia el nombre, para que la persona no tenga que hacerlo a mano. Úsala solo cuando la persona lo pida. Antes de quitar TODAS las fotos de un álbum, confírmalo con ella. «Quitar» no borra la foto del teléfono: sigue en «Todas tus fotos». Los álbumes que pone Nido solo (por año, Navidad o verano) no se pueden cambiar; sí se pueden copiar sus fotos a un álbum de la persona. Si la herramienta dice que el álbum de destino no existe, pregúntale si quiere crearlo y, si dice que sí, repite la llamada con crear_si_no_existe=true. Usa el nombre del álbum tal como es (el contexto te da la lista): un nombre parecido no vale y te devolverá la lista para que preguntes. Cuenta con tus palabras la frase que devuelve: si empieza por «Hecho:» se ha hecho; si no, dice qué falta o qué preguntar.",
+    "description": "Crea álbumes, les añade fotos, pasa fotos de un álbum a otro, quita fotos de un álbum o le cambia el nombre, para que la persona no tenga que hacerlo a mano. Úsala solo cuando la persona lo pida. Antes de quitar TODAS las fotos de un álbum, confírmalo con ella. «Quitar» no borra la foto del teléfono: sigue en «Todas tus fotos». Los álbumes que pone Nido solo (por año, Navidad o verano) se cambian igual que los suyos: añadir, quitar, pasar fotos y renombrar. Al pasar fotos DESDE uno de ellos se copian (siguen también allí, porque son de esa fecha). Si la herramienta dice que el álbum de destino no existe, pregúntale si quiere crearlo y, si dice que sí, repite la llamada con crear_si_no_existe=true. Usa el nombre del álbum tal como es (el contexto te da la lista): un nombre parecido no vale y te devolverá la lista para que preguntes. Cuenta con tus palabras la frase que devuelve: si empieza por «Hecho:» se ha hecho; si no, dice qué falta o qué preguntar.",
     "parameters": {
       "type": "object",
       "properties": {
@@ -104,7 +104,7 @@
   {
     "type": "client",
     "name": "nombrar_persona",
-    "description": "Guarda al momento el nombre de la persona de la ficha abierta. Úsala solo con la ficha de esa persona abierta (el contexto dice «Tiene abierta la ficha…» o «Tiene abierta una ficha SIN NOMBRE»). En cuanto te diga el nombre (deletreado antes si era dudoso), llámala: se guarda y en pantalla sale «Guardado: … · Deshacer». Después díselo y compruébalo: «Ya lo he guardado como José. ¿Está bien?». Si te corrige, vuelve a llamarla con el nombre bueno: se cambia solo. Si no quería guardarlo, llama con deshacer=true. Si el nombre ya lo tiene otra ficha, o si uno de los dos es solo un nombre de pila que coincide con el otro («Ana» cuando ya existe «Ana nieta»), no lo guarda y te pide que preguntes cómo distinguirlas. Si la ficha ya tenía otro nombre de antes, no lo cambia salvo con sobrescribir=true, que solo se usa si ella lo confirma.",
+    "description": "Guarda al momento el nombre de la persona de la ficha abierta. Úsala solo con la ficha de esa persona abierta (el contexto dice «Tiene abierta la ficha…» o «Tiene abierta una ficha SIN NOMBRE»). En cuanto te diga el nombre (deletreado antes si era dudoso), llámala: se guarda y en pantalla sale «Guardado: … · Deshacer». Después díselo y compruébalo: «Ya lo he guardado como José. ¿Está bien?». Si te corrige, vuelve a llamarla con el nombre bueno: se cambia solo. Si no quería guardarlo, llama con deshacer=true. Si el nombre ya lo tiene otra ficha, o si uno de los dos es solo un nombre de pila que coincide con el otro («Ana» cuando ya existe «Ana nieta»), no lo guarda y te pide que preguntes si es la misma persona: si dice que sí, repite con unir=true y las dos fichas se juntan en una (con «Deshacer» en pantalla); si es otra, pregúntale cómo distinguirlas. Si la ficha ya tenía otro nombre de antes, no lo cambia salvo con sobrescribir=true, que solo se usa si ella lo confirma.",
     "parameters": {
       "type": "object",
       "properties": {
@@ -115,6 +115,10 @@
         "sobrescribir": {
           "type": "boolean",
           "description": "true solo si la ficha ya tenía otro nombre y la persona ha confirmado que quiere cambiarlo."
+        },
+        "unir": {
+          "type": "boolean",
+          "description": "true solo si la herramienta te ha dicho que ya hay otra ficha con ese nombre y la persona confirma que es LA MISMA persona: junta las dos fichas en una."
         },
         "deshacer": {
           "type": "boolean",

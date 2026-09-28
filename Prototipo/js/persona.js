@@ -484,10 +484,13 @@ window.PersonaSelect = (function () {
     });
 
     // Cuadrículas completas: se repiten las fotos de la persona hasta llenar 8 huecos (datos de ejemplo).
+    // Vacías: el estado vacío con el pollito (data-persona-vacio, como «Álbum vacío»), no una frase suelta (28-sep).
     document.querySelectorAll('[data-persona-grid]').forEach((grid) => {
       grid.innerHTML = '';
-      if (!persona.photos.length) return; // sin fotos no hay nada que pintar (antes salía "assets/img/undefined": imagen rota)
-      if (persona.dynamic && grid.dataset.personaGrid === 'videos') { vacio(grid, 'Todavía no hay vídeos de esta persona.'); return; }
+      const estadoVacio = document.querySelector('[data-persona-vacio="' + grid.dataset.personaGrid + '"]');
+      const sinNada = !persona.photos.length || (persona.dynamic && grid.dataset.personaGrid === 'videos');
+      if (estadoVacio) estadoVacio.hidden = !sinNada;
+      if (sinNada) return; // sin fotos no hay nada que pintar (antes salía "assets/img/undefined": imagen rota)
       const huecos = persona.dynamic ? persona.photos.length : 8;
       for (let i = 0; i < huecos; i++) {
         const file = persona.photos[i % persona.photos.length];
@@ -644,13 +647,25 @@ window.PersonaSelect = (function () {
     const titulo = fila.previousElementSibling;
     const next = scr.querySelector('.personas-next');
     fila.innerHTML = '';
-    grupos = grupos.filter((g) => g.a.name && g.b.name); // "Sin nombre y Sin nombre" no dice nada: un grupo existe cuando se conoce a los dos
+    // "Sin nombre y Sin nombre" no dice nada; basta con conocer a uno (28-sep: con el reconocimiento más estricto, Clara y Ana ya no
+    // salen juntas en 2 fotos y la sección desaparecía entera). El que no tiene nombre sale como «otra persona» y, al ponérselo, se ve.
+    grupos = grupos.filter((g) => g.a.name || g.b.name).sort((x, y) => (!!(y.a.name && y.b.name) - !!(x.a.name && x.b.name)) || y.imgs.length - x.imgs.length);
+    // Dos «Clara nieta y otra persona» seguidos no se distinguen: de cada persona con nombre, solo el grupo con más fotos.
+    const conOtra = new Set();
+    grupos = grupos.filter((g) => {
+      if (g.a.name && g.b.name) return true;
+      const k = (g.a.name ? g.a : g.b).id;
+      if (conOtra.has(k)) return false;
+      conOtra.add(k);
+      return true;
+    });
     grupos.forEach((g) => {
       const card = document.createElement('div');
       card.className = 'persona-group';
       card.innerHTML = '<div class="persona-group__photo photo-card"><img alt="" /></div><p class="persona-group__name"></p>';
       card.querySelector('img').src = g.imgs[0].currentSrc || g.imgs[0].src;
-      card.querySelector('p').textContent = nombreDe(g.a) + ' y ' + nombreDe(g.b);
+      const [uno, otro] = g.a.name ? [g.a, g.b] : [g.b, g.a];
+      card.querySelector('p').textContent = uno.name + ' y ' + (otro.name || 'otra persona');
       fila.appendChild(card);
     });
     const hay = grupos.length > 0;
@@ -1587,11 +1602,11 @@ window.PersonaSelect = (function () {
     const nombre = capNombre(juntarDeletreo(String(p.nombre || '').replace(/[^\p{L}\p{M}\s'’.-]/gu, '')));
     if (!nombre || nombre.length > 40) return { ok: false, mensaje: 'No he podido quedarme con ese nombre. Pídele que lo repita o que lo deletree letra a letra.' };
     const otra = Reconocimiento.people.find((x) => x !== person && x.name && norm(x.name) === norm(nombre));
-    if (otra) return { ok: false, duplicado: true, mensaje: 'Ya existe otra ficha que se llama «' + otra.name + '». Pregúntale si es la misma persona o si quiere distinguirlas (por ejemplo con el apellido o «mi nieta Clara»).' };
+    if (otra) return { ok: false, duplicado: true, id, person, otra, mensaje: 'Ya existe otra ficha que se llama «' + otra.name + '». Pregúntale si es la misma persona. Si dice que sí, repite con unir=true: junto las dos fichas en una. Si es otra persona, pregúntale cómo distinguirlas (por ejemplo con el apellido o «' + nombre.split(' ')[0] + ' prima») y guarda ese nombre.' };
     // «Ana» con «Ana nieta» ya en la lista (o al revés): al decir «Ana» no se sabría a cuál de las dos se refiere.
     const pal = (x) => norm(x).split(' ');
     const casi = Reconocimiento.people.find((x) => x !== person && x.name && pal(x.name)[0] === pal(nombre)[0] && (pal(x.name).length === 1 || pal(nombre).length === 1));
-    if (casi) return { ok: false, duplicado: true, mensaje: 'Ya conozco a «' + casi.name + '». Si es otra persona, pregúntale cómo distinguirlas (por ejemplo «' + nombre.split(' ')[0] + ' prima» o con el apellido) y guarda ese nombre; si es la misma, díselo.' };
+    if (casi) return { ok: false, duplicado: true, id, person, otra: casi, mensaje: 'Ya conozco a «' + casi.name + '». Pregúntale si es la misma persona. Si dice que sí, repite con unir=true: junto las dos fichas en una. Si es otra persona, pregúntale cómo distinguirlas (por ejemplo «' + nombre.split(' ')[0] + ' prima» o con el apellido) y guarda ese nombre.' };
     if (person.name && norm(person.name) !== norm(nombre) && !p.sobrescribir) return { ok: false, yaTiene: true, mensaje: 'Esta ficha ya se llama «' + person.name + '». Si quiere llamarla «' + nombre + '», pídele que lo confirme y repite con sobrescribir=true.' };
     return { ok: true, id, person, nombre };
   }
@@ -1654,7 +1669,36 @@ window.PersonaSelect = (function () {
         ' Díselo y compruébalo con ella en una sola frase: «Ya lo he guardado como ' + nombre + '. ¿Está bien?». Si te corrige, vuelve a llamar con el nombre bueno (se cambia solo). Si no quería guardarlo, llama con deshacer=true.' };
   }
 
-  // p: { nombre, sobrescribir, deshacer, id }
+  // Unir dos fichas que son la misma persona (28-sep, pedido: «si le digo a Nidi que se llama igual que una que ya hay, que pregunte
+  // si es la misma y, si lo es, que unifique»). La ficha abierta se junta con la que ya tenía el nombre: quedan una sola ficha con
+  // las fotos de las dos (organizarBiblioteca las vuelve a repartir) y se abre. «Deshacer» las separa otra vez.
+  function unirFichas(person, otra) {
+    const deshacer = Reconocimiento.merge(person, otra);
+    const circulo = document.querySelector('[data-screen="personas"] [data-persona-open="' + person.id + '"]');
+    if (circulo) circulo.remove();
+    const fotosAntes = new Set([...(PERSONAS[person.id] && PERSONAS[person.id].photos || []), ...(PERSONAS[otra.id] && PERSONAS[otra.id].photos || [])]);
+    delete PERSONAS[person.id];
+    if (ultimoGuardado && ultimoGuardado.id === person.id) ultimoGuardado = null;
+    registerPerson(otra);
+    if (PERSONAS[otra.id]) PERSONAS[otra.id].photos = [...fotosAntes];
+    openPerson(otra.id);
+    setTimeout(() => organizarBiblioteca(), 400); // fotos y grupos («Clara y Ana») con la ficha ya unida
+    if (window.nidoToast) {
+      window.nidoToast(window.NidoNav.current(), 'Unidas en «' + otra.name + '»', 'Deshacer', () => {
+        deshacer();
+        registerPerson(person);
+        setTimeout(() => organizarBiblioteca(), 100);
+        openPerson(person.id);
+        window.nidoToast(window.NidoNav.current(), 'Vuelven a ser dos fichas', null, null, 3000);
+        avisarNidi('Ha tocado «Deshacer»: las dos fichas vuelven a estar separadas. La que tiene abierta está sin nombre: pregúntale quién es.');
+      }, DESHACER_MS);
+    }
+    const n = fotosAntes.size;
+    return { ok: true, id: otra.id, nombre: otra.name, nFotos: n,
+      mensaje: 'Hecho: he juntado las dos fichas en «' + otra.name + '»' + (n ? ' (' + n + (n === 1 ? ' foto).' : ' fotos).') : '.') + ' Ya la tiene abierta. Díselo en una frase: «Listo, ya está todo junto en ' + otra.name + '».' };
+  }
+
+  // p: { nombre, sobrescribir, deshacer, unir, id }
   function nombrarPersonaAgente(p) {
     p = p || {};
     if (p.deshacer) {
@@ -1668,6 +1712,7 @@ window.PersonaSelect = (function () {
     const r = id && window.Reconocimiento && Reconocimiento.byId(id);
     if (r && ultimoGuardado && ultimoGuardado.id === id && r.name === ultimoGuardado.nombre) p = Object.assign({}, p, { sobrescribir: true });
     const v = validarNombre(p);
+    if (!v.ok && v.duplicado && p.unir && v.person && v.otra) return unirFichas(v.person, v.otra);
     return v.ok ? guardarNombre(v) : v;
   }
 

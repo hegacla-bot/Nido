@@ -387,6 +387,9 @@
   pointer-events: none;
 }
 .album-vacio[hidden] { display: none; }
+/* En Imágenes / Vídeos de una persona no hay tarjeta «Añadir» encima: el bloque (197px) va centrado en el hueco libre entre
+   el título de sección (acaba en 156px) y Volver (746px) → centro en 451 (28-sep; a 390 quedaba 37px bajo). */
+[data-persona-vacio].album-vacio { top: 22.0625rem; /* 353px */ }
 .album-vacio__pollito {
   width: 11.375rem;
   height: 6.6875rem;

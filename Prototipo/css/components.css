@@ -260,17 +260,21 @@
   left: 0;
   right: 0;
   bottom: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.125rem; /* 2px */
+  /* La flecha va PEGADA al final del texto, también con dos líneas («21 de septiembre de / 2026 ›»), como «Un día especial ›»
+     (28-sep). Con flex se iba al borde derecho: el texto partido ocupa todo el ancho. Ahora es parte de la línea: un espacio
+     invisible que no se parte (\2060) + la flecha de fondo en span::after, así nunca baja sola a otra línea. La <img> se oculta. */
+  display: block;
   padding: 1rem 1rem 0.75rem; /* 16px 16px 12px */
   color: var(--color-white);
   font-size: 1.25rem; /* 20px */
   font-weight: var(--font-weight-bold);
 }
-.photo-card__caption img {
-  width: 1.5rem; /* 24px */
-  height: 1.5rem;
+.photo-card__caption img { display: none; }
+.photo-card__caption span::after {
+  content: '\2060'; /* unión invisible: no deja partir la línea entre el texto y la flecha */
+  padding-left: 0.125rem; /* 2px, como antes */
+  padding-right: 1.5rem; /* 24px: la flecha */
+  background: url('../assets/icons/icon-chevron-right.svg') no-repeat right center / 1.5rem 1.5rem;
 }
 
 .carousel-next,
@@ -304,6 +308,33 @@
 }
 .carousel-prev[hidden] {
   display: none;
+}
+
+/* Anterior / siguiente en Detalle foto (28-sep): las flechas del carrusel de Inicio, 20px bajo la foto y 19px sobre Volver. */
+.detalle-nav {
+  position: absolute;
+  left: var(--space-page-margin);
+  right: var(--space-page-margin);
+  top: 40.9375rem; /* 655px */
+  height: 4.5rem; /* 72px */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+.detalle-nav[hidden] { display: none; }
+.detalle-nav .carousel-prev,
+.detalle-nav .carousel-next {
+  top: 0;
+}
+.detalle-nav .carousel-prev { left: 0; }
+.detalle-nav .carousel-next { left: auto; right: 0; }
+.detalle-nav .carousel-prev[hidden],
+.detalle-nav .carousel-next[hidden] { display: none; }
+.detalle-nav__cuenta {
+  font-size: var(--font-size-label-medium); /* 18px */
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary-blue-dark);
 }
 
 .grid-2 {
@@ -475,7 +506,9 @@
 .detail-media {
   position: absolute;
   left: 0;
-  top: 17rem; /* 272px */
+  /* 28-sep: con la fila de flechas, 20px entre botones de arriba (acaban en 225), foto (390), flechas (72) y Volver (746).
+     Antes 272px, sin flechas. */
+  top: 15.3125rem; /* 245px → acaba en 635 */
   width: 100%;
   height: 24.375rem; /* 390px */
   box-shadow: var(--shadow-card);
@@ -527,6 +560,23 @@
    (Yo) sin revisar todavía contra el rediseño. */
 .detalle-actions {
   top: 8.4375rem; /* 135px */
+}
+/* El título es lo que se ve (fecha, recuerdo…): siempre en una línea; app.js elige una versión que quepa. */
+[data-screen="detalle-foto"] .page-title {
+  white-space: nowrap;
+}
+/* «Felicitación» con el icono ENCIMA, como «Eliminar» a su lado y como «Mis documentos» en Yo (28-sep, regla de iconos: en una
+   misma fila, todos igual). Para que quepa en los 90px de la fila, menos relleno dentro de la doble capa. */
+.detalle-actions .albumes-new-wrap,
+.ob-detalle [data-detalle-step="1"] .albumes-new-wrap {
+  padding: 0.5rem; /* 8px */
+  display: flex;
+}
+.detalle-actions .albumes-new-btn,
+.ob-detalle [data-detalle-step="1"] .albumes-new-btn {
+  flex-direction: column;
+  gap: 0.4375rem; /* 7px: con 8 la fila medía 91px */
+  padding: 0.25rem 1rem;
 }
 
 .bottom-action-row {

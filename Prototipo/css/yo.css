@@ -124,8 +124,8 @@
   height: 1.75rem;
   flex-shrink: 0;
 }
-/* 25-sep: textos centrados en la fila (pedido). El icono se queda a la derecha, fuera del flujo, para que no descentre el texto;
-   el relleno lateral (48px) es igual a los dos lados y deja sitio al icono. «Eliminar cuenta» centra icono + texto juntos. */
+/* Icono DELANTE del texto y los dos centrados en la fila (28-sep, regla de iconos de toda la app: el icono va delante salvo las
+   flechas de avanzar). Figma 692:2425 los ponía detrás en las tres primeras y delante en «Eliminar cuenta»; ahora las cuatro igual. */
 .ajustes-row {
   position: relative;
   justify-content: center;
@@ -133,12 +133,6 @@
   padding-right: 3rem;
   text-align: center;
   white-space: nowrap;
-}
-.ajustes-row:not(.ajustes-row--danger) img {
-  position: absolute;
-  right: 1rem; /* 16px: deja ~4px entre el texto más largo y el icono */
-  top: 50%;
-  transform: translateY(-50%);
 }
 .ajustes-row--danger {
   justify-content: center;

@@ -118,10 +118,8 @@
 }
 
 /* ---- Paso 2 · destaca "Personas" (759:4520) ---- */
-.ob-step-2 .carousel {
-  padding-left: 1.25rem;
-  scroll-snap-type: none;
-}
+/* Carrusel de los pasos 2-5 = el de Inicio y el paso 1 (46,5px, tarjeta centrada). En los frames de Figma estaba a 20px y la
+   tarjeta saltaba de sitio al pasar del paso 1 al 2 (28-sep). */
 .ob-step-2 .onboarding-highlight {
   left: 8.875rem; top: 8.9375rem; width: 6.6875rem; /* 142, 143, 107 */
   filter: none;
@@ -147,10 +145,6 @@
 }
 
 /* ---- Paso 3 · destaca "Yo" (759:4608) ---- */
-.ob-step-3 .carousel {
-  padding-left: 1.25rem;
-  scroll-snap-type: none;
-}
 .ob-step-3 .onboarding-highlight {
   left: 16.625rem; top: 8.75rem; width: 6.6875rem; /* 266, 140, 107 */
   filter: none;
@@ -175,11 +169,6 @@
 }
 
 /* ---- Paso 4 · destaca el título "Mis recuerdos" (759:4688) ---- */
-.ob-step-4 .carousel,
-.ob-step-5 .carousel {
-  padding-left: 1.25rem;
-  scroll-snap-type: none;
-}
 /* El título vuelve a dibujarse en blanco por encima del velo (sin botón
    destacado en este paso). */
 .ob-step-4 .onboarding-glow-title {
@@ -274,7 +263,7 @@
   width: 100%;
 }
 .ob-detalle [data-detalle-step="1"] .albumes-new-btn {
-  padding: 1rem 2rem;
+  padding: 0.25rem 1rem; /* = el de la pantalla (icono encima, components.css .detalle-actions) */
 }
 .ob-detalle [data-detalle-step="1"] .onboarding-tooltip {
   left: 1.625rem; top: 28.25rem; width: 14.9375rem; height: auto; /* 26, 368, 239×83 */
@@ -329,7 +318,10 @@
   box-shadow: 2px 4px 16px 0 rgba(123, 123, 135, 0.3), 2px 4px 4px 0 #868693;
 }
 .ob-yo .onboarding-tooltip {
-  left: 6.3125rem; top: 27.1875rem; width: 17rem; height: auto; /* 101, 353, 272×91 */
+  /* Anclada por ABAJO (28-sep): con top fijo, si Safari parte el texto en una línea más la burbuja crecía hacia abajo y pisaba
+     la cabeza del pollito. Ahora termina siempre 18px sobre la cabeza (medido en los píxeles del dibujo, como el tour de Inicio)
+     y, si tiene más líneas, crece hacia arriba. */
+  left: 6.3125rem; top: auto; bottom: 20.325rem; width: 17rem; height: auto; /* borde inferior en y=526,8; cabeza en 544,8 */
   padding: var(--bubble-pad-y) var(--bubble-pad-x) var(--bubble-pad-b); /* 16 por los cuatro lados: todas las burbujas igual */
   border-radius: var(--radius-bubble);
   border-bottom-left-radius: 0;
@@ -353,7 +345,7 @@
   box-shadow: 2px 4px 16px 0 rgba(123, 123, 135, 0.3), 2px 4px 4px 0 #868693;
 }
 .ob-yo [data-layer-step="2"] .onboarding-tooltip {
-  left: 8.5rem; top: 29.1562rem; width: 13.5625rem; height: auto; /* 136, 373, 217×69 */
+  left: 8.5rem; top: auto; bottom: 19.656rem; width: 13.5625rem; height: auto; /* anclada por abajo: borde en y=537,5, 18px sobre la cabeza (555,5) */
   padding: var(--bubble-pad-y) var(--bubble-pad-x) var(--bubble-pad-b); /* 16 por los cuatro lados: todas las burbujas igual */
   border-radius: var(--radius-bubble);
   border-bottom-left-radius: 0;

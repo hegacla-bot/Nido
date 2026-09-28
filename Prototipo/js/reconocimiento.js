@@ -161,6 +161,30 @@ window.Reconocimiento = (function () {
 
   const byId = (id) => people.find((p) => p.id === id) || null;
 
+  // Dos fichas que son la misma persona (28-sep: se le dice a Nidi un nombre que ya tiene otra ficha y confirma que es la misma).
+  // Las huellas de las dos se juntan en «into» (alternando, hasta 8: así reconoce las caras de las dos fichas) y «from» desaparece.
+  // Devuelve una función que lo deja todo como estaba (para «Deshacer»).
+  function merge(from, into) {
+    const idx = people.indexOf(from);
+    const antes = into.descriptors.slice();
+    const a = into.descriptors, b = from.descriptors, mix = [];
+    for (let i = 0; mix.length < 8 && (i < a.length || i < b.length); i++) {
+      if (a[i]) mix.push(a[i]);
+      if (b[i] && mix.length < 8) mix.push(b[i]);
+    }
+    into.descriptors = mix;
+    const avatarAntes = into.avatar;
+    if (!into.avatar) into.avatar = from.avatar;
+    if (idx >= 0) people.splice(idx, 1);
+    save();
+    return () => {
+      into.descriptors = antes;
+      into.avatar = avatarAntes;
+      if (!people.includes(from)) people.splice(Math.min(Math.max(idx, 0), people.length), 0, from);
+      save();
+    };
+  }
+
   function rename(person, name) { person.name = name; save(); }
   function setAvatar(person, avatar) { person.avatar = avatar; save(); }
   const avatarOf = (img, f) => ({ src: img.currentSrc || img.src, nw: f.natural.w, nh: f.natural.h, x: f.box.x, y: f.box.y, w: f.box.w, h: f.box.h });
@@ -289,7 +313,7 @@ window.Reconocimiento = (function () {
   }
 
   return {
-    load, detect, precargar, match, addPerson, reinforce, byId, photosOf, faceAt, bustPolygon, faceBox, rename, setAvatar, organize, sembrar,
+    load, detect, precargar, match, addPerson, reinforce, byId, photosOf, faceAt, bustPolygon, faceBox, rename, setAvatar, organize, sembrar, merge,
     get people() { return people; },
   };
 })();
