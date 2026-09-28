@@ -21,3 +21,12 @@
   height: 46.90725rem;
   object-fit: contain;
 }
+
+/* Salida (28-sep): el pollito del huevo se desvanece sobre el blanco antes de que aparezca «Hola, soy Nidi» (app.js, salirDelHuevo).
+   Vale también para la animación de respaldo (<img> con la misma clase). */
+.screen--bienvenida .bienvenida-video {
+  transition: opacity 0.45s ease;
+}
+.screen--bienvenida.is-saliendo .bienvenida-video {
+  opacity: 0;
+}

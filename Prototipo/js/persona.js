@@ -466,11 +466,17 @@ window.PersonaSelect = (function () {
 
     // Una persona de verdad (reconocida en las fotos de la biblioteca): cada foto una sola vez, y sin vídeos inventados
     // (todavía no se reconoce a nadie dentro de un vídeo). Solo las personas de ejemplo repiten fotos para llenar la pantalla.
-    const vacio = (el, msg) => { el.innerHTML = '<p class="personas-vacio">' + msg + '</p>'; };
+    // Fila vacía (28-sep): el estado vacío del pollito en pequeño, como el de las pantallas completas, en vez de una frase suelta.
+    const vacio = (el, titulo, msg) => {
+      el.innerHTML = '<div class="persona-vacio-fila"><img class="persona-vacio-fila__pollito" src="assets/img/pollito-album-vacio.webp" alt="" />' +
+        '<p class="album-vacio__titulo"></p><p class="album-vacio__texto"></p></div>';
+      el.querySelector('.album-vacio__titulo').textContent = titulo;
+      el.querySelector('.album-vacio__texto').textContent = msg;
+    };
     document.querySelectorAll('[data-persona-carousel]').forEach((row) => {
       row.innerHTML = '';
-      if (persona.dynamic && row.dataset.personaCarousel === 'videos') { vacio(row, 'Todavía no hay vídeos de esta persona.'); return; }
-      if (!persona.photos.length) { vacio(row, 'Todavía no hay fotos de esta persona.'); return; } // igual que la de vídeos (25-sep)
+      if (persona.dynamic && row.dataset.personaCarousel === 'videos') { vacio(row, 'Sin vídeos', 'Todavía no hay vídeos de esta persona.'); return; }
+      if (!persona.photos.length) { vacio(row, 'Sin fotos', 'Todavía no hay fotos de esta persona.'); return; } // igual que la de vídeos (25-sep)
       persona.photos.forEach((file) => {
         const card = document.createElement('div');
         card.className = 'persona-group';
@@ -662,8 +668,11 @@ window.PersonaSelect = (function () {
     grupos.forEach((g) => {
       const card = document.createElement('div');
       card.className = 'persona-group';
-      card.innerHTML = '<div class="persona-group__photo photo-card"><img alt="" /></div><p class="persona-group__name"></p>';
+      card.innerHTML = '<div class="persona-group__photo photo-card"><img alt="" /></div><p class="persona-group__name"></p><p class="persona-group__meta"></p>';
       card.querySelector('img').src = g.imgs[0].currentSrc || g.imgs[0].src;
+      // Todas las fotos en las que salen juntos (28-sep): al tocar el grupo se abren TODAS en el detalle (app.js, data-grupo-fotos).
+      card.dataset.grupoFotos = JSON.stringify(g.imgs.map((i) => i.currentSrc || i.src));
+      card.querySelector('.persona-group__meta').textContent = g.imgs.length + (g.imgs.length === 1 ? ' foto' : ' fotos');
       const [uno, otro] = g.a.name ? [g.a, g.b] : [g.b, g.a];
       card.querySelector('p').textContent = uno.name + ' y ' + (otro.name || 'otra persona');
       fila.appendChild(card);
@@ -1715,6 +1724,86 @@ window.PersonaSelect = (function () {
     if (!v.ok && v.duplicado && p.unir && v.person && v.otra) return unirFichas(v.person, v.otra);
     return v.ok ? guardarNombre(v) : v;
   }
+
+  // ---------------------------------------------------------------
+  // Ficha SIN nombre (28-sep, pedido): al abrirla, Nido pregunta primero quién es — sin Nidi (con Nidi ya lo pregunta él, ver
+  // agenteAvisoFicha en app.js). Su cara, el micrófono y «Ahora no» (una vez por ficha y sesión). El nombre se guarda como lo haría
+  // Nidi (validarNombre + guardarNombre: «Guardado · Deshacer»); si ya lo tiene otra ficha, «¿Es la misma …?» → unirFichas.
+  // ---------------------------------------------------------------
+  const fichaAsk = document.querySelector('[data-ficha-ask]');
+  const fichaMisma = document.querySelector('[data-ficha-misma]');
+  const fichaScreen = document.querySelector('[data-screen="persona-fotos"]');
+  const fichasPreguntadasSinNidi = new Set();
+  let fichaDuplicada = null; // { person, otra, nombre } mientras se pregunta si es la misma
+  let fichaNombreIdx = 0;
+  function cerrarFichaAsk() {
+    if (fichaScreen && fichaScreen.classList.contains('is-preguntando')) fichaScreen.classList.remove('is-preguntando');
+    if (fichaAsk) { fichaAsk.classList.remove('is-visible'); fichaAsk.querySelector('.persona-ask__mic').classList.remove('is-listening'); }
+    if (fichaMisma) fichaMisma.classList.remove('is-visible');
+    fichaDuplicada = null;
+  }
+  function preguntarFichaSinNombre() {
+    const f = fichaAbierta();
+    if (!fichaAsk || !f || !f.real || f.nombre || fichasPreguntadasSinNidi.has(f.id)) return;
+    if (window.NidoAgente && window.NidoAgente.activa) return; // Nidi lo pregunta hablando
+    fichasPreguntadasSinNidi.add(f.id);
+    const circulo = document.querySelector('[data-screen="personas"] [data-persona-open="' + f.id + '"] .persona-item__photo');
+    const cara = fichaAsk.querySelector('[data-ficha-ask-cara]');
+    cara.setAttribute('style', circulo ? circulo.getAttribute('style') : '');
+    fichaAsk.querySelector('[data-ficha-ask-1]').textContent = '¿Quién es esta persona?';
+    fichaAsk.querySelector('[data-ficha-ask-2]').textContent = 'Toca en el micrófono y dímelo.';
+    fichaAsk.classList.add('is-visible');
+    fichaScreen.classList.add('is-preguntando');
+  }
+  if (fichaScreen) {
+    // Al entrar en la ficha (se deja ver un momento qué fotos son antes de preguntar); al salir, se cierra.
+    // Solo cuando la ficha pasa de oculta a visible o al revés: cerrarFichaAsk también toca la clase de la pantalla y, sin esta
+    // comprobación, el vigilante se disparaba a sí mismo sin fin y la página se quedaba colgada.
+    let fichaAskTimer = null;
+    let fichaVisible = fichaScreen.classList.contains('is-active');
+    new MutationObserver(() => {
+      const ahora = fichaScreen.classList.contains('is-active');
+      if (ahora === fichaVisible) return;
+      fichaVisible = ahora;
+      clearTimeout(fichaAskTimer);
+      if (ahora) fichaAskTimer = setTimeout(() => { if (fichaScreen.classList.contains('is-active')) preguntarFichaSinNombre(); }, 700);
+      else cerrarFichaAsk();
+    }).observe(fichaScreen, { attributes: true, attributeFilter: ['class'] });
+  }
+  document.addEventListener('click', (event) => {
+    const b = event.target.closest('[data-ficha-action]');
+    if (!b) return;
+    const accion = b.dataset.fichaAction;
+    if (accion === 'ahora-no') { cerrarFichaAsk(); return; }
+    if (accion === 'misma' && fichaDuplicada) { const { person, otra } = fichaDuplicada; cerrarFichaAsk(); unirFichas(person, otra); return; }
+    if (accion === 'otra') {
+      // Es otra persona con el mismo nombre: se vuelve a preguntar, pidiendo algo que las distinga.
+      const n = fichaDuplicada ? fichaDuplicada.nombre.split(' ')[0] : '';
+      fichaMisma.classList.remove('is-visible');
+      fichaDuplicada = null;
+      fichaAsk.querySelector('[data-ficha-ask-1]').textContent = 'Entonces, ¿con qué nombre la guardo para no confundirlas?';
+      fichaAsk.querySelector('[data-ficha-ask-2]').textContent = n ? 'Por ejemplo «' + n + ' prima». Toca y dímelo.' : 'Toca en el micrófono y dímelo.';
+      return;
+    }
+    if (accion !== 'mic') return;
+    const mic = fichaAsk.querySelector('.persona-ask__mic');
+    if (mic.classList.contains('is-listening')) return;
+    mic.classList.add('is-listening');
+    escuchar().then((r) => (r.fallback ? { name: NOMBRES_DESCONOCIDOS[fichaNombreIdx++ % NOMBRES_DESCONOCIDOS.length] } : r)).then((res) => {
+      if (!fichaAsk.classList.contains('is-visible')) return; // se cerró mientras escuchaba
+      mic.classList.remove('is-listening');
+      if (res.error) { window.nidoToast('persona-fotos', res.error, null, null, 6000); return; } // se queda para reintentar
+      const v = validarNombre({ nombre: res.name });
+      if (v.ok) { cerrarFichaAsk(); guardarNombre(v); return; }
+      if (v.duplicado && v.person && v.otra) {
+        fichaDuplicada = { person: v.person, otra: v.otra, nombre: res.name };
+        fichaMisma.querySelector('[data-ficha-misma-title]').textContent = '¿Es la misma persona que «' + v.otra.name + '»?';
+        fichaMisma.classList.add('is-visible');
+        return;
+      }
+      window.nidoToast('persona-fotos', 'No me he quedado con el nombre. Toca el micrófono y dímelo otra vez.', null, null, 6000);
+    });
+  });
 
   // Abre la primera ficha sin nombre (con más fotos primero), para que Nidi pregunte quién es.
   function abrirFichaSinNombre() {

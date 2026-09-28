@@ -108,7 +108,10 @@
         if (screen.classList.contains('registro-3')) enterRegistroCode(screen);
         if (screen.classList.contains('registro-4')) enterRegistroSplash(screen);
         if (screen.classList.contains('registro-nidi')) enterRegistroNidi();
+        if (name === 'bienvenida') enterEclosion();
+        if (name === 'inicio') enterInicio();
       }
+      if (!willBeActive && wasActive && screen.dataset.screen === 'bienvenida' && bienvenidaVideo) bienvenidaVideo.pause(); // al salir del huevo, no sigue sonando
       if (!willBeActive && wasActive && screen.classList.contains('registro-nidi')) {
         clearTimeout(registroNidiTimer);
       }
@@ -135,9 +138,27 @@
 
   let detalleCards = []; // tarjetas de la pantalla de origen, en el mismo orden que la galería del detalle
 
-  function openDetalle(clickedCard) {
+  // Grupo de personas → pantalla «grupo-fotos» con todas las fotos en las que salen juntos (título con los nombres de pila).
+  function abrirGrupo(tarjeta) {
+    const scr = document.querySelector('[data-screen="grupo-fotos"]');
+    const nombre = (tarjeta.querySelector('.persona-group__name') || {}).textContent || 'Juntos';
+    // «Clara nieta y Ainhoa» → «Clara y Ainhoa»: el título cabe en una línea (el parentesco ya se ve en Personas).
+    scr.querySelector('[data-grupo-nombre]').textContent = nombre.split(' y ').map((n) => (n === 'otra persona' ? n : n.split(' ')[0])).join(' y ');
+    const grid = scr.querySelector('[data-grupo-grid]');
+    grid.innerHTML = '';
+    JSON.parse(tarjeta.dataset.grupoFotos).forEach((src) => {
+      const c = document.createElement('div'); c.className = 'photo-card';
+      const im = document.createElement('img'); im.src = src; im.alt = ''; c.appendChild(im);
+      grid.appendChild(c);
+    });
+    grid.parentElement.scrollTop = 0;
+    showScreen('grupo-fotos');
+  }
+
+  // lista (opcional): las tarjetas a enseñar, si no son las de la pantalla.
+  function openDetalle(clickedCard, lista) {
     const originScreen = document.querySelector('.screen.is-active');
-    const cards = Array.from(originScreen.querySelectorAll('.photo-card'));
+    const cards = lista || Array.from(originScreen.querySelectorAll('.photo-card'));
     detalleCards = cards.filter((c) => c.querySelector('img, video'));
     const startIndex = Math.max(0, cards.indexOf(clickedCard));
 
@@ -177,6 +198,8 @@
       item.appendChild(clone);
       detalleMedia.appendChild(item);
 
+      // Papeles de Mis documentos (28-sep): enteros, sin recortar (un horario o un DNI cortado no sirve). Sin buscar caras en ellos.
+      if (card.closest('[data-screen="mis-documentos"]')) { item.classList.add('detail-media__item--documento'); return; }
       if (clone.tagName === 'IMG') window.PersonaSelect.buildHotspots(item, clone);
     });
 
@@ -316,8 +339,9 @@
   // Vídeo con respaldo: si el navegador no deja reproducirlo solo (modo de bajo consumo del iPhone, ahorro de datos...), se enseña la
   // misma animación como imagen animada, que sí se mueve, y se avanza igual al terminar. Nunca se queda parado en la primera imagen.
   // ---------------------------------------------------------------
+  // Devuelve «empezar()»: se llama al ENTRAR en la pantalla del vídeo (28-sep: el huevo ya no es lo primero, va tras el registro).
   function videoConRespaldo(video, opts) {
-    let sonando = false, respaldo = false;
+    let sonando = false, respaldo = false, img = null, vez = 0;
     video.muted = true; video.setAttribute('muted', ''); video.playsInline = true;
     video.addEventListener('playing', () => { sonando = true; });
     const pon = () => {
@@ -328,19 +352,25 @@
     ['loadeddata', 'canplay'].forEach((ev) => video.addEventListener(ev, pon));
     window.addEventListener('pageshow', pon);
     ['touchstart', 'pointerdown', 'click'].forEach((ev) => document.addEventListener(ev, pon, { passive: true }));
-    pon();
-    setTimeout(pon, 300);
-    setTimeout(() => {
-      if (sonando || !opts.activa()) return;
-      respaldo = true;
-      const img = document.createElement('img');
-      img.className = video.className;
-      img.alt = '';
-      img.src = opts.animacion + '?t=' + Date.now(); // el parámetro hace que empiece de cero
-      video.style.display = 'none';
-      video.after(img);
-      setTimeout(() => { if (opts.activa()) opts.fin(img); }, opts.ms);
-    }, 1200);
+    return function empezar() {
+      const esta = ++vez; // si se vuelve a entrar, los temporizadores de la vez anterior ya no cuentan
+      sonando = false; respaldo = false;
+      if (img) { img.remove(); img = null; video.style.display = ''; }
+      try { video.currentTime = 0; } catch (e) { /* aún sin datos */ }
+      pon();
+      setTimeout(pon, 300);
+      setTimeout(() => {
+        if (esta !== vez || sonando || !opts.activa()) return;
+        respaldo = true;
+        img = document.createElement('img');
+        img.className = video.className;
+        img.alt = '';
+        img.src = opts.animacion + '?t=' + Date.now(); // el parámetro hace que empiece de cero
+        video.style.display = 'none';
+        video.after(img);
+        setTimeout(() => { if (esta === vez && opts.activa()) opts.fin(img); }, opts.ms);
+      }, 1200);
+    };
   }
 
   // ---------------------------------------------------------------
@@ -348,6 +378,7 @@
   // — al terminar, pasa sola al registro.
   // ---------------------------------------------------------------
   const bienvenidaVideo = document.querySelector('[data-bienvenida-video]');
+  let empezarBienvenida = null;
   if (bienvenidaVideo) {
     // Solo si sigue en bienvenida: con un deep-link (#pantalla) el vídeo se reproduce
     // igualmente por debajo y, al acabar, arrastraba a otra pantalla (bug de la sesión 3).
@@ -356,9 +387,27 @@
     // el 24-sep: de la bienvenida se pasa directo al registro.
     // registro-1 ("Revive tus momentos...", valor+Entrar) se quitó del todo el 24-sep: de la
     // bienvenida se pasa ahora directo a registro-2 (antes ya se había quitado pre-registro igual).
-    bienvenidaVideo.addEventListener('ended', () => { if (enBienvenida()) showScreen('registro-nidi'); });
-    videoConRespaldo(bienvenidaVideo, { activa: enBienvenida, animacion: 'assets/video/pollito-huevo.webp', ms: 5300, fin: () => showScreen('registro-nidi') });
+    // Al terminar, el pollito del huevo se desvanece sobre el blanco y LUEGO aparece el saludo (28-sep): fundir los dos a la vez
+    // dejaba dos pollitos superpuestos (el del huevo, más pequeño, asomando detrás del que saluda).
+    const bienvenidaScreen = bienvenidaVideo.closest('.screen');
+    const salirDelHuevo = () => {
+      if (!enBienvenida() || bienvenidaScreen.classList.contains('is-saliendo')) return;
+      bienvenidaScreen.classList.add('is-saliendo');
+      setTimeout(() => { if (enBienvenida()) showScreen('registro-nidi'); }, 450);
+    };
+    bienvenidaVideo.addEventListener('ended', salirDelHuevo);
+    empezarBienvenida = videoConRespaldo(bienvenidaVideo, { activa: enBienvenida, animacion: 'assets/video/pollito-huevo.webp', ms: 5300, fin: salirDelHuevo });
+    if (enBienvenida()) empezarBienvenida(); // enlace directo (#bienvenida)
   }
+
+  // Inicio (28-sep): el logo 1,8 s (o un toque, data-nav) y a la presentación.
+  const INICIO_MS = 1800;
+  let inicioTimer = null;
+  function enterInicio() {
+    clearTimeout(inicioTimer);
+    inicioTimer = setTimeout(() => { if (currentScreen() === 'inicio') showScreen('intro-1'); }, INICIO_MS);
+  }
+  if (currentScreen() === 'inicio') enterInicio();
 
   // ---------------------------------------------------------------
   // Flujo de registro: teléfono (registro-2) y código (registro-3) usan
@@ -452,7 +501,7 @@
 
   function enterRegistroNidi() {
     clearTimeout(registroNidiTimer);
-    registroNidiTimer = setTimeout(() => showScreen('intro-1'), REGISTRO_NIDI_MS); // luego las 3 pantallas de presentación y el registro (28-sep)
+    registroNidiTimer = setTimeout(() => { if (currentScreen() === 'registro-nidi') showScreen('onboarding-1'); }, REGISTRO_NIDI_MS); // y empieza el tour de Inicio (28-sep: el saludo va ahora tras el registro)
   }
 
   // Pantalla de carga (registro-4). «Permitir» abre el selector de fotos del sistema y a la vez entra aquí: la carga espera a que
@@ -463,16 +512,34 @@
   const REGISTRO_SPLASH_TOPE_MS = 12000;
   let galeriaAbierta = false; // el selector de fotos del sistema está abierto
   let splashDesde = 0;
-  function splashSiguiente() { if (currentScreen() === 'registro-4') showScreen('onboarding-1'); }
+  function splashSiguiente() { if (currentScreen() === 'registro-4') showScreen('bienvenida'); } // 28-sep: nace el pollito, saluda y luego el tour
   function enterRegistroSplash(screen) {
     clearTimeout(registroSplashTimer);
     splashDesde = Date.now();
     // Tras el loader arranca el tour de onboarding (rediseño de la sesión 5).
     registroSplashTimer = setTimeout(splashSiguiente, galeriaAbierta ? REGISTRO_SPLASH_TOPE_MS : REGISTRO_SPLASH_MS);
   }
-  // El selector se ha cerrado. Devuelve true si estábamos en la pantalla de carga (ya se ha ocupado de todo).
+  // La eclosión (bienvenida) hace ahora de pantalla de carga (28-sep). Si «Permitir» ha abierto la galería, el huevo espera quieto
+  // (se ve su primera imagen) a que se cierre, y entonces nace; tope por si el navegador no avisa del cierre.
+  let eclosionTimer = null;
+  function enterEclosion() {
+    clearTimeout(eclosionTimer);
+    bienvenidaVideo.closest('.screen').classList.remove('is-saliendo');
+    if (!empezarBienvenida) return;
+    if (!galeriaAbierta) { empezarBienvenida(); return; }
+    bienvenidaVideo.pause();
+    try { bienvenidaVideo.currentTime = 0; } catch (e) { /* aún sin datos */ }
+    eclosionTimer = setTimeout(() => { if (currentScreen() === 'bienvenida') empezarBienvenida(); }, REGISTRO_SPLASH_TOPE_MS);
+  }
+  // El selector se ha cerrado. Devuelve true si estábamos en la pantalla de carga o en la eclosión (ya se ha ocupado de todo).
   function splashSelectorCerrado(cancelado) {
     galeriaAbierta = false;
+    if (currentScreen() === 'bienvenida') {
+      clearTimeout(eclosionTimer);
+      if (cancelado) nidoToast('bienvenida', AVISO_GALERIA, null, null, REGISTRO_SPLASH_AVISO_MS - 300);
+      if (empezarBienvenida && bienvenidaVideo.paused) empezarBienvenida();
+      return true;
+    }
     if (currentScreen() !== 'registro-4') return false;
     clearTimeout(registroSplashTimer);
     if (cancelado) {
@@ -899,7 +966,8 @@
   // texto repetido sobre el velo — todo lo que se ve nítido encima del difuminado. Se reenvía el toque
   // al botón "Siguiente" de esa misma pantalla, así hay un único camino de avance por paso.
   document.addEventListener('click', (event) => {
-    const hit = event.target.closest('.onboarding-highlight, .onboarding-tooltip, .onboarding-pollito, .onboarding-caption, .onboarding-glow-title');
+    // .ob-personas__title (28-sep): el título «Grupos de personas» destacado del tour de Personas no hacía nada al tocarlo.
+    const hit = event.target.closest('.onboarding-highlight, .onboarding-tooltip, .onboarding-pollito, .onboarding-caption, .onboarding-glow-title, .ob-personas__title');
     if (!hit || event.target.closest('[data-onboarding-next], [data-detalle-onboarding-next], [data-onboarding-layer-close], [data-onboarding-layer-next]')) return;
     const scope = hit.closest('.screen--onboarding, [data-detalle-onboarding], [data-onboarding-layer]');
     const cta = scope && scope.querySelector('.onboarding-cta');
@@ -1472,6 +1540,7 @@
     personas: 'Aquí están las personas que salen en tus fotos. Toca una para ver las suyas.',
     'persona-fotos': 'Estas son las fotos y vídeos de esta persona.',
     'persona-imagenes': 'Todas las imágenes de esta persona.',
+    'grupo-fotos': 'Las fotos en las que salen juntos. Toca una para verla más grande.',
     'persona-videos': 'Todos los vídeos de esta persona.',
     yo: 'Aquí tienes tus documentos, tus felicitaciones y los ajustes.',
     'mis-documentos': 'Aquí están las fotos con documentos o información útil.',
@@ -1556,7 +1625,7 @@
   // avatar pero con un solo bocadillo y otra pose. Una vez por visita a cada pantalla; nunca durante el alta, el tour, una foto abierta
   // o cuando ya hay otra capa, aviso o conversación en marcha. Tocar el micrófono sigue como cualquier ayuda; Cancelar la cierra.
   const AYUDA_INACTIVIDAD = 'Llevas un rato aquí. Toca el micrófono si quieres que te ayude.';
-  const IDLE_SIN_AYUDA = /^(bienvenida|intro|registro|onboarding|ajustes-codigo|ajustes-telefono|detalle-foto)/;
+  const IDLE_SIN_AYUDA = /^(inicio|bienvenida|intro|registro|onboarding|ajustes-codigo|ajustes-telefono|detalle-foto)/;
   const IDLE_CAPAS = '.ayuda-layer.is-visible, .persona-ask.is-visible, .persona-confirm.is-visible, .eliminar-foto-layer.is-visible, [data-modal].is-visible, [data-onboarding-layer].is-visible, .detalle-onboarding.is-visible, .ob-album-nuevo.is-visible, .nido-toast.is-visible';
   function ayudaInactividad() {
     const layer = ayudaBuild();
@@ -2451,6 +2520,12 @@
       destination = 'detalle-foto';
       pressable = card;
       cameFrom = currentScreen();
+      const grupo = card.closest('[data-grupo-fotos]');
+      if (grupo) {
+        // Un grupo de personas (28-sep): primero la pantalla con TODAS sus fotos; el detalle, desde ahí.
+        abrirGrupo(grupo);
+        return;
+      }
       openDetalle(card);
     } else {
       destination = navTarget.dataset.nav || navTarget.dataset.onboardingNext;

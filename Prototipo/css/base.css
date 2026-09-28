@@ -102,6 +102,16 @@ p, h1, h2, h3 {
   pointer-events: none !important;
 }
 
+/* Fundido suave (28-sep: logo → intro y huevo → «Hola, soy Nidi» eran bruscos). La pantalla nueva aparece despacio (0,9 s) y sin
+   encogerse, ENCIMA de la anterior, que no se va hasta que la nueva está entera: un fundido limpio, sin pasar por el fondo gris. */
+.screen--suave {
+  transform: none;
+  transition: opacity 0.9s ease;
+}
+.screen--suave:not(.is-active) {
+  transition: opacity 0s linear 0.9s;
+}
+
 .screen.is-active {
   opacity: 1;
   pointer-events: auto;

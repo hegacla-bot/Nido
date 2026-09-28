@@ -369,6 +369,7 @@
 .screen[data-screen="album-detalle"] .screen-content,
 .screen[data-screen="album-seleccionar"] .screen-content,
 .screen[data-screen="persona-imagenes"] .screen-content,
+.screen[data-screen="grupo-fotos"] .screen-content,
 .screen[data-screen="persona-videos"] .screen-content {
   padding-bottom: 13.75rem; /* 220px */
 }

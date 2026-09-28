@@ -177,7 +177,8 @@
 /* ---- registro-4 · loader tras el código (704:1730, rediseño) ----
    Fondo blanco, logo azul de 131×48 a 359px y spinner de 45.57px justo
    debajo (435px), centrado bajo el logo (131 + 43 = 174px de left). */
-.registro-4 {
+.registro-4,
+.inicio-logo {
   background: var(--color-white);
 }
 .registro-4-logo {

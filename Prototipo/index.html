@@ -25,15 +25,15 @@
        nocturna para Año Nuevo). Solo se usan en persona.css. -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700&family=Mountains+of+Christmas:wght@700&family=Bungee&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/tokens.css?v=11" />
-  <link rel="stylesheet" href="css/base.css?v=17" />
-  <link rel="stylesheet" href="css/components.css?v=65" />
-  <link rel="stylesheet" href="css/bienvenida.css?v=4" />
-  <link rel="stylesheet" href="css/registro.css?v=29" />
-  <link rel="stylesheet" href="css/albumes.css?v=19" />
+  <link rel="stylesheet" href="css/base.css?v=18" />
+  <link rel="stylesheet" href="css/components.css?v=69" />
+  <link rel="stylesheet" href="css/bienvenida.css?v=5" />
+  <link rel="stylesheet" href="css/registro.css?v=30" />
+  <link rel="stylesheet" href="css/albumes.css?v=20" />
   <link rel="stylesheet" href="css/persona.css?v=29" />
   <link rel="stylesheet" href="css/yo.css?v=9" />
-  <link rel="stylesheet" href="css/personas.css?v=69" />
-  <link rel="stylesheet" href="css/onboarding.css?v=43" />
+  <link rel="stylesheet" href="css/personas.css?v=72" />
+  <link rel="stylesheet" href="css/onboarding.css?v=45" />
   <link rel="stylesheet" href="css/eliminar-foto.css?v=18" />
 </head>
 <body>
@@ -44,12 +44,32 @@
     <!-- ============================================================ -->
     <!-- BIENVENIDA — el pollito nace del huevo, una sola vez          -->
     <!-- ============================================================ -->
-    <section class="screen screen--bienvenida is-active" data-screen="bienvenida">
+    <!-- INICIO (28-sep): lo primero es el logo de Nido, 1,8 s (o un toque), y luego la presentación (intro-1). El huevo ya no va
+         aquí: sin contexto no decía nada. Ahora nace DESPUÉS del registro, como premio al terminarlo (idea de Clara). -->
+    <section class="screen screen--registro screen--suave inicio-logo is-active" data-screen="inicio" data-nav="intro-1">
+      <div class="status-bar">
+        <span class="status-bar__time">9:41</span>
+        <div class="status-bar__levels">
+          <img class="status-bar__icon status-bar__icon--cellular" src="assets/icons/statusbar-cellular.svg" alt="" />
+          <img class="status-bar__icon status-bar__icon--wifi" src="assets/icons/statusbar-wifi.svg" alt="" />
+          <span class="status-bar__battery">
+            <span class="status-bar__battery-fill"></span>
+            <img class="status-bar__battery-cap" src="assets/icons/statusbar-battery-cap.svg" alt="" />
+          </span>
+        </div>
+      </div>
+      <img class="registro-4-logo" src="assets/img/logo-nido-carga.png" alt="Nido" /><!-- mismo sitio que en la pantalla de carga -->
+      <div class="home-bar"><span class="home-bar__pill"></span></div>
+    </section>
+
+    <!-- El pollito nace (huevo): SUSTITUYE a la pantalla de carga (28-sep). Tras el permiso de fotos → huevo → «Hola, soy Nidi» → tour.
+         Si se abrió la galería, el huevo espera quieto a que se cierre (no nace escondido detrás del selector). -->
+    <section class="screen screen--bienvenida screen--suave" data-screen="bienvenida">
       <video
         class="bienvenida-video"
         src="assets/video/pollito-huevo.mp4?v=7"
         poster="assets/img/pollito-huevo-poster.png?v=4"
-        autoplay muted playsinline
+        muted playsinline preload="auto"
         data-bienvenida-video
       ></video>
     </section>
@@ -207,7 +227,7 @@
           <p class="registro-modal-title">Ayúdanos</p>
           <p class="registro-modal-body">Permite el acceso a tu galería y organizaremos todas tus fotos automáticamente.</p>
           <div class="registro-modal-actions">
-            <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-wide" data-nav="registro-4" data-pick-gallery>
+            <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-wide" data-nav="bienvenida" data-pick-gallery>
               <span class="btn__icon"><img src="assets/icons/icon-check.svg" alt="" /></span>
               Permitir
             </button>
@@ -222,11 +242,11 @@
           <p class="registro-modal-title registro-modal-title--mas">¿Para qué necesitamos el acceso?</p>
           <p class="registro-modal-body registro-modal-body--mas">Para enseñarte tus recuerdos, Nido necesita ver las fotos de tu teléfono. Se quedan siempre donde están:<br />solo enviamos una copia pequeña cuando hace falta mirarla,<br />y nunca la guardamos.</p>
           <div class="registro-modal-actions">
-            <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-wide" data-nav="registro-4" data-pick-gallery>
+            <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-wide" data-nav="bienvenida" data-pick-gallery>
               <span class="btn__icon"><img src="assets/icons/icon-check.svg" alt="" /></span>
               Permitir
             </button>
-            <button class="btn btn--type3 btn--horizontal btn--lg" data-nav="registro-4">
+            <button class="btn btn--type3 btn--horizontal btn--lg" data-nav="bienvenida">
               Más tarde
             </button>
           </div>
@@ -294,7 +314,7 @@
     <!-- REGISTRO · saludo de Nidi (765:5974) — justo tras el huevo, antes del teléfono -->
     <!-- Sin botón: avanza sola al teléfono (registro-2), o al tocar en cualquier sitio. -->
     <!-- ============================================================ -->
-    <section class="screen screen--registro registro-nidi" data-screen="registro-nidi" data-nav="intro-1">
+    <section class="screen screen--registro screen--suave registro-nidi" data-screen="registro-nidi" data-nav="onboarding-1">
       <div class="status-bar">
         <span class="status-bar__time">9:41</span>
         <div class="status-bar__levels">
@@ -320,7 +340,7 @@
     <!-- Nidi nace, se presenta y enseña qué se puede hacer; luego el registro. La ilustración de arriba (móvil inclinado con    -->
     <!-- brillos y sombras) sale de la exportación de Clara, con su barra de estado; título, texto, puntos y botón son HTML.       -->
     <!-- ============================================================ -->
-    <section class="screen screen--intro" data-screen="intro-1">
+    <section class="screen screen--intro screen--suave" data-screen="intro-1">
       <img class="intro-ilustracion" src="assets/img/intro-1.webp?v=2" alt="Un móvil con la pantalla Personas de Nido: grupos de personas y sus fotos" />
       <div class="intro-hoja"></div>
       <div class="intro-contenido">
@@ -1653,6 +1673,31 @@
         <span class="btn__icon"><img src="assets/icons/icon-arrow-left-lighter.svg?v=1" alt="" /></span>
         Volver
       </button>
+
+      <!-- Ficha SIN nombre (28-sep): al abrirla, Nido pregunta primero quién es (sin Nidi; con Nidi ya lo pregunta él). Su cara, el
+           micrófono y «Ahora no». Si el nombre ya lo tiene otra ficha, pregunta si es la misma y las junta (persona.js, fichaAsk). -->
+      <div class="persona-ask ficha-ask" data-ficha-ask>
+        <div class="onboarding-overlay"></div>
+        <p class="persona-ask__bubble persona-ask__bubble--1" data-ficha-ask-1>¿Quién es esta persona?</p>
+        <p class="persona-ask__bubble persona-ask__bubble--2" data-ficha-ask-2>Toca en el micrófono y dímelo.</p>
+        <div class="ficha-ask__cara" data-ficha-ask-cara></div>
+        <img class="persona-ask__pollito" src="assets/img/pollito-ayuda-v3.webp" alt="Nidi preguntando" />
+        <button class="persona-ask__mic" data-ficha-action="mic" aria-label="Hablar">
+          <img src="assets/icons/mic-escuchar.svg" alt="" />
+        </button>
+        <button class="btn btn--type2 btn--horizontal btn--lg persona-ask__cancel" data-ficha-action="ahora-no">
+          Ahora no
+        </button>
+      </div>
+      <div class="registro-modal-overlay persona-confirm" data-ficha-misma>
+        <div class="registro-modal">
+          <p class="registro-modal-title" data-ficha-misma-title>¿Es la misma persona?</p>
+          <div class="registro-modal-actions">
+            <button class="btn btn--type2 btn--horizontal btn--lg" data-ficha-action="misma">Sí, es la misma</button>
+            <button class="btn btn--type3 btn--horizontal btn--lg" data-ficha-action="otra">No, es otra</button>
+          </div>
+        </div>
+      </div>
       <div class="home-bar"><span class="home-bar__pill"></span></div>
     </section>
 
@@ -1695,6 +1740,46 @@
 
       <div class="bottom-fade"></div>
       <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-wide bottom-action" data-nav="persona-fotos-keep">
+        <span class="btn__icon"><img src="assets/icons/icon-arrow-left-lighter.svg?v=1" alt="" /></span>
+        Volver
+      </button>
+      <div class="home-bar"><span class="home-bar__pill"></span></div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- GRUPO DE PERSONAS (28-sep): al tocar un grupo, primero todas sus fotos (como «Imágenes» de una persona) y desde aquí el
+         detalle de cada una. persona.js (abrirGrupo) la rellena. -->
+    <!-- ============================================================ -->
+    <section class="screen" data-screen="grupo-fotos">
+      <div class="status-bar">
+        <span class="status-bar__time">9:41</span>
+        <div class="status-bar__levels">
+          <img class="status-bar__icon status-bar__icon--cellular" src="assets/icons/statusbar-cellular.svg" alt="" />
+          <img class="status-bar__icon status-bar__icon--wifi" src="assets/icons/statusbar-wifi.svg" alt="" />
+          <span class="status-bar__battery">
+            <span class="status-bar__battery-fill"></span>
+            <img class="status-bar__battery-cap" src="assets/icons/statusbar-battery-cap.svg" alt="" />
+          </span>
+        </div>
+      </div>
+      <button class="avatar avatar--ring" data-help aria-label="Ayuda">
+        <img src="assets/img/avatar-pollito.png?v=4" alt="Tu pollito" />
+      </button>
+      <h1 class="page-title" data-grupo-nombre>Grupo</h1>
+      <div class="top-fade"></div>
+
+      <div class="screen-content">
+        <h2 class="section-title">Imágenes</h2>
+        <div class="album-grid" data-grupo-grid></div>
+      </div>
+
+
+      <button class="albumes-more" data-scroll-toggle aria-label="Bajar">
+        <img src="assets/icons/icon-arrow-narrow-down-blue.svg" alt="" />
+      </button>
+
+      <div class="bottom-fade"></div>
+      <button class="btn btn--type2 btn--horizontal btn--lg btn--icon-wide bottom-action" data-nav="personas">
         <span class="btn__icon"><img src="assets/icons/icon-arrow-left-lighter.svg?v=1" alt="" /></span>
         Volver
       </button>
@@ -2357,12 +2442,12 @@
   <script src="js/vendor/exifr.js" defer></script>
   <!-- face-api.js (1,3 MB) ya no se carga aquí: reconocimiento.js lo pide solo cuando hay que buscar personas, para que la app no espere a bajarlo. -->
   <script src="js/reconocimiento.js?v=12"></script>
-  <script src="js/persona.js?v=81"></script>
+  <script src="js/persona.js?v=84"></script>
   <script src="js/eliminar-foto.js?v=2"></script>
   <input type="file" id="gallery-input" accept="image/*,video/*" multiple hidden />
   <script src="js/agente.js?v=9"></script>
   <script src="js/agente-acciones.js?v=9"></script>
   <script src="js/editor-pollitos.js?v=5"></script>
-  <script src="js/app.js?v=116"></script>
+  <script src="js/app.js?v=124"></script>
 </body>
 </html>

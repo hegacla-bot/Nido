@@ -198,10 +198,12 @@
 /* Cuadrículas de Imágenes / Vídeos: el título va a 131px (sin chevron) y la
    cuadrícula a 168px. */
 [data-screen="persona-imagenes"] .screen-content,
+[data-screen="grupo-fotos"] .screen-content,
 [data-screen="persona-videos"] .screen-content {
   padding-top: 8.1875rem; /* 131px */
 }
 [data-screen="persona-imagenes"] .section-title,
+[data-screen="grupo-fotos"] .section-title,
 [data-screen="persona-videos"] .section-title {
   margin-bottom: 0.75rem;
 }
@@ -906,3 +908,47 @@
   -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 2rem);
   mask-image: linear-gradient(to bottom, transparent 0, #000 2rem);
 }
+
+/* ---- 28-sep · Ficha sin nombre: Nido pregunta quién es (persona.js, fichaAsk). Su cara, a la izquierda del pollito. ---- */
+.ficha-ask__cara {
+  position: absolute;
+  left: 1.25rem; /* 20px */
+  top: 19.5rem; /* 312px: bajo las burbujas, junto al pollito */
+  width: 7.25rem; /* 116px, como los círculos de Personas */
+  height: 7.25rem;
+  border-radius: 50%;
+  background: #d9d9d9 no-repeat;
+  border: 3px solid var(--color-white);
+  box-shadow: var(--shadow-card);
+  z-index: 1;
+}
+
+/* ---- 28-sep · Fila vacía de la ficha (Imágenes / Vídeos): el estado vacío del pollito, en pequeño, en vez de una frase suelta ---- */
+.persona-vacio-fila {
+  flex: 0 0 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem 1.25rem 0.5rem;
+  text-align: center;
+  color: var(--color-primary-blue-dark);
+}
+.persona-vacio-fila__pollito {
+  width: 8.5rem; /* 136px (el de Álbum vacío a 3/4) */
+  height: auto;
+  margin-bottom: 0.75rem;
+}
+.persona-vacio-fila .album-vacio__titulo,
+.persona-vacio-fila .album-vacio__texto { margin: 0; }
+.persona-vacio-fila .album-vacio__texto { margin-top: 0.25rem; }
+
+/* ---- 28-sep · Grupos: cuántas fotos tiene cada uno (al tocarlo se ven todas) ---- */
+.persona-group__meta {
+  margin: 0.125rem 0 0;
+  font-size: var(--font-size-label-small);
+  color: var(--color-primary-blue-dark); /* no el gris claro de los tokens: con mala vista no se lee */
+}
+
+/* Mientras pregunta quién es, la ficha de detrás no se ve (sus filas, la vacía con su pollito…): bastan la cara, el pollito y el micro. */
+[data-screen="persona-fotos"].is-preguntando .screen-content { visibility: hidden; }
