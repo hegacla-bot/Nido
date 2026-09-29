@@ -24,8 +24,8 @@ Prototipo final publicado (28 de septiembre de 2026). Las versiones anteriores (
 
 ## Equipo
 
-- Ainhoa — parte técnica del prototipo
-- Clara — project lead, UI
+- Ainhoa — parte técnica del prototipo/UX
+- Clara — project lead, UX/UI
 - Josep — case study
 
 ## Cómo se trabaja
